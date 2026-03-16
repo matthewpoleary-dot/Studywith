@@ -7,7 +7,7 @@ export const config = {
   matcher: ["/app/:path*"],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   // Create a Supabase client using request cookies (Edge-compatible)
