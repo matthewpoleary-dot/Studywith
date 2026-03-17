@@ -13,11 +13,28 @@ export default async function ReceiptPage({ params }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen justify-center bg-black px-4 py-8 text-zinc-100">
-      <main className="flex w-full max-w-4xl flex-col gap-4 rounded-3xl border border-zinc-900 bg-zinc-950/80 p-5 shadow-2xl shadow-black/60">
+    <div className="min-h-screen bg-[#FDFCF8]">
+      {/* Nav */}
+      <header className="sticky top-0 z-10 border-b border-[#E7E5E4] bg-[#FDFCF8]/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+          <a
+            href="/"
+            className="font-serif text-xl font-semibold text-[#1A1A1A] hover:opacity-70 transition-opacity"
+          >
+            StudyWith
+          </a>
+          <a
+            href="/app"
+            className="rounded-full border border-[#E7E5E4] px-4 py-2 text-sm font-medium text-[#57534E] transition-all hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+          >
+            ← Dashboard
+          </a>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-6 py-10">
         <LearningReceipt sessionId={id} />
       </main>
     </div>
   );
 }
-
