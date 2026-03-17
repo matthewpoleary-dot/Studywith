@@ -42,10 +42,17 @@ export async function POST(request: Request) {
       metadata: { supabase_user_id: user.id },
     });
     customerId = customer.id;
+    // Upsert so this works even if the users row was never created by the trigger
     await getSupabaseAdmin()
       .from("users")
-      .update({ stripe_customer_id: customerId })
-      .eq("id", user.id);
+      .upsert(
+        {
+          id: user.id,
+          email: userData?.email ?? user.email ?? "",
+          stripe_customer_id: customerId,
+        },
+        { onConflict: "id" },
+      );
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -68,7 +75,7 @@ export async function POST(request: Request) {
         quantity: 1,
       },
     ],
-    success_url: `${siteUrl}/app?payment=success`,
+    success_url: `${siteUrl}/payment-success`,
     cancel_url: `${siteUrl}/?payment=cancelled`,
     metadata: { supabase_user_id: user.id },
   });

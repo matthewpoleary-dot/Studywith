@@ -54,6 +54,16 @@ export async function proxy(request: NextRequest) {
     .eq("id", user.id)
     .single();
 
+  // Auto-create the users row if the DB trigger never fired
+  if (!userData) {
+    await adminClient
+      .from("users")
+      .upsert(
+        { id: user.id, email: user.email ?? "", subscribed: false },
+        { onConflict: "id" },
+      );
+  }
+
   if (!userData?.subscribed) {
     return NextResponse.redirect(
       new URL("/?checkout=required", request.url),

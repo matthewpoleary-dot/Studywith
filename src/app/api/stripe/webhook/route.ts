@@ -35,11 +35,16 @@ export async function POST(request: Request) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.supabase_user_id;
+      const customerEmail =
+        session.customer_details?.email ?? session.customer_email ?? "";
       if (userId) {
+        // Use upsert so this works even if the DB trigger never created the row
         await getSupabaseAdmin()
           .from("users")
-          .update({ subscribed: true })
-          .eq("id", userId);
+          .upsert(
+            { id: userId, email: customerEmail, subscribed: true },
+            { onConflict: "id" },
+          );
       }
       break;
     }

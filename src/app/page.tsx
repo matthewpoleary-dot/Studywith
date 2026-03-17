@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   MessageCircle,
   TrendingUp,
@@ -19,7 +20,27 @@ import {
   Link,
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
-import SubscribeBanner from "@/components/SubscribeBanner";
+
+// ─── Subscribe Banner (rendered inside the fixed nav) ─────────────────────────
+
+const SubscribeBannerBar = () => {
+  const searchParams = useSearchParams();
+  if (searchParams.get("checkout") !== "required") return null;
+  return (
+    <div className="bg-zinc-950 border-b border-zinc-800 px-6 py-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <p className="text-sm text-zinc-300">
+          <strong className="text-white">Account created.</strong>{" "}
+          Subscribe to unlock your tutor.
+        </p>
+        <CheckoutButton
+          label="Subscribe for €20/month"
+          className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+        />
+      </div>
+    </div>
+  );
+};
 
 // ─── FAQ Accordion ────────────────────────────────────────────────────────────
 
@@ -87,6 +108,11 @@ const Navigation = () => {
           : "bg-transparent"
       }`}
     >
+      {/* Subscribe banner lives inside the fixed nav so it never overlaps */}
+      <Suspense fallback={null}>
+        <SubscribeBannerBar />
+      </Suspense>
+
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <div className="flex items-center justify-between h-20">
           <a
@@ -164,7 +190,7 @@ const Hero = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <section className="pt-32 pb-20 md:pt-40 md:pb-32 px-6 md:px-12 lg:px-24">
+    <section className="pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-4xl">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
@@ -173,14 +199,14 @@ const Hero = () => {
           </h1>
 
           <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-2xl mb-10">
-            An AI tutor that guides you through any assignment using the
-            Socratic method. No instant answers — just thoughtful questions that
-            help you reach understanding yourself.
+            Stuck on an assignment? Your AI tutor won&apos;t give you the
+            answer. It&apos;ll ask the right questions until you get there
+            yourself.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <CheckoutButton
-              label="Start tutoring — €20/month"
+              label="Start tutoring for €20/month"
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <button
@@ -216,7 +242,7 @@ const HowItWorks = () => {
       icon: ClipboardList,
       title: "Paste your assignment",
       description:
-        "Share the problem you're working on — an essay prompt, maths question, or any exam topic.",
+        "Share the problem you're working on - an essay prompt, maths question, or any exam topic.",
     },
     {
       number: "02",
@@ -230,7 +256,7 @@ const HowItWorks = () => {
       icon: Target,
       title: "Reach the answer yourself",
       description:
-        "Through guided thinking, you arrive at the solution with genuine understanding — not just a copied answer.",
+        "Through guided thinking, you arrive at the solution with genuine understanding, not just a copied answer.",
     },
   ];
 
@@ -274,13 +300,13 @@ const HowItWorks = () => {
           <div className="flex items-center gap-2 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
             <div className="h-2 w-2 rounded-full bg-[#D97706]" />
             <p className="text-xs font-medium text-[#57534E]">
-              Example session — Biology assignment
+              Example session - Biology assignment
             </p>
           </div>
           <div className="space-y-4 p-5 text-sm">
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                In one sentence — what do you think this assignment is asking
+                In one sentence: what do you think this assignment is asking
                 you to do?
               </div>
             </div>
@@ -293,7 +319,7 @@ const HowItWorks = () => {
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
                 Good start. What molecule does the plant produce to store that
-                energy — and where does the carbon come from?
+                energy, and where does the carbon come from?
               </div>
             </div>
           </div>
@@ -311,13 +337,13 @@ const Features = () => {
       icon: MessageCircle,
       title: "Socratic Method",
       description:
-        "Guided questioning that builds real understanding. The tutor never gives you the answer — it helps you find it.",
+        "Guided questioning that builds real understanding. The tutor never gives you the answer. It helps you find it.",
     },
     {
       icon: BookOpen,
       title: "Learning Receipts",
       description:
-        "Every session ends with a scored breakdown — concepts you handled, gaps to review, and an honest score out of 100.",
+        "Every session ends with a scored breakdown - concepts you handled, gaps to review, and an honest score out of 100.",
     },
     {
       icon: TrendingUp,
@@ -452,10 +478,10 @@ const Pricing = () => {
   const features = [
     "Unlimited tutoring sessions",
     "Learning receipt after every session",
-    "Full session history & dashboard",
+    "Full session history and dashboard",
     "Shareable receipt links",
     "Any subject or assignment type",
-    "Cancel anytime — no contracts",
+    "Cancel anytime, no contracts",
   ];
 
   return (
@@ -534,7 +560,7 @@ const FAQ = () => {
     {
       question: "Does the AI just give away answers directly?",
       answer:
-        "No — that's exactly what we avoid. The AI will never simply hand over the answer. Instead, it guides you through the reasoning process with questions and hints. When you reach the answer, you'll genuinely understand how you got there.",
+        "No. That's exactly what we avoid. The AI will never simply hand over the answer. Instead, it guides you through the reasoning process with questions and hints. When you reach the answer, you'll genuinely understand how you got there.",
     },
     {
       question: "What subjects does StudyWith cover?",
@@ -544,7 +570,7 @@ const FAQ = () => {
     {
       question: "What is a Learning Receipt?",
       answer:
-        "At the end of each session, StudyWith generates a Learning Receipt — a scored breakdown of the session. It shows your score out of 100, the concepts you demonstrated understanding of, gaps to review, and a written summary. Each receipt has a unique shareable link.",
+        "At the end of each session, StudyWith generates a Learning Receipt, a scored breakdown of the session. It shows your score out of 100, the concepts you demonstrated understanding of, gaps to review, and a written summary. Each receipt has a unique shareable link.",
     },
     {
       question: "Can I cancel my subscription anytime?",
@@ -554,7 +580,7 @@ const FAQ = () => {
     {
       question: "How is this different from just asking ChatGPT?",
       answer:
-        "ChatGPT will just give you the answer. StudyWith is specifically designed to refuse that — it uses the Socratic method to guide your thinking. The goal is to make you better at reasoning through problems, not to complete your homework for you.",
+        "ChatGPT will just give you the answer. StudyWith is specifically designed to refuse that. It uses the Socratic method to guide your thinking. The goal is to make you better at reasoning through problems, not to complete your homework for you.",
     },
   ];
 
@@ -657,7 +683,7 @@ const Footer = () => {
 
         <div className="pt-8 border-t border-[#E7E5E4] flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-[#57534E]">
-            © {currentYear} StudyWith. All rights reserved.
+            {currentYear} StudyWith. All rights reserved.
           </p>
           <p className="text-sm text-[#57534E]">
             Made for students who want to actually learn.
@@ -673,9 +699,6 @@ const Footer = () => {
 export default function StudyWithLanding() {
   return (
     <div className="min-h-screen bg-[#FDFCF8]">
-      <Suspense>
-        <SubscribeBanner />
-      </Suspense>
       <Navigation />
       <main>
         <Hero />
