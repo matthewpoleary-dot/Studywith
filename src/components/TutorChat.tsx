@@ -138,10 +138,10 @@ export default function TutorChat({
           finalAssignment = data.text;
           setAssignment(data.text);
         } else {
-          setExtractError(data.error ?? "Couldn't read the image. Try again or type your assignment.");
+          setExtractError(data.error ?? "Couldn't read the file. Try again or type your assignment.");
         }
       } catch (err) {
-        setExtractError(err instanceof Error ? err.message : "Network error reading image. Try again.");
+        setExtractError(err instanceof Error ? err.message : "Network error reading file. Try again.");
       } finally {
         setIsExtracting(false);
       }
@@ -183,7 +183,9 @@ export default function TutorChat({
 
     const messageContent = pdfText
       ? `${inputText ? inputText + "\n\n" : ""}[Uploaded file contents:\n${pdfText}]`
-      : inputText || "📷 [image attached]";
+      : pendingMime === "application/pdf"
+        ? `${inputText ? inputText + "\n\n" : ""}📄 ${fileName || "PDF attached"}`
+        : inputText || "📷 [image attached]";
 
     const userMessage: TutorMessage = {
       id: crypto.randomUUID(),
@@ -257,6 +259,15 @@ export default function TutorChat({
       setIsEnding(false);
       alert("Could not end session. Please try again.");
     }
+  };
+
+  // Returns a clean display version of a message (hides raw PDF text dump)
+  const getDisplayContent = (content: string): string => {
+    const pdfTag = "[Uploaded file contents:";
+    const idx = content.indexOf(pdfTag);
+    if (idx === -1) return content;
+    const before = content.slice(0, idx).trim();
+    return before ? `${before}\n\n📄 PDF attached` : "📄 PDF attached";
   };
 
   // ── Before session starts: centered prompt ─────────────────────────────────
@@ -349,17 +360,17 @@ export default function TutorChat({
               disabled={!canStart || isExtracting}
               className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isExtracting ? "Reading image..." : "Start session"}
+              {isExtracting ? "Reading file..." : "Start session"}
             </button>
 
             {/* Image upload button */}
             <button
               onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center gap-2 rounded-full border border-[#E7E5E4] px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706] hover:text-[#D97706] transition"
-              title="Upload image of assignment"
+              title="Upload image or PDF of assignment"
             >
               <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
-              Upload image
+              Upload file
             </button>
           </div>
 
@@ -419,13 +430,13 @@ export default function TutorChat({
                 </div>
               )}
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                   m.role === "student"
                     ? "bg-[#1A1A1A] text-white rounded-br-sm"
                     : "bg-white border border-[#E7E5E4] text-[#1A1A1A] rounded-bl-sm shadow-sm"
                 }`}
               >
-                {m.content}
+                {getDisplayContent(m.content)}
               </div>
             </div>
           ))}
@@ -512,7 +523,7 @@ export default function TutorChat({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[#A8A29E] hover:text-[#D97706] transition"
-              title="Attach image"
+              title="Attach image or PDF"
             >
               <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
             </button>
