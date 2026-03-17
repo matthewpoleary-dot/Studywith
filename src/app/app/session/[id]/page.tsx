@@ -3,7 +3,8 @@ import { getSupabaseAdmin } from "@/lib/supabase-service";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import TutorChat from "@/components/TutorChat";
-import type { Database } from "@/lib/database.types";
+import CompletedSessionView from "@/components/CompletedSessionView";
+import type { Database, LearningReceipt } from "@/lib/database.types";
 import type { TutorMessage } from "@/components/TutorChat";
 
 export default async function SessionPage({
@@ -26,17 +27,29 @@ export default async function SessionPage({
   // Fetch the session
   const { data: session } = await getSupabaseAdmin()
     .from("sessions")
-    .select("id, user_id, assignment_text, messages, receipt")
+    .select("id, user_id, assignment_text, title, messages, receipt, created_at")
     .eq("id", id)
     .single();
 
   if (!session || session.user_id !== user.id) notFound();
 
-  // If session has a receipt, redirect to the receipt page
-  if (session.receipt) redirect(`/receipt/${id}`);
-
   const messages = (session.messages ?? []) as TutorMessage[];
 
+  // Completed session — show tabbed chat + receipt view
+  if (session.receipt) {
+    return (
+      <CompletedSessionView
+        sessionId={session.id}
+        assignment={session.assignment_text}
+        messages={messages}
+        receipt={session.receipt as unknown as LearningReceipt}
+        title={session.title}
+        createdAt={session.created_at}
+      />
+    );
+  }
+
+  // Active session — show the live chat
   return (
     <TutorChat
       initialAssignment={session.assignment_text}

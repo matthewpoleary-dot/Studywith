@@ -119,10 +119,7 @@ function SidebarContent({
             </p>
             <div className="space-y-0.5">
               {sessions.map((session) => {
-                const hasReceipt = session.receipt !== null;
-                const href = hasReceipt
-                  ? `/receipt/${session.id}`
-                  : `/app/session/${session.id}`;
+                const href = `/app/session/${session.id}`;
                 const isActive =
                   pathname === `/receipt/${session.id}` ||
                   pathname === `/app/session/${session.id}`;
