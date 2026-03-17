@@ -4,12 +4,14 @@ import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import CheckoutButton from "@/components/CheckoutButton";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [needsSubscription, setNeedsSubscription] = useState(false);
   const searchParams = useSearchParams();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -18,10 +20,7 @@ function LoginForm() {
     setError(null);
 
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
@@ -29,27 +28,55 @@ function LoginForm() {
       return;
     }
 
-    // Call check-subscription before navigating — this heals the DB if the
-    // webhook was slow or failed, so the proxy finds subscribed=true on arrival.
+    // Check subscription — heals DB via Stripe fallback if webhook was missed
     try {
       const res = await fetch("/api/check-subscription");
       const data = (await res.json()) as { subscribed: boolean };
 
       if (data.subscribed) {
-        // Full reload so the proxy reads fresh cookies & DB state (no router cache)
-        const redirectTo = searchParams.get("redirectTo") ?? "/app";
-        window.location.href = redirectTo;
+        // Full reload so the proxy reads fresh cookies & DB state
+        window.location.href = searchParams.get("redirectTo") ?? "/app";
       } else {
-        // Not subscribed yet — send to the polling page which retries up to
-        // 15 times. It runs the Stripe email fallback on each attempt, so even
-        // old accounts whose stripe_customer_id was never saved will heal.
-        window.location.href = "/payment-success";
+        // Show subscribe UI inline — no confusing redirect or spinner
+        setNeedsSubscription(true);
+        setLoading(false);
       }
     } catch {
-      // Network error — full reload to /app and let the proxy decide
+      // Network error — go to /app and let the proxy decide
       window.location.href = searchParams.get("redirectTo") ?? "/app";
     }
   };
+
+  // Shown after sign-in when no active subscription is found
+  if (needsSubscription) {
+    return (
+      <div className="flex flex-col gap-5 text-center">
+        <div>
+          <p className="text-sm font-medium text-[#1A1A1A] mb-1">
+            No active subscription
+          </p>
+          <p className="text-xs text-[#57534E] leading-relaxed">
+            You&apos;re signed in as <span className="font-medium">{email}</span> but
+            we couldn&apos;t find an active subscription on this account.
+          </p>
+        </div>
+        <CheckoutButton
+          label="Subscribe for €20/month"
+          className="inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#1A1A1A]/80 disabled:cursor-not-allowed disabled:opacity-60"
+        />
+        <button
+          onClick={() => {
+            setNeedsSubscription(false);
+            setEmail("");
+            setPassword("");
+          }}
+          className="text-xs text-[#57534E] hover:text-[#1A1A1A] transition"
+        >
+          Use a different account
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={(e) => void handleLogin(e)} className="flex flex-col gap-4">
@@ -99,7 +126,7 @@ function LoginForm() {
         disabled={loading}
         className="mt-1 inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#1A1A1A]/80 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Signing in..." : "Sign in"}
+        {loading ? "Signing in…" : "Sign in"}
       </button>
 
       <p className="text-center text-xs text-[#57534E]">
