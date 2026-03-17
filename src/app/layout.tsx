@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "StudyWith — AI Tutor",
+  title: "StudyWith",
   description:
     "An AI tutor that guides you through assignments using the Socratic method. No instant answers — just guided thinking.",
 };
