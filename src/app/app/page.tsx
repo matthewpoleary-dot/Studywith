@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
+import Link from "next/link";
 import type { Database, LearningReceipt } from "@/lib/database.types";
 
-export default async function DashboardPage() {
+export default async function AppDashboard() {
   const cookieStore = await cookies();
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,139 +41,129 @@ export default async function DashboardPage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      {/* Page header */}
-      <div className="mb-10 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Welcome back,{" "}
-            <span className="text-zinc-400">{user?.email}</span>
-          </p>
-        </div>
-        <Link
-          href="/app/new"
-          className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-black transition hover:bg-emerald-400"
-        >
-          + New session
-        </Link>
+    <div className="max-w-2xl mx-auto px-6 md:px-10 py-12 md:py-16">
+      {/* Greeting */}
+      <div className="mb-10">
+        <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-2">
+          What would you like to work on?
+        </h1>
+        <p className="text-[#57534E]">
+          Start a new session or pick up where you left off.
+        </p>
       </div>
 
-      {/* Stats row */}
-      <div className="mb-10 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-          <p className="text-xs font-medium text-zinc-500">Total sessions</p>
-          <p className="mt-2 text-4xl font-semibold">{allSessions.length}</p>
-        </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-          <p className="text-xs font-medium text-zinc-500">Completed</p>
-          <p className="mt-2 text-4xl font-semibold">{completedSessions.length}</p>
-        </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-          <p className="text-xs font-medium text-zinc-500">Average score</p>
-          <p
-            className={`mt-2 text-4xl font-semibold ${
-              avgScore === null
-                ? "text-zinc-600"
-                : avgScore >= 75
-                  ? "text-emerald-400"
-                  : avgScore >= 50
-                    ? "text-yellow-400"
-                    : "text-red-400"
-            }`}
-          >
-            {avgScore !== null ? `${avgScore}` : "—"}
-            {avgScore !== null && (
-              <span className="text-lg text-zinc-600">/100</span>
-            )}
-          </p>
-        </div>
-      </div>
+      {/* New session CTA */}
+      <Link
+        href="/app/new"
+        className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-full px-7 py-3.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.02] mb-12"
+      >
+        <span className="text-lg leading-none">+</span>
+        New session
+      </Link>
 
-      {/* Session history */}
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="font-medium tracking-tight">Session history</h2>
-        <span className="text-xs text-zinc-600">{allSessions.length} total</span>
-      </div>
-
-      {allSessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 px-6 py-20 text-center">
-          <div className="mb-3 text-3xl">📚</div>
-          <p className="font-medium text-zinc-300">No sessions yet</p>
-          <p className="mt-1 text-sm text-zinc-600">
-            Start your first session to see your progress here.
-          </p>
-          <Link
-            href="/app/new"
-            className="mt-6 rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-medium text-black transition hover:bg-emerald-400"
-          >
-            Start your first session
-          </Link>
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {allSessions.map((s) => {
-            const receipt = s.receipt as unknown as LearningReceipt | null;
-            const score = receipt?.score ?? null;
-            const scoreColor =
-              score === null
-                ? "text-zinc-600"
-                : score >= 75
-                  ? "text-emerald-400"
-                  : score >= 50
-                    ? "text-yellow-400"
-                    : "text-red-400";
-            const date = new Date(s.created_at).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            });
-
-            return (
-              <div
-                key={s.id}
-                className="group flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-zinc-700"
+      {/* Stats — only shown when there are sessions */}
+      {allSessions.length > 0 && (
+        <>
+          <div className="grid grid-cols-3 gap-4 mb-10">
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+              <p className="text-xs font-medium text-[#57534E] mb-2">
+                Total sessions
+              </p>
+              <p className="text-3xl font-serif font-medium text-[#1A1A1A]">
+                {allSessions.length}
+              </p>
+            </div>
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+              <p className="text-xs font-medium text-[#57534E] mb-2">
+                Completed
+              </p>
+              <p className="text-3xl font-serif font-medium text-[#1A1A1A]">
+                {completedSessions.length}
+              </p>
+            </div>
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+              <p className="text-xs font-medium text-[#57534E] mb-2">
+                Avg score
+              </p>
+              <p
+                className={`text-3xl font-serif font-medium ${
+                  avgScore === null
+                    ? "text-[#A8A29E]"
+                    : avgScore >= 75
+                      ? "text-emerald-600"
+                      : avgScore >= 50
+                        ? "text-amber-600"
+                        : "text-red-500"
+                }`}
               >
-                {/* Assignment preview + score */}
-                <div className="flex items-start justify-between gap-3">
-                  <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-zinc-300">
-                    {s.assignment_text || "No assignment text"}
-                  </p>
-                  {score !== null && (
-                    <div className={`shrink-0 text-2xl font-semibold ${scoreColor}`}>
-                      {score}
-                      <span className="text-xs text-zinc-600">/100</span>
-                    </div>
-                  )}
-                  {score === null && (
-                    <span className="shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-xs text-zinc-500">
-                      In progress
-                    </span>
-                  )}
-                </div>
+                {avgScore !== null ? `${avgScore}` : "--"}
+                {avgScore !== null && (
+                  <span className="text-base text-[#A8A29E]">/100</span>
+                )}
+              </p>
+            </div>
+          </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-600">{date}</span>
-                  {receipt ? (
+          {/* Recent completed sessions */}
+          {completedSessions.length > 0 && (
+            <div>
+              <h2 className="font-medium text-[#1A1A1A] mb-4">
+                Recent receipts
+              </h2>
+              <div className="space-y-3">
+                {completedSessions.slice(0, 5).map((s) => {
+                  const receipt = s.receipt as unknown as LearningReceipt;
+                  const score = receipt?.score ?? null;
+                  const date = new Date(s.created_at).toLocaleDateString(
+                    "en-GB",
+                    { day: "numeric", month: "short", year: "numeric" },
+                  );
+                  return (
                     <Link
+                      key={s.id}
                       href={`/receipt/${s.id}`}
-                      className="text-xs text-emerald-400 transition hover:text-emerald-300"
+                      className="flex items-center justify-between gap-4 bg-white border border-[#E7E5E4] rounded-xl px-5 py-4 hover:border-[#D97706]/40 hover:shadow-sm transition-all group"
                     >
-                      View receipt →
+                      <p className="text-sm text-[#1A1A1A] truncate flex-1 leading-relaxed">
+                        {s.assignment_text || "Session"}
+                      </p>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {score !== null && (
+                          <span
+                            className={`text-sm font-medium ${
+                              score >= 75
+                                ? "text-emerald-600"
+                                : score >= 50
+                                  ? "text-amber-600"
+                                  : "text-red-500"
+                            }`}
+                          >
+                            {score}/100
+                          </span>
+                        )}
+                        <span className="text-xs text-[#A8A29E]">{date}</span>
+                        <span className="text-xs text-[#D97706] opacity-0 group-hover:opacity-100 transition-opacity">
+                          View receipt
+                        </span>
+                      </div>
                     </Link>
-                  ) : (
-                    <Link
-                      href="/app/new"
-                      className="text-xs text-zinc-600 transition hover:text-zinc-400"
-                    >
-                      Resume →
-                    </Link>
-                  )}
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Empty state */}
+      {allSessions.length === 0 && (
+        <div className="border border-dashed border-[#E7E5E4] rounded-2xl px-6 py-16 text-center">
+          <p className="font-serif text-lg text-[#1A1A1A] mb-2">
+            No sessions yet
+          </p>
+          <p className="text-sm text-[#57534E]">
+            Paste any assignment above to get started.
+          </p>
         </div>
       )}
     </div>

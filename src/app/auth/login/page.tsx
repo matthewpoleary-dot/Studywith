@@ -30,8 +30,23 @@ function LoginForm() {
       return;
     }
 
-    const redirectTo = searchParams.get("redirectTo") ?? "/app";
-    router.push(redirectTo);
+    // Call check-subscription before navigating — this heals the DB if the
+    // webhook was slow or failed, so the proxy finds subscribed=true on arrival.
+    try {
+      const res = await fetch("/api/check-subscription");
+      const data = (await res.json()) as { subscribed: boolean };
+
+      if (data.subscribed) {
+        const redirectTo = searchParams.get("redirectTo") ?? "/app";
+        router.push(redirectTo);
+      } else {
+        router.push("/?checkout=required");
+      }
+    } catch {
+      // Network error — fall back to /app and let the proxy decide
+      router.push(searchParams.get("redirectTo") ?? "/app");
+    }
+
     router.refresh();
   };
 

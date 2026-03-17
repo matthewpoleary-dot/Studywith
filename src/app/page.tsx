@@ -134,16 +134,16 @@ const Navigation = () => {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <a
               href="/auth/login"
-              className="text-sm text-[#57534E] hover:text-[#1A1A1A] transition-colors font-medium"
+              className="rounded-full border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all"
             >
               Sign in
             </a>
             <CheckoutButton
-              label="Get started"
-              className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-6 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+              label="Sign up"
+              className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
           </div>
 
@@ -171,9 +171,15 @@ const Navigation = () => {
                   {id.replace("-", " ")}
                 </button>
               ))}
+              <a
+                href="/auth/login"
+                className="rounded-full border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+              >
+                Sign in
+              </a>
               <CheckoutButton
-                label="Get started"
-                className="bg-[#1A1A1A] text-white rounded-full px-6 py-3 text-sm font-medium mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                label="Sign up"
+                className="bg-[#1A1A1A] text-white rounded-full px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -242,7 +248,7 @@ const HowItWorks = () => {
       icon: ClipboardList,
       title: "Paste your assignment",
       description:
-        "Share the problem you're working on - an essay prompt, maths question, or any exam topic.",
+        "Share the problem you're working on: an essay prompt, maths question, or any exam topic.",
     },
     {
       number: "02",
@@ -343,7 +349,7 @@ const Features = () => {
       icon: BookOpen,
       title: "Learning Receipts",
       description:
-        "Every session ends with a scored breakdown - concepts you handled, gaps to review, and an honest score out of 100.",
+        "Every session ends with a scored breakdown: concepts you handled, gaps to review, and an honest score out of 100.",
     },
     {
       icon: TrendingUp,
@@ -555,7 +561,7 @@ const FAQ = () => {
     {
       question: "What is the Socratic method?",
       answer:
-        "The Socratic method is a teaching technique developed by the ancient Greek philosopher Socrates. Instead of lecturing or giving direct answers, a teacher asks a series of probing questions that lead the student to reason their way to understanding. The idea is that genuine understanding can't be handed to you — it has to be reached through your own thinking. Socrates believed that asking the right questions was more powerful than providing the right answers, because it builds reasoning skills that last. That's exactly the philosophy behind StudyWith.",
+        "The Socratic method is a teaching technique developed by the ancient Greek philosopher Socrates. Instead of lecturing or giving direct answers, a teacher asks a series of probing questions that lead the student to reason their way to understanding. The idea is that genuine understanding can't be handed to you. It has to be reached through your own thinking. Socrates believed that asking the right questions was more powerful than providing the right answers, because it builds reasoning skills that last. That's exactly the philosophy behind StudyWith.",
     },
     {
       question: "How does the Socratic tutoring method work?",
