@@ -21,6 +21,7 @@ import {
   Link,
   Star,
   XCircle,
+  ArrowRight,
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 
@@ -221,12 +222,12 @@ const Hero = () => {
 
           <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-2xl mb-10">
             Your AI tutor asks questions instead of giving answers. Paste any
-            assignment and work through it — until you genuinely understand it.
+            assignment and work through it until you genuinely understand it.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-8">
             <CheckoutButton
-              label="Get started — €20/month"
+              label="Get started"
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <button
@@ -249,19 +250,6 @@ const Hero = () => {
           </p>
         </div>
 
-        {/* Stats bar */}
-        <div className="mt-16 flex flex-col sm:flex-row gap-8 sm:gap-16">
-          {[
-            { value: "12", label: "subjects covered" },
-            { value: "100%", label: "Socratic — no direct answers" },
-            { value: "€20", label: "per month, cancel anytime" },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <p className="font-serif text-3xl font-medium text-[#1A1A1A]">{stat.value}</p>
-              <p className="text-sm text-[#57534E] mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -331,10 +319,11 @@ const HowItWorks = () => {
 
         {/* Chat preview */}
         <div className="mt-20 max-w-2xl mx-auto overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
-          <div className="flex items-center gap-2 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
+          <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
             <div className="h-2 w-2 rounded-full bg-[#D97706]" />
-            <p className="text-xs font-medium text-[#57534E]">
-              Example session - Biology assignment
+            <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">Science</span>
+            <p className="text-xs text-[#57534E]">
+              Explain how photosynthesis converts light energy into glucose
             </p>
           </div>
           <div className="space-y-4 p-5 text-sm">
@@ -444,97 +433,68 @@ const Features = () => {
           ))}
         </div>
 
-        {/* Learning Receipt mini preview */}
-        <div className="mt-16 max-w-lg mx-auto bg-[#F5F4F0] rounded-2xl border border-[#E7E5E4] p-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#D97706] mb-4">
-            Sample Learning Receipt
-          </p>
-          <div className="flex items-center justify-between mb-4">
-            <p className="font-serif text-lg font-medium text-[#1A1A1A]">Biology — Photosynthesis</p>
-            <div className="flex items-baseline gap-1">
-              <span className="font-serif text-3xl font-medium text-[#1A1A1A]">82</span>
-              <span className="text-sm text-[#A8A29E]">/100</span>
+        {/* Learning Receipt preview */}
+        <div className="mt-16 max-w-lg mx-auto bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-sm">
+          {/* Receipt header */}
+          <div className="bg-[#F5F4F0] border-b border-[#E7E5E4] px-6 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-0.5">Learning Receipt</p>
+              <p className="font-serif text-base font-medium text-[#1A1A1A]">Biology: Photosynthesis</p>
+            </div>
+            <div className="text-right">
+              <div className="flex items-baseline gap-0.5 justify-end">
+                <span className="font-serif text-3xl font-medium text-amber-600">72</span>
+                <span className="text-sm text-[#A8A29E]">/100</span>
+              </div>
+              <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 rounded-md px-2 py-0.5 mt-1 inline-block">Developing</span>
             </div>
           </div>
-          <div className="space-y-2 mb-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#57534E] mb-1">Concepts covered</p>
-            {["Light-dependent reactions", "Carbon fixation (Calvin cycle)", "ATP production"].map((c) => (
-              <div key={c} className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={2.5} />
-                <span className="text-sm text-[#1A1A1A]">{c}</span>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#57534E] mb-1">Gaps to review</p>
-            {["Role of NADPH in the Calvin cycle"].map((g) => (
-              <div key={g} className="flex items-center gap-2">
-                <div className="w-3.5 h-3.5 rounded-full border-2 border-[#A8A29E] shrink-0" />
-                <span className="text-sm text-[#57534E]">{g}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
-
-const Testimonials = () => {
-  const quotes = [
-    {
-      text: "I used to just paste my essay prompts into ChatGPT. StudyWith actually made me think — I finished my coursework understanding every argument I made.",
-      name: "Aoife R.",
-      detail: "A-Level History student",
-    },
-    {
-      text: "Maths used to terrify me before exams. Now I work through past papers with the tutor and I finally understand why the steps work, not just what they are.",
-      name: "James T.",
-      detail: "Leaving Cert student",
-    },
-    {
-      text: "The Learning Receipt is genuinely useful. I can see exactly where my gaps are and go back to review. My tutor was impressed when I showed her.",
-      name: "Priya M.",
-      detail: "First-year university student",
-    },
-  ];
-
-  return (
-    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            Student stories
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
-            What students are saying
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-          {quotes.map((q, i) => (
-            <div key={i} className="bg-white border border-[#E7E5E4] rounded-xl p-8 flex flex-col">
-              <div className="flex items-center gap-0.5 mb-4">
-                {[...Array(5)].map((_, j) => (
-                  <Star key={j} className="w-4 h-4 fill-[#D97706] text-[#D97706]" />
+          <div className="px-6 py-5 space-y-5">
+            {/* Concepts covered */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">Concepts covered</p>
+              <div className="space-y-1.5">
+                {["Energy conversion in chloroplasts", "The role of chlorophyll", "Glucose as stored energy"].map((c) => (
+                  <div key={c} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={2.5} />
+                    <span className="text-sm text-[#1A1A1A]">{c}</span>
+                  </div>
                 ))}
               </div>
-              <p className="text-[#1A1A1A] leading-relaxed flex-1 mb-6">
-                &ldquo;{q.text}&rdquo;
-              </p>
-              <div>
-                <p className="font-medium text-[#1A1A1A] text-sm">{q.name}</p>
-                <p className="text-xs text-[#A8A29E] mt-0.5">{q.detail}</p>
+            </div>
+
+            {/* Gaps to review — highlighted as USP */}
+            <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700 mb-2">Gaps to review</p>
+              <div className="space-y-2.5">
+                {[
+                  "Light-dependent vs light-independent reactions",
+                  "The specific role of NADPH and ATP",
+                ].map((g) => (
+                  <div key={g} className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[#A8A29E] mt-0.5 shrink-0 text-xs">→</span>
+                      <span className="text-sm text-[#57534E]">{g}</span>
+                    </div>
+                    <span className="text-[11px] font-medium text-[#D97706] shrink-0 flex items-center gap-0.5 hover:underline cursor-pointer whitespace-nowrap">
+                      Review this <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+
+            <p className="text-xs text-[#A8A29E] italic">
+              Click &ldquo;Review this&rdquo; on any gap to start a new session focused on that topic.
+            </p>
+          </div>
         </div>
       </div>
     </section>
   );
 };
+
 
 // ─── Comparison ───────────────────────────────────────────────────────────────
 
@@ -936,7 +896,6 @@ export default function StudyWithLanding() {
         <Hero />
         <HowItWorks />
         <Features />
-        <Testimonials />
         <Comparison />
         <UseCases />
         <Pricing />
@@ -944,27 +903,14 @@ export default function StudyWithLanding() {
         {/* Closing CTA */}
         <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
           <div className="max-w-3xl mx-auto text-center">
-            {/* Quote above CTA */}
-            <div className="mb-10 bg-[#F5F4F0] rounded-2xl px-8 py-6 border border-[#E7E5E4]">
-              <div className="flex items-center gap-0.5 justify-center mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-[#D97706] text-[#D97706]" />
-                ))}
-              </div>
-              <p className="text-[#1A1A1A] leading-relaxed italic font-serif text-lg mb-3">
-                &ldquo;I actually understand my coursework now instead of just copying answers. It&apos;s like having a patient tutor at 2am.&rdquo;
-              </p>
-              <p className="text-sm text-[#A8A29E]">GCSE student</p>
-            </div>
-
             <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
               Ready to actually understand your work?
             </h2>
             <p className="text-lg text-[#57534E] mb-10">
-              Cancel anytime. No contracts. Just real learning.
+              Join students who learn by thinking, not copying.
             </p>
             <CheckoutButton
-              label="Get started — €20/month"
+              label="Get started"
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
           </div>
