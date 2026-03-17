@@ -31,14 +31,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    // PDF: extract text with pdf-parse v2
+    // PDF: extract text with pdf-parse v1
     if (mimeType === "application/pdf") {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PDFParse } = require("pdf-parse") as { PDFParse: new (opts: { data: Uint8Array }) => { getText: () => Promise<{ text: string }> } };
+      const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
       const buffer = Buffer.from(imageBase64, "base64");
-      const parser = new PDFParse({ data: new Uint8Array(buffer) });
-      const result = await parser.getText();
-      const text = result.text.trim();
+      const data = await pdfParse(buffer);
+      const text = data.text.trim();
       if (!text) return Response.json({ error: "No text found in PDF — it may be a scanned image. Try uploading a photo of the page instead." }, { status: 422 });
       return Response.json({ text });
     }
