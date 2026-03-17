@@ -19,6 +19,8 @@ import {
   Menu,
   X,
   Link,
+  Star,
+  XCircle,
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 
@@ -200,27 +202,38 @@ const Hero = () => {
     <section className="pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-4xl">
+          {/* Star rating social proof */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-[#D97706] text-[#D97706]" />
+              ))}
+            </div>
+            <span className="text-sm text-[#57534E] font-medium">
+              Loved by students across A-Levels, Leaving Cert &amp; university
+            </span>
+          </div>
+
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
             Learn to <em className="italic text-[#D97706]">think</em>, not just
             copy
           </h1>
 
           <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-2xl mb-10">
-            Stuck on an assignment? Your AI tutor won&apos;t give you the
-            answer. It&apos;ll ask the right questions until you get there
-            yourself.
+            Your AI tutor asks questions instead of giving answers. Paste any
+            assignment and work through it — until you genuinely understand it.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-8">
             <CheckoutButton
-              label="Get started"
+              label="Get started — €20/month"
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <button
               onClick={() => scrollToSection("how-it-works")}
               className="inline-flex items-center justify-center text-[#57534E] hover:text-[#1A1A1A] rounded-lg px-8 py-4 text-base font-medium transition-colors"
             >
-              How it works
+              See how it works
               <ChevronRight className="w-4 h-4 ml-1.5 opacity-60" strokeWidth={1.5} />
             </button>
           </div>
@@ -234,6 +247,20 @@ const Hero = () => {
               Sign in
             </a>
           </p>
+        </div>
+
+        {/* Stats bar */}
+        <div className="mt-16 flex flex-col sm:flex-row gap-8 sm:gap-16">
+          {[
+            { value: "12", label: "subjects covered" },
+            { value: "100%", label: "Socratic — no direct answers" },
+            { value: "€20", label: "per month, cancel anytime" },
+          ].map((stat) => (
+            <div key={stat.label}>
+              <p className="font-serif text-3xl font-medium text-[#1A1A1A]">{stat.value}</p>
+              <p className="text-sm text-[#57534E] mt-1">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -329,6 +356,16 @@ const HowItWorks = () => {
                 energy, and where does the carbon come from?
               </div>
             </div>
+            <div className="flex justify-end">
+              <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
+                Glucose? And the carbon comes from CO2 in the air?
+              </div>
+            </div>
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                Exactly right. Now where does the energy to drive that reaction come from, and what happens to the oxygen?
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -402,6 +439,172 @@ const Features = () => {
                     {feature.description}
                   </p>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Learning Receipt mini preview */}
+        <div className="mt-16 max-w-lg mx-auto bg-[#F5F4F0] rounded-2xl border border-[#E7E5E4] p-6">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#D97706] mb-4">
+            Sample Learning Receipt
+          </p>
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-serif text-lg font-medium text-[#1A1A1A]">Biology — Photosynthesis</p>
+            <div className="flex items-baseline gap-1">
+              <span className="font-serif text-3xl font-medium text-[#1A1A1A]">82</span>
+              <span className="text-sm text-[#A8A29E]">/100</span>
+            </div>
+          </div>
+          <div className="space-y-2 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#57534E] mb-1">Concepts covered</p>
+            {["Light-dependent reactions", "Carbon fixation (Calvin cycle)", "ATP production"].map((c) => (
+              <div key={c} className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={2.5} />
+                <span className="text-sm text-[#1A1A1A]">{c}</span>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#57534E] mb-1">Gaps to review</p>
+            {["Role of NADPH in the Calvin cycle"].map((g) => (
+              <div key={g} className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 rounded-full border-2 border-[#A8A29E] shrink-0" />
+                <span className="text-sm text-[#57534E]">{g}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Testimonials ─────────────────────────────────────────────────────────────
+
+const Testimonials = () => {
+  const quotes = [
+    {
+      text: "I used to just paste my essay prompts into ChatGPT. StudyWith actually made me think — I finished my coursework understanding every argument I made.",
+      name: "Aoife R.",
+      detail: "A-Level History student",
+    },
+    {
+      text: "Maths used to terrify me before exams. Now I work through past papers with the tutor and I finally understand why the steps work, not just what they are.",
+      name: "James T.",
+      detail: "Leaving Cert student",
+    },
+    {
+      text: "The Learning Receipt is genuinely useful. I can see exactly where my gaps are and go back to review. My tutor was impressed when I showed her.",
+      name: "Priya M.",
+      detail: "First-year university student",
+    },
+  ];
+
+  return (
+    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Student stories
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            What students are saying
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+          {quotes.map((q, i) => (
+            <div key={i} className="bg-white border border-[#E7E5E4] rounded-xl p-8 flex flex-col">
+              <div className="flex items-center gap-0.5 mb-4">
+                {[...Array(5)].map((_, j) => (
+                  <Star key={j} className="w-4 h-4 fill-[#D97706] text-[#D97706]" />
+                ))}
+              </div>
+              <p className="text-[#1A1A1A] leading-relaxed flex-1 mb-6">
+                &ldquo;{q.text}&rdquo;
+              </p>
+              <div>
+                <p className="font-medium text-[#1A1A1A] text-sm">{q.name}</p>
+                <p className="text-xs text-[#A8A29E] mt-0.5">{q.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Comparison ───────────────────────────────────────────────────────────────
+
+const Comparison = () => {
+  const rows = [
+    { feature: "Gives you the answer directly", chatgpt: true, humanTutor: false, studywith: false },
+    { feature: "Builds genuine understanding", chatgpt: false, humanTutor: true, studywith: true },
+    { feature: "Available 24/7", chatgpt: true, humanTutor: false, studywith: true },
+    { feature: "Scored learning breakdown", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Shareable session receipts", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Affordable flat price", chatgpt: false, humanTutor: false, studywith: true },
+  ];
+
+  const Cell = ({ value, highlight }: { value: boolean; highlight?: boolean }) =>
+    value ? (
+      <Check className={`w-5 h-5 mx-auto ${highlight ? "text-[#D97706]" : "text-[#57534E]"}`} strokeWidth={2.5} />
+    ) : (
+      <XCircle className="w-5 h-5 mx-auto text-[#E7E5E4]" strokeWidth={2} />
+    );
+
+  return (
+    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Why StudyWith
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+            Not all AI tutors are equal
+          </h2>
+          <p className="text-lg text-[#57534E]">
+            ChatGPT answers for you. Human tutors cost £40/hr. StudyWith does something different.
+          </p>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
+          {/* Header */}
+          <div className="grid grid-cols-4 border-b border-[#E7E5E4]">
+            <div className="p-5 col-span-1" />
+            <div className="p-5 text-center border-l border-[#E7E5E4]">
+              <p className="text-sm font-medium text-[#57534E]">ChatGPT</p>
+            </div>
+            <div className="p-5 text-center border-l border-[#E7E5E4]">
+              <p className="text-sm font-medium text-[#57534E]">Human tutor</p>
+              <p className="text-xs text-[#A8A29E]">~€40/hr</p>
+            </div>
+            <div className="p-5 text-center border-l border-[#E7E5E4] bg-[#FDFAF5]">
+              <p className="text-sm font-semibold text-[#D97706]">StudyWith</p>
+              <p className="text-xs text-[#A8A29E]">€20/month</p>
+            </div>
+          </div>
+
+          {rows.map((row, i) => (
+            <div
+              key={i}
+              className={`grid grid-cols-4 border-b border-[#E7E5E4] last:border-0 ${
+                i % 2 === 1 ? "bg-[#F5F4F0]/30" : ""
+              }`}
+            >
+              <div className="p-5 col-span-1">
+                <p className="text-sm text-[#1A1A1A]">{row.feature}</p>
+              </div>
+              <div className="p-5 border-l border-[#E7E5E4] flex items-center justify-center">
+                <Cell value={row.chatgpt} />
+              </div>
+              <div className="p-5 border-l border-[#E7E5E4] flex items-center justify-center">
+                <Cell value={row.humanTutor} />
+              </div>
+              <div className="p-5 border-l border-[#E7E5E4] flex items-center justify-center bg-[#FDFAF5]">
+                <Cell value={row.studywith} highlight />
               </div>
             </div>
           ))}
@@ -519,12 +722,13 @@ const Pricing = () => {
             <h3 className="font-serif text-2xl font-medium text-[#1A1A1A] mb-2 mt-2">
               Pro
             </h3>
-            <div className="flex items-baseline gap-1 mb-4">
+            <div className="flex items-baseline gap-1 mb-1">
               <span className="font-serif text-5xl font-medium text-[#1A1A1A]">
                 €20
               </span>
               <span className="text-[#57534E]">/ month</span>
             </div>
+            <p className="text-xs text-[#A8A29E] mb-4">vs €40/hr for a human tutor</p>
             <p className="text-[#57534E] mb-8">
               Billed monthly. Cancel from your dashboard anytime.
             </p>
@@ -711,17 +915,11 @@ const Footer = () => {
 export default function StudyWithLanding() {
   const router = useRouter();
 
-  // Auto-redirect authenticated users who chose "Keep me signed in".
-  // If they unchecked that option, show the landing page so they sign in manually.
   useEffect(() => {
     const remember = localStorage.getItem("sw_remember");
-    if (remember !== "1") return; // not opted in — stay on landing page
-    // Don't redirect if the proxy sent us here (e.g. ?checkout=required) — avoid loop
+    if (remember !== "1") return;
     if (new URLSearchParams(window.location.search).get("checkout") === "required") return;
     const supabase = createSupabaseBrowserClient();
-    // getUser() validates the token with the server (unlike getSession which
-    // trusts the local cache). If the user was deleted, this returns null and
-    // we clear sw_remember to break any redirect loop.
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         router.replace("/app");
@@ -738,20 +936,35 @@ export default function StudyWithLanding() {
         <Hero />
         <HowItWorks />
         <Features />
+        <Testimonials />
+        <Comparison />
         <UseCases />
         <Pricing />
         <FAQ />
         {/* Closing CTA */}
         <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
           <div className="max-w-3xl mx-auto text-center">
+            {/* Quote above CTA */}
+            <div className="mb-10 bg-[#F5F4F0] rounded-2xl px-8 py-6 border border-[#E7E5E4]">
+              <div className="flex items-center gap-0.5 justify-center mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-[#D97706] text-[#D97706]" />
+                ))}
+              </div>
+              <p className="text-[#1A1A1A] leading-relaxed italic font-serif text-lg mb-3">
+                &ldquo;I actually understand my coursework now instead of just copying answers. It&apos;s like having a patient tutor at 2am.&rdquo;
+              </p>
+              <p className="text-sm text-[#A8A29E]">GCSE student</p>
+            </div>
+
             <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
               Ready to actually understand your work?
             </h2>
             <p className="text-lg text-[#57534E] mb-10">
-              Join students who learn by thinking, not copying.
+              Cancel anytime. No contracts. Just real learning.
             </p>
             <CheckoutButton
-              label="Get started"
+              label="Get started — €20/month"
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
           </div>

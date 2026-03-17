@@ -457,8 +457,32 @@ export default function TutorChat({
                 : "Paste your assignment, problem, or question here..."
             }
             rows={6}
-            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-4 shadow-sm"
+            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-3 shadow-sm"
           />
+
+          {/* Example prompts — shown when textarea is empty */}
+          {!assignment.trim() && !imageBase64 && (
+            <div className="mb-4">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-[#A8A29E] mb-2">Try an example</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Explain how photosynthesis converts light into energy",
+                  "Solve: 3x² + 5x − 2 = 0",
+                  "Help me structure a history essay on the causes of WW1",
+                  "What is the role of mitochondria in cellular respiration?",
+                ].map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => setAssignment(prompt)}
+                    className="rounded-lg border border-[#E7E5E4] bg-white px-3 py-1.5 text-xs text-[#57534E] hover:border-[#D97706]/50 hover:text-[#1A1A1A] transition-colors text-left"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Subject — auto-detected, click to override */}
           <div className="flex items-center gap-2 mb-5">

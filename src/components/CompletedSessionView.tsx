@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, FileText, ExternalLink } from "lucide-react";
+import { BookOpen, FileText, ExternalLink, Plus } from "lucide-react";
 import type { TutorMessage } from "./TutorChat";
 import type { LearningReceipt } from "@/lib/database.types";
 import CopyLinkButton from "./CopyLinkButton";
@@ -193,6 +193,25 @@ export default function CompletedSessionView({ sessionId, assignment, messages, 
                       <p className="text-sm leading-relaxed text-[#1A1A1A]">{receipt.summary}</p>
                     </section>
                   )}
+
+                  {/* Bottom CTA */}
+                  <section className="rounded-2xl border border-[#E7E5E4] bg-[#F5F4F0] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <p className="font-medium text-[#1A1A1A] text-sm">Ready to keep learning?</p>
+                      <p className="text-xs text-[#57534E] mt-0.5">
+                        {receipt.gaps.length > 0
+                          ? "You have gaps to review — or start something new."
+                          : "Great session. Start a new one to keep the momentum going."}
+                      </p>
+                    </div>
+                    <a
+                      href="/app/new"
+                      className="inline-flex items-center gap-2 shrink-0 rounded-lg bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.02]"
+                    >
+                      <Plus className="w-4 h-4" strokeWidth={2} />
+                      New session
+                    </a>
+                  </section>
                 </>
               ) : (
                 <div className="rounded-2xl border border-[#E7E5E4] bg-white p-8 text-center">
