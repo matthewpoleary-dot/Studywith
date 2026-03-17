@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       model: "llama-3.3-70b-versatile",
       max_tokens: 512,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: `${SYSTEM_PROMPT}\n\nThe student's assignment is:\n${body.assignment}` },
         ...chatMessages,
       ],
     });
