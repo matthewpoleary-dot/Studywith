@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function SignupPage() {
@@ -12,6 +13,22 @@ export default function SignupPage() {
   const [status, setStatus] = useState<"idle" | "creating" | "redirecting">(
     "idle",
   );
+  const router = useRouter();
+
+  // If already signed in and subscribed, skip straight to the app
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      try {
+        const res = await fetch("/api/check-subscription");
+        const data = (await res.json()) as { subscribed: boolean };
+        if (data.subscribed) router.replace("/app");
+      } catch {
+        // ignore — let them see the signup page
+      }
+    });
+  }, [router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +52,22 @@ export default function SignupPage() {
       return;
     }
 
-    // Account created — immediately redirect to Stripe checkout
+    // Check if this account is already subscribed (e.g. existing user who signed out)
     setStatus("redirecting");
+    try {
+      const subRes = await fetch("/api/check-subscription");
+      if (subRes.ok) {
+        const subData = (await subRes.json()) as { subscribed: boolean };
+        if (subData.subscribed) {
+          window.location.href = "/app";
+          return;
+        }
+      }
+    } catch {
+      // fall through to Stripe
+    }
+
+    // New account — redirect to Stripe checkout
     try {
       const res = await fetch("/api/stripe/create-checkout", { method: "POST" });
       const data = (await res.json()) as { url?: string; error?: string };
@@ -48,15 +79,14 @@ export default function SignupPage() {
       // fall through to fallback
     }
 
-    // Fallback: show subscription prompt on homepage
     window.location.href = "/?checkout=required";
   };
 
   const buttonLabel =
     status === "creating"
-      ? "Creating account..."
+      ? "Creating account…"
       : status === "redirecting"
-        ? "Redirecting to payment..."
+        ? "Redirecting…"
         : "Create account and subscribe";
 
   return (
@@ -89,7 +119,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
+                autoComplete="off"
                 placeholder="you@example.com"
                 className="rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
               />
