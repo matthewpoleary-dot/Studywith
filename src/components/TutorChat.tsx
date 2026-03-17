@@ -309,7 +309,7 @@ export default function TutorChat({
       });
       if (!res.ok) throw new Error("Failed");
       const data = (await res.json()) as { receiptId: string };
-      window.location.href = `/receipt/${data.receiptId}`;
+      window.location.href = `/app/session/${data.receiptId}`;
     } catch {
       setIsEnding(false);
       alert("Could not end session. Please try again.");
