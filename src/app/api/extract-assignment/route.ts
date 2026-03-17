@@ -25,10 +25,20 @@ export async function POST(request: Request) {
   };
 
   if (!imageBase64 || !mimeType) {
-    return Response.json({ error: "Missing image data" }, { status: 400 });
+    return Response.json({ error: "Missing file data" }, { status: 400 });
   }
 
   try {
+    // PDF: extract text with pdf-parse
+    if (mimeType === "application/pdf") {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+      const buffer = Buffer.from(imageBase64, "base64");
+      const data = await pdfParse(buffer) as { text: string };
+      return Response.json({ text: data.text.trim() });
+    }
+
+    // Image: use Groq vision model
     const groq = new OpenAI({
       apiKey: process.env.GROQ_API_KEY,
       baseURL: "https://api.groq.com/openai/v1",

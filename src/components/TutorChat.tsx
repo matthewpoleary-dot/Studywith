@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Send, ImagePlus, X } from "lucide-react";
+import { Send, ImagePlus, X, FileText } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -39,6 +39,7 @@ export default function TutorChat({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>("");
+  const [fileName, setFileName] = useState<string>("");
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -64,14 +65,37 @@ export default function TutorChat({
     if (isSessionStarted) textareaRef.current?.focus();
   }, [isSessionStarted]);
 
+  const clearFile = () => {
+    setImagePreview(null);
+    setImageBase64(null);
+    setImageMime("");
+    setFileName("");
+  };
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // PDF: read as base64 directly (no compression)
+    if (file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const [, data] = (reader.result as string).split(",");
+        setImagePreview(null);
+        setImageBase64(data);
+        setImageMime("application/pdf");
+        setFileName(file.name);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+      return;
+    }
+
+    // Image: compress to max 1024px
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        // Compress to max 1024px — keeps base64 well under Next.js 4MB body limit
         const MAX = 1024;
         let { width, height } = img;
         if (width > height) {
@@ -88,6 +112,7 @@ export default function TutorChat({
         setImagePreview(compressed);
         setImageBase64(data);
         setImageMime("image/jpeg");
+        setFileName(file.name);
       };
       img.src = reader.result as string;
     };
@@ -137,19 +162,38 @@ export default function TutorChat({
   const handleSend = async () => {
     if ((!input.trim() && !imageBase64) || !isSessionStarted || isLoading) return;
 
+    const pendingImage = imageBase64;
+    const pendingMime = imageMime;
+    const inputText = input.trim();
+
+    // For PDFs: extract text first, embed in message content
+    let pdfText: string | null = null;
+    if (pendingImage && pendingMime === "application/pdf") {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/extract-assignment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64: pendingImage, mimeType: pendingMime }),
+        });
+        const data = (await res.json()) as { text?: string };
+        pdfText = data.text ?? null;
+      } catch { /* include file name only */ }
+    }
+
+    const messageContent = pdfText
+      ? `${inputText ? inputText + "\n\n" : ""}[Uploaded file contents:\n${pdfText}]`
+      : inputText || "📷 [image attached]";
+
     const userMessage: TutorMessage = {
       id: crypto.randomUUID(),
       role: "student",
-      content: input.trim() || "📷 [image attached]",
+      content: messageContent,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    const pendingImage = imageBase64;
-    const pendingMime = imageMime;
-    setImagePreview(null);
-    setImageBase64(null);
-    setImageMime("");
+    clearFile();
     setIsLoading(true);
 
     try {
@@ -161,7 +205,8 @@ export default function TutorChat({
           subject,
           messages: [...messages, userMessage],
           sessionId,
-          ...(pendingImage && { imageBase64: pendingImage, imageMime: pendingMime }),
+          // Only send images to vision model; PDFs are already embedded as text above
+          ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
         }),
       });
 
@@ -223,7 +268,7 @@ export default function TutorChat({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.pdf"
           className="hidden"
           onChange={handleImageSelect}
         />
@@ -235,21 +280,20 @@ export default function TutorChat({
             Paste your assignment below, or upload a photo and we&apos;ll read it for you.
           </p>
 
-          {/* Image preview */}
-          {imagePreview && (
+          {/* File preview */}
+          {(imagePreview ?? (imageMime === "application/pdf" ? true : null)) && (
             <div className="relative mb-4 rounded-2xl overflow-hidden border border-[#E7E5E4] shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imagePreview}
-                alt="Assignment"
-                className="w-full max-h-56 object-cover"
-              />
+              {imageMime === "application/pdf" ? (
+                <div className="flex items-center gap-3 px-4 py-3 bg-white">
+                  <FileText className="w-8 h-8 shrink-0 text-[#D97706]" strokeWidth={1.5} />
+                  <span className="text-sm text-[#1A1A1A] truncate">{fileName}</span>
+                </div>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={imagePreview!} alt="Assignment" className="w-full max-h-56 object-cover" />
+              )}
               <button
-                onClick={() => {
-                  setImagePreview(null);
-                  setImageBase64(null);
-                  setImageMime("");
-                }}
+                onClick={clearFile}
                 className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
               >
                 <X className="w-3.5 h-3.5" />
@@ -410,7 +454,7 @@ export default function TutorChat({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.pdf"
         className="hidden"
         onChange={handleImageSelect}
       />
@@ -424,20 +468,23 @@ export default function TutorChat({
             void handleSend();
           }}
         >
-          {/* Image attachment preview */}
-          {imagePreview && (
+          {/* File attachment preview */}
+          {(imagePreview ?? (imageMime === "application/pdf" ? true : null)) && (
             <div className="mb-2 flex">
-              <div className="relative inline-block">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imagePreview}
-                  alt="attached"
-                  className="h-16 rounded-xl border border-[#E7E5E4] shadow-sm object-cover"
-                />
+              <div className="relative inline-flex items-center gap-2 bg-white border border-[#E7E5E4] rounded-xl px-3 py-2 shadow-sm">
+                {imageMime === "application/pdf" ? (
+                  <>
+                    <FileText className="w-5 h-5 shrink-0 text-[#D97706]" strokeWidth={1.5} />
+                    <span className="text-xs text-[#1A1A1A] max-w-[160px] truncate">{fileName}</span>
+                  </>
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={imagePreview!} alt="attached" className="h-12 rounded-lg object-cover" />
+                )}
                 <button
                   type="button"
-                  onClick={() => { setImagePreview(null); setImageBase64(null); setImageMime(""); }}
-                  className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-[#1A1A1A] text-white"
+                  onClick={clearFile}
+                  className="ml-1 p-0.5 rounded-full bg-[#1A1A1A] text-white shrink-0"
                 >
                   <X className="w-3 h-3" />
                 </button>
