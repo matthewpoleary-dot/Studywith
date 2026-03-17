@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Send } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -17,23 +18,33 @@ export default function TutorChat() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<TutorMessage[]>([]);
   const [isSessionStarted, setIsSessionStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
-  // Redirect to login if not authenticated
+  // Auth guard
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push("/auth/login?redirectTo=/app");
-      }
+      if (!session) router.push("/auth/login?redirectTo=/app");
     });
   }, [router]);
 
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
+  // Focus input when session starts
+  useEffect(() => {
+    if (isSessionStarted) textareaRef.current?.focus();
+  }, [isSessionStarted]);
+
   const handleStart = () => {
     if (!assignment.trim()) return;
-
     setIsSessionStarted(true);
     setMessages([
       {
@@ -46,7 +57,7 @@ export default function TutorChat() {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || !isSessionStarted) return;
+    if (!input.trim() || !isSessionStarted || isLoading) return;
 
     const userMessage: TutorMessage = {
       id: crypto.randomUUID(),
@@ -56,6 +67,7 @@ export default function TutorChat() {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/tutor", {
@@ -68,24 +80,14 @@ export default function TutorChat() {
         }),
       });
 
-      if (!response.ok) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: "tutor",
-            content: "Something went wrong. Try sending that again in a moment.",
-          },
-        ]);
-        return;
-      }
+      if (!response.ok) throw new Error("Failed");
 
-      const data = (await response.json()) as { content: string; sessionId: string | null };
+      const data = (await response.json()) as {
+        content: string;
+        sessionId: string | null;
+      };
 
-      // Capture session ID on first exchange
-      if (!sessionId && data.sessionId) {
-        setSessionId(data.sessionId);
-      }
+      if (!sessionId && data.sessionId) setSessionId(data.sessionId);
 
       setMessages((prev) => [
         ...prev,
@@ -95,8 +97,7 @@ export default function TutorChat() {
           content: data.content,
         },
       ]);
-    } catch (err) {
-      console.error("[handleSend] error:", err);
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -105,28 +106,21 @@ export default function TutorChat() {
           content: "Something went wrong. Try sending that again in a moment.",
         },
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleEndSession = async () => {
-    if (isEnding) return;
+    if (isEnding || !sessionId) return;
     setIsEnding(true);
-
     try {
       const res = await fetch("/api/end-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: sessionId!,
-          assignment,
-          messages,
-        }),
+        body: JSON.stringify({ sessionId, assignment, messages }),
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to end session");
-      }
-
+      if (!res.ok) throw new Error("Failed");
       const data = (await res.json()) as { receiptId: string };
       window.location.href = `/receipt/${data.receiptId}`;
     } catch {
@@ -135,97 +129,149 @@ export default function TutorChat() {
     }
   };
 
-  return (
-    <div className="flex h-[72vh] flex-col gap-4 md:h-[78vh]">
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
-        <section className="flex flex-col gap-3 rounded-2xl border border-zinc-900 bg-zinc-950/80 p-4">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Assignment
-          </h2>
+  // ── Before session starts: centered prompt ─────────────────────────────────
+  if (!isSessionStarted) {
+    return (
+      <div className="h-screen flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-xl">
+          <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
+            New tutoring session
+          </h1>
+          <p className="text-sm text-[#57534E] mb-6 leading-relaxed">
+            Paste your assignment below. Your tutor will guide you to the
+            answer step by step — without giving it away.
+          </p>
+
           <textarea
             value={assignment}
             onChange={(e) => setAssignment(e.target.value)}
-            disabled={isSessionStarted}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.metaKey) handleStart();
+            }}
             placeholder="Paste your assignment, problem, or question here..."
-            className="min-h-[140px] flex-1 resize-none rounded-xl border border-zinc-800 bg-black/40 p-3 text-sm text-zinc-100 outline-none ring-0 placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40"
+            rows={6}
+            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-4 shadow-sm"
           />
-          <button
-            type="button"
-            onClick={handleStart}
-            disabled={!assignment.trim() || isSessionStarted}
-            className="mt-1 inline-flex items-center justify-center rounded-full bg-emerald-500 px-4 py-2 text-xs font-medium text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
-          >
-            {isSessionStarted ? "Session started" : "Start tutoring session"}
-          </button>
-        </section>
 
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-900 bg-black/40">
-          <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm">
-            {messages.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-xs text-zinc-600">
-                Your tutor will appear here once you start a session.
-              </div>
-            ) : (
-              messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`flex ${
-                    m.role === "student" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed ${
-                      m.role === "student"
-                        ? "bg-emerald-500 text-black"
-                        : m.role === "tutor"
-                          ? "bg-zinc-900 text-zinc-100"
-                          : "bg-zinc-950 text-zinc-400"
-                    }`}
-                  >
-                    {m.content}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="border-t border-zinc-900 bg-black/60 p-3">
-            <form
-              className="flex items-end gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void handleSend();
-              }}
+          <button
+            onClick={handleStart}
+            disabled={!assignment.trim()}
+            className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Start session
+          </button>
+          <p className="text-xs text-[#A8A29E] mt-3">
+            Cmd+Enter to start
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Session active ─────────────────────────────────────────────────────────
+  return (
+    <div className="flex flex-col h-screen">
+      {/* Assignment strip */}
+      <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
+        <div className="max-w-2xl mx-auto flex items-center gap-4">
+          <p className="text-xs text-[#57534E] truncate flex-1 min-w-0">
+            <span className="font-semibold text-[#1A1A1A]">Assignment:</span>{" "}
+            {assignment}
+          </p>
+          <button
+            onClick={() => void handleEndSession()}
+            disabled={messages.length === 0 || isEnding || !sessionId}
+            className="shrink-0 rounded-full border border-[#E7E5E4] px-4 py-1.5 text-xs font-medium text-[#57534E] hover:border-red-300 hover:text-red-500 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {isEnding ? "Ending..." : "End session"}
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto py-8 px-6">
+        <div className="max-w-2xl mx-auto space-y-4">
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              className={`flex ${
+                m.role === "student" ? "justify-end" : "justify-start"
+              }`}
             >
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={!isSessionStarted}
-                placeholder={
-                  isSessionStarted
-                    ? "Write your next attempt or idea..."
-                    : "Start a session by adding an assignment first."
+              {m.role === "tutor" && (
+                <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center shrink-0 mt-0.5 mr-2.5">
+                  <span className="text-[9px] font-bold text-[#D97706]">T</span>
+                </div>
+              )}
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                  m.role === "student"
+                    ? "bg-[#1A1A1A] text-white rounded-br-sm"
+                    : "bg-white border border-[#E7E5E4] text-[#1A1A1A] rounded-bl-sm shadow-sm"
+                }`}
+              >
+                {m.content}
+              </div>
+            </div>
+          ))}
+
+          {/* Typing indicator */}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center shrink-0 mt-0.5 mr-2.5">
+                <span className="text-[9px] font-bold text-[#D97706]">T</span>
+              </div>
+              <div className="bg-white border border-[#E7E5E4] rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                <div className="flex gap-1.5 items-center h-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:300ms]" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Input bar */}
+      <div className="sticky bottom-0 bg-[#FDFCF8]/95 backdrop-blur-sm border-t border-[#E7E5E4] px-6 py-4">
+        <form
+          className="max-w-2xl mx-auto"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSend();
+          }}
+        >
+          <div className="flex items-end gap-3 bg-white border border-[#E7E5E4] rounded-2xl px-4 py-3 shadow-sm focus-within:border-[#D97706] focus-within:ring-1 focus-within:ring-[#D97706]/30 transition">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void handleSend();
                 }
-                rows={2}
-                className="max-h-24 flex-1 resize-none rounded-2xl border border-zinc-800 bg-black/60 p-2 text-xs text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40"
-              />
-              <button
-                type="submit"
-                disabled={!isSessionStarted || !input.trim()}
-                className="inline-flex h-9 items-center justify-center rounded-full bg-zinc-100 px-4 text-xs font-medium text-black transition hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
-              >
-                Send
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleEndSession()}
-                disabled={!isSessionStarted || messages.length === 0 || isEnding}
-                className="inline-flex h-9 items-center justify-center rounded-full border border-zinc-700 bg-transparent px-4 text-xs font-medium text-zinc-300 transition hover:border-red-500 hover:text-red-400 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
-              >
-                {isEnding ? "Ending..." : "End session"}
-              </button>
-            </form>
+              }}
+              placeholder="Write your response..."
+              rows={1}
+              className="flex-1 resize-none bg-transparent text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] max-h-32"
+              style={{ lineHeight: "1.5rem" }}
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className="h-8 w-8 shrink-0 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <Send className="w-3.5 h-3.5" strokeWidth={2} />
+            </button>
           </div>
-        </section>
+          <p className="text-center text-[11px] text-[#A8A29E] mt-2">
+            Enter to send · Shift+Enter for new line
+          </p>
+        </form>
       </div>
     </div>
   );
