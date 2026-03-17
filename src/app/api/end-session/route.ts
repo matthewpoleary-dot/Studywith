@@ -58,13 +58,15 @@ ${transcript}
 
 Return ONLY valid JSON — no markdown fences, no explanation — with exactly this shape:
 {
+  "title": "3-5 word topic title",
   "conceptsCovered": ["concept 1", "concept 2"],
   "gaps": ["gap 1", "gap 2"],
   "score": 75,
   "summary": "One paragraph summarising learning progress and what to review."
 }
 
-Score 0–100 based on how confidently the student handled the core ideas. Be honest and specific.`;
+Score 0–100 based on how confidently the student handled the core ideas. Be honest and specific.
+The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitochondria & ATP synthesis", "Basic addition facts").`;
 
   let receiptText = "{}";
   try {
@@ -79,9 +81,15 @@ Score 0–100 based on how confidently the student handled the core ideas. Be ho
   }
 
   let receipt: LearningReceipt;
+  let sessionTitle: string | null = null;
   try {
     const cleaned = receiptText.replace(/```(?:json)?\n?|\n?```/g, "").trim();
-    receipt = JSON.parse(cleaned) as LearningReceipt;
+    const parsed = JSON.parse(cleaned) as LearningReceipt & { title?: string };
+    sessionTitle = parsed.title ?? null;
+    // Strip title from receipt JSON before storing (it lives on the session row)
+    const { title: _t, ...receiptFields } = parsed;
+    void _t;
+    receipt = receiptFields as LearningReceipt;
   } catch {
     receipt = {
       conceptsCovered: [],
@@ -91,10 +99,14 @@ Score 0–100 based on how confidently the student handled the core ideas. Be ho
     };
   }
 
-  // Persist receipt and final messages to Supabase
+  // Persist receipt, title and final messages to Supabase
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (getSupabaseAdmin().from("sessions") as any)
-    .update({ receipt, messages: body.messages })
+    .update({
+      receipt,
+      messages: body.messages,
+      ...(sessionTitle ? { title: sessionTitle } : {}),
+    })
     .eq("id", body.sessionId)
     .eq("user_id", user.id);
 

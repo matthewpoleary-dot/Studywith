@@ -43,7 +43,7 @@ function SidebarContent({
     const current =
       localTitles[session.id] ??
       session.title ??
-      session.assignment_text.slice(0, 60);
+      session.assignment_text.slice(0, 40);
     setRenamingId(session.id);
     setRenameValue(current);
     setTimeout(() => renameInputRef.current?.select(), 0);
@@ -60,13 +60,19 @@ function SidebarContent({
     });
   };
 
-  const getDisplayName = (session: Session) => {
+  const getTitle = (session: Session) => {
     const raw =
       localTitles[session.id] ??
       session.title ??
       session.assignment_text;
-    return raw.length > 48 ? raw.slice(0, 48) + "..." : raw;
+    return raw.length > 40 ? raw.slice(0, 40) + "…" : raw;
   };
+
+  const getDate = (session: Session) =>
+    new Date(session.created_at).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
 
   return (
     <div className="flex flex-col h-full">
@@ -153,9 +159,14 @@ function SidebarContent({
                       <a
                         href={href}
                         onClick={onNav}
-                        className="flex-1 min-w-0 text-sm truncate leading-snug"
+                        className="flex-1 min-w-0 flex flex-col"
                       >
-                        {getDisplayName(session)}
+                        <span className="text-sm truncate leading-snug">
+                          {getTitle(session)}
+                        </span>
+                        <span className="text-[10px] text-[#A8A29E] mt-0.5">
+                          {getDate(session)}
+                        </span>
                       </a>
                     )}
 

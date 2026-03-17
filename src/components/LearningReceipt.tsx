@@ -1,14 +1,23 @@
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import type { LearningReceipt as ReceiptData } from "@/lib/database.types";
+import CopyLinkButton from "./CopyLinkButton";
 
 type LearningReceiptProps = {
   sessionId: string;
 };
 
+function scoreBand(score: number): { label: string; pillClass: string } {
+  if (score >= 90) return { label: "Excellent", pillClass: "bg-emerald-50 text-emerald-700 border border-emerald-200" };
+  if (score >= 80) return { label: "Strong understanding", pillClass: "bg-emerald-50 text-emerald-600 border border-emerald-100" };
+  if (score >= 60) return { label: "Developing", pillClass: "bg-amber-50 text-amber-700 border border-amber-200" };
+  if (score >= 40) return { label: "Needs work", pillClass: "bg-orange-50 text-orange-600 border border-orange-200" };
+  return { label: "Struggling", pillClass: "bg-red-50 text-red-600 border border-red-200" };
+}
+
 export default async function LearningReceipt({ sessionId }: LearningReceiptProps) {
   const { data: session, error } = await getSupabaseAdmin()
     .from("sessions")
-    .select("receipt, assignment_text, created_at")
+    .select("receipt, assignment_text, created_at, title")
     .eq("id", sessionId)
     .not("receipt", "is", null)
     .single();
@@ -50,6 +59,8 @@ export default async function LearningReceipt({ sessionId }: LearningReceiptProp
         ? "bg-amber-50 border-amber-100"
         : "bg-red-50 border-red-100";
 
+  const band = scoreBand(receipt.score);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -57,14 +68,19 @@ export default async function LearningReceipt({ sessionId }: LearningReceiptProp
         <p className="text-xs font-medium uppercase tracking-widest text-[#A8A29E] mb-2">
           Learning Receipt
         </p>
-        <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-2">
-          Session from{" "}
-          <span className="text-[#D97706]">{date}</span>
+        <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-1">
+          {session.title ? (
+            <>{session.title} — <span className="text-[#D97706]">{date}</span></>
+          ) : (
+            <>Session from <span className="text-[#D97706]">{date}</span></>
+          )}
         </h1>
-        <p className="text-sm text-[#57534E]">
-          This page is shareable. It never shows your exact answers — only what you
-          learned, where you struggled, and what to review.
-        </p>
+        <div className="flex items-center gap-3 mt-3 flex-wrap">
+          <p className="text-sm text-[#57534E]">
+            Shareable — never shows exact answers, only what you learned.
+          </p>
+          <CopyLinkButton />
+        </div>
       </div>
 
       {/* Score + concepts + gaps */}
@@ -78,6 +94,9 @@ export default async function LearningReceipt({ sessionId }: LearningReceiptProp
             {receipt.score}
             <span className="text-xl text-[#A8A29E]">/100</span>
           </div>
+          <span className={`inline-block mt-2 rounded-md px-2.5 py-0.5 text-xs font-medium ${band.pillClass}`}>
+            {band.label}
+          </span>
           <p className="mt-3 text-xs text-[#57534E] leading-relaxed">
             Reflects how confidently you handled the main ideas of the assignment.
           </p>
@@ -108,11 +127,19 @@ export default async function LearningReceipt({ sessionId }: LearningReceiptProp
             Gaps to review
           </p>
           {receipt.gaps.length > 0 ? (
-            <ul className="space-y-1.5">
+            <ul className="space-y-3">
               {receipt.gaps.map((gap, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-[#57534E]">
-                  <span className="mt-0.5 text-[#A8A29E]">→</span>
-                  {gap}
+                <li key={i} className="flex flex-col gap-1">
+                  <span className="flex items-start gap-2 text-sm text-[#57534E]">
+                    <span className="mt-0.5 text-[#A8A29E] shrink-0">→</span>
+                    {gap}
+                  </span>
+                  <a
+                    href={`/app/new?topic=${encodeURIComponent(gap)}`}
+                    className="ml-5 inline-flex items-center gap-1 text-[11px] font-medium text-[#D97706] hover:underline"
+                  >
+                    Review this →
+                  </a>
                 </li>
               ))}
             </ul>

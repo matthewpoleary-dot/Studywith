@@ -23,7 +23,7 @@ export default async function AppDashboard() {
 
   const { data: sessions } = await getSupabaseAdmin()
     .from("sessions")
-    .select("id, assignment_text, created_at, receipt")
+    .select("id, assignment_text, title, created_at, receipt")
     .eq("user_id", user!.id)
     .order("created_at", { ascending: false });
 
@@ -55,7 +55,7 @@ export default async function AppDashboard() {
       {/* New session CTA */}
       <Link
         href="/app/new"
-        className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-full px-7 py-3.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.02] mb-12"
+        className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-lg px-7 py-3.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.02] mb-12"
       >
         <span className="text-lg leading-none">+</span>
         New session
@@ -125,7 +125,7 @@ export default async function AppDashboard() {
                       className="flex items-center justify-between gap-4 bg-white border border-[#E7E5E4] rounded-xl px-5 py-4 hover:border-[#D97706]/40 hover:shadow-sm transition-all group"
                     >
                       <p className="text-sm text-[#1A1A1A] truncate flex-1 leading-relaxed">
-                        {s.assignment_text || "Session"}
+                        {(s as { title?: string | null }).title ?? s.assignment_text ?? "Session"}
                       </p>
                       <div className="flex items-center gap-4 shrink-0">
                         {score !== null && (

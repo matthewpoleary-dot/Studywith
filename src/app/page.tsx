@@ -138,13 +138,13 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-3">
             <a
               href="/auth/login"
-              className="rounded-full border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all"
+              className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all"
             >
               Sign in
             </a>
             <CheckoutButton
               label="Sign up"
-              className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+              className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
           </div>
 
@@ -174,13 +174,13 @@ const Navigation = () => {
               ))}
               <a
                 href="/auth/login"
-                className="rounded-full border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
               >
                 Sign in
               </a>
               <CheckoutButton
                 label="Sign up"
-                className="bg-[#1A1A1A] text-white rounded-full px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                className="bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -214,11 +214,11 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-3 mb-8">
             <CheckoutButton
               label="Get started"
-              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <button
               onClick={() => scrollToSection("how-it-works")}
-              className="inline-flex items-center justify-center text-[#57534E] hover:text-[#1A1A1A] rounded-full px-8 py-4 text-base font-medium transition-colors"
+              className="inline-flex items-center justify-center text-[#57534E] hover:text-[#1A1A1A] rounded-lg px-8 py-4 text-base font-medium transition-colors"
             >
               How it works
               <ChevronRight className="w-4 h-4 ml-1.5 opacity-60" strokeWidth={1.5} />
@@ -543,7 +543,7 @@ const Pricing = () => {
 
             <CheckoutButton
               label="Get started"
-              className="w-full rounded-full py-4 text-base font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+              className="w-full rounded-lg py-4 text-base font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <p className="text-center text-sm text-[#57534E] mt-3">
               No commitment. Cancel whenever.
@@ -559,6 +559,11 @@ const Pricing = () => {
 
 const FAQ = () => {
   const faqs = [
+    {
+      question: "How is this different from just asking ChatGPT?",
+      answer:
+        "ChatGPT will just give you the answer. StudyWith is specifically designed to refuse that. It uses the Socratic method to guide your thinking. The goal is to make you better at reasoning through problems, not to complete your homework for you.",
+    },
     {
       question: "What is the Socratic method?",
       answer:
@@ -588,11 +593,6 @@ const FAQ = () => {
       question: "Can I cancel my subscription anytime?",
       answer:
         "Absolutely. You can cancel your subscription at any time from your dashboard with no questions asked. You'll keep access until the end of your billing period.",
-    },
-    {
-      question: "How is this different from just asking ChatGPT?",
-      answer:
-        "ChatGPT will just give you the answer. StudyWith is specifically designed to refuse that. It uses the Socratic method to guide your thinking. The goal is to make you better at reasoning through problems, not to complete your homework for you.",
     },
   ];
 
@@ -739,6 +739,21 @@ export default function StudyWithLanding() {
         <UseCases />
         <Pricing />
         <FAQ />
+        {/* Closing CTA */}
+        <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+              Ready to actually understand your work?
+            </h2>
+            <p className="text-lg text-[#57534E] mb-10">
+              Join students who learn by thinking, not copying.
+            </p>
+            <CheckoutButton
+              label="Get started"
+              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+            />
+          </div>
+        </section>
       </main>
       <Footer />
     </div>

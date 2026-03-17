@@ -14,6 +14,8 @@ export default function SignupPage() {
     "idle",
   );
   const [confirmEmail, setConfirmEmail] = useState<string | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
   const router = useRouter();
 
   // If already signed in and subscribed, skip straight to the app
@@ -97,6 +99,15 @@ export default function SignupPage() {
         ? "Redirecting…"
         : "Create account and subscribe";
 
+  const handleResend = async () => {
+    if (!confirmEmail || resendLoading) return;
+    setResendLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.resend({ type: "signup", email: confirmEmail });
+    setResendLoading(false);
+    setResendDone(true);
+  };
+
   // Email confirmation required — show check-your-inbox screen
   if (confirmEmail) {
     return (
@@ -121,6 +132,17 @@ export default function SignupPage() {
             <p className="text-xs text-[#A8A29E]">
               Check your spam folder if it doesn&apos;t arrive within a minute.
             </p>
+            {resendDone ? (
+              <p className="text-xs text-[#D97706] font-medium">Email resent!</p>
+            ) : (
+              <button
+                onClick={() => void handleResend()}
+                disabled={resendLoading}
+                className="text-xs text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors disabled:opacity-50"
+              >
+                {resendLoading ? "Sending…" : "Resend confirmation email"}
+              </button>
+            )}
             <Link
               href="/auth/login"
               className="inline-block text-xs text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
