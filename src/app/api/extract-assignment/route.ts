@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
@@ -29,21 +29,22 @@ export async function POST(request: Request) {
   }
 
   try {
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+    const groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.2-11b-vision-preview",
       max_tokens: 1024,
       messages: [
         {
           role: "user",
           content: [
             {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-                data: imageBase64,
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${imageBase64}`,
               },
             },
             {
@@ -55,9 +56,7 @@ export async function POST(request: Request) {
       ],
     });
 
-    const text =
-      message.content[0]?.type === "text" ? message.content[0].text : "";
-
+    const text = completion.choices[0]?.message?.content ?? "";
     return Response.json({ text });
   } catch (err) {
     console.error("extract-assignment error:", err);
