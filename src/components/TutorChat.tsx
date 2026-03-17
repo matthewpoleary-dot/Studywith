@@ -109,10 +109,10 @@ export default function TutorChat({
           finalAssignment = data.text;
           setAssignment(data.text);
         } else {
-          setExtractError("Couldn't read the image. Try again or type your assignment.");
+          setExtractError(data.error ?? "Couldn't read the image. Try again or type your assignment.");
         }
-      } catch {
-        setExtractError("Network error reading image. Try again.");
+      } catch (err) {
+        setExtractError(err instanceof Error ? err.message : "Network error reading image. Try again.");
       } finally {
         setIsExtracting(false);
       }
