@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, Menu, X, BookOpen, LogOut, Pencil, Settings } from "lucide-react";
+import { Plus, Menu, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -23,7 +23,8 @@ function SidebarContent({
   sessions,
   userEmail,
   onNav,
-}: AppSidebarProps & { onNav?: () => void }) {
+  onCollapse,
+}: AppSidebarProps & { onNav?: () => void; onCollapse?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -84,6 +85,15 @@ function SidebarContent({
         >
           StudyWith
         </a>
+        {onCollapse && (
+          <button
+            onClick={onCollapse}
+            className="hidden md:flex p-1.5 rounded-lg text-[#A8A29E] hover:text-[#57534E] hover:bg-[#E7E5E4] transition-colors"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+        )}
         {onNav && (
           <button
             onClick={onNav}
@@ -213,6 +223,7 @@ function SidebarContent({
 
 export default function AppSidebar({ sessions: initialSessions, userEmail }: AppSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [sessions, setSessions] = useState<Session[]>(initialSessions);
 
   // Re-fetch on mount to always get fresh sessions (bypasses SSR caching issues)
@@ -258,8 +269,28 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
         />
       </aside>
 
-      <aside className="hidden md:flex md:flex-col w-64 shrink-0 h-screen sticky top-0 bg-[#F5F4F0] border-r border-[#E7E5E4] overflow-hidden">
-        <SidebarContent sessions={sessions} userEmail={userEmail} />
+      {/* Desktop collapsed — floating toggle */}
+      {desktopCollapsed && (
+        <button
+          className="hidden md:flex fixed top-4 left-4 z-50 p-2 rounded-xl bg-white border border-[#E7E5E4] shadow-sm text-[#57534E] hover:text-[#1A1A1A] transition-colors"
+          onClick={() => setDesktopCollapsed(false)}
+          title="Open sidebar"
+        >
+          <PanelLeftOpen className="w-4 h-4" strokeWidth={1.5} />
+        </button>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside
+        className={`hidden md:flex md:flex-col shrink-0 h-screen sticky top-0 bg-[#F5F4F0] border-r border-[#E7E5E4] overflow-hidden transition-all duration-200 ease-in-out ${
+          desktopCollapsed ? "w-0 border-r-0" : "w-64"
+        }`}
+      >
+        <SidebarContent
+          sessions={sessions}
+          userEmail={userEmail}
+          onCollapse={() => setDesktopCollapsed(true)}
+        />
       </aside>
     </>
   );

@@ -716,6 +716,8 @@ export default function StudyWithLanding() {
   useEffect(() => {
     const remember = localStorage.getItem("sw_remember");
     if (remember !== "1") return; // not opted in — stay on landing page
+    // Don't redirect if the proxy sent us here (e.g. ?checkout=required) — avoid loop
+    if (new URLSearchParams(window.location.search).get("checkout") === "required") return;
     const supabase = createSupabaseBrowserClient();
     // getUser() validates the token with the server (unlike getSession which
     // trusts the local cache). If the user was deleted, this returns null and
