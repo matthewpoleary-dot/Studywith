@@ -13,6 +13,9 @@ export type TutorMessage = {
   content: string;
 };
 
+const SUBJECTS = ["General", "Maths", "English", "Science", "History", "Languages"] as const;
+type Subject = (typeof SUBJECTS)[number];
+
 type TutorChatProps = {
   initialAssignment?: string;
   initialMessages?: TutorMessage[];
@@ -25,6 +28,7 @@ export default function TutorChat({
   initialSessionId = null as string | null,
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
+  const [subject, setSubject] = useState<Subject>("General");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<TutorMessage[]>(initialMessages);
   const [isSessionStarted, setIsSessionStarted] = useState(initialMessages.length > 0);
@@ -149,6 +153,7 @@ export default function TutorChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assignment,
+          subject,
           messages: [...messages, userMessage],
           sessionId,
         }),
@@ -258,6 +263,27 @@ export default function TutorChat({
             rows={6}
             className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-4 shadow-sm"
           />
+
+          {/* Subject picker */}
+          <div className="mb-5">
+            <p className="text-xs font-medium text-[#57534E] mb-2">Subject</p>
+            <div className="flex flex-wrap gap-2">
+              {SUBJECTS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSubject(s)}
+                  className={`rounded-full px-4 py-1.5 text-sm transition ${
+                    subject === s
+                      ? "bg-[#D97706] text-white"
+                      : "border border-[#E7E5E4] text-[#57534E] hover:border-[#D97706] hover:text-[#D97706]"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <button

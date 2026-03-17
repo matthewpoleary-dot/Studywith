@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Plus, Menu, X, BookOpen, LogOut, Pencil } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -191,8 +191,21 @@ function SidebarContent({
   );
 }
 
-export default function AppSidebar({ sessions, userEmail }: AppSidebarProps) {
+export default function AppSidebar({ sessions: initialSessions, userEmail }: AppSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>(initialSessions);
+
+  // Re-fetch on mount to always get fresh sessions (bypasses SSR caching issues)
+  useEffect(() => {
+    fetch("/api/sessions")
+      .then((r) => r.json())
+      .then((d: { sessions?: Session[] }) => {
+        if (d.sessions) setSessions(d.sessions);
+      })
+      .catch(() => {
+        // silently keep initial SSR data on error
+      });
+  }, []);
 
   return (
     <>

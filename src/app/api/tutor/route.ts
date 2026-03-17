@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // Inline type to avoid importing from a 'use client' boundary
 type TutorMessage = { id: string; role: "student" | "tutor" | "system"; content: string };
 
-const SYSTEM_PROMPT = `You are a Socratic tutor. Your rules:
+const BASE_PROMPT = `You are a Socratic tutor. Your rules:
 1. NEVER give the full answer directly — not even if the student begs.
 2. Always ask the student to attempt something before providing any help.
 3. If the student is stuck, give a hint — not the answer.
@@ -19,8 +19,17 @@ const SYSTEM_PROMPT = `You are a Socratic tutor. Your rules:
 7. If a student asks you to just give the answer, gently decline and redirect to thinking.
 8. Start by asking the student to explain in their own words what the assignment is asking.`;
 
+const SUBJECT_ADDONS: Record<string, string> = {
+  Maths: `\n\nFor maths: Ask the student to identify what they know, what they're solving for, and which formula or method applies. When they attempt a step, ask them to explain their reasoning. Ask them to check if their answer makes sense (units, magnitude, sign). Never skip steps — work through problems one line at a time.`,
+  English: `\n\nFor English and essay writing: Focus on thesis clarity, argument structure, and use of evidence. Ask what their main claim is, how each paragraph supports it, and whether their quotes or examples are specific and accurately referenced. Push for analysis over summary — "what does this tell us?" not just "what happens?".`,
+  Science: `\n\nFor science: Focus on the underlying principles, not just the calculation. Ask the student to state the relevant law or concept before applying it, predict the outcome before working through it, and connect their answer back to the scientific principle. For experiments, guide them through hypothesis, variables, and data interpretation.`,
+  History: `\n\nFor history: Focus on causation, consequence, and source evaluation. Ask the student to explain WHY events happened, not just what happened. Prompt them to consider multiple perspectives and assess the reliability of sources. Push for analytical reasoning: "How significant was this cause compared to others?"`,
+  Languages: `\n\nFor language learning: Focus on grammar rules, vocabulary in context, and sentence construction. Ask the student to identify the grammatical structure being used and explain why it applies. Prompt them to spot patterns and construct their own example sentences. Correct errors by asking "Is there another form of this word that fits better?" rather than giving the answer.`,
+};
+
 type RequestBody = {
   assignment: string;
+  subject?: string;
   messages: TutorMessage[];
   sessionId?: string;
 };
@@ -93,7 +102,7 @@ export async function POST(request: Request) {
       model: "llama-3.3-70b-versatile",
       max_tokens: 512,
       messages: [
-        { role: "system", content: `${SYSTEM_PROMPT}\n\nThe student's assignment is:\n${body.assignment}` },
+        { role: "system", content: `${BASE_PROMPT}${SUBJECT_ADDONS[body.subject ?? ""] ?? ""}\n\nThe student's assignment is:\n${body.assignment}` },
         ...chatMessages,
       ],
     });
