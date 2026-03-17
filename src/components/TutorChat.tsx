@@ -35,7 +35,7 @@ function detectSubject(text: string): Subject {
   if (/\b(psychology|behaviour|cognitive|memory|attachment|personality|experiment|mental|stimulus|response|piaget|freud|brain)\b/.test(t)) return "Psychology";
   if (/\b(business|marketing|management|strategy|finance|accounting|revenue|profit|entrepreneur|stakeholder|swot|cash flow)\b/.test(t)) return "Business";
   if (/\b(art|design|colour|composition|painting|sculpture|photography|typography|texture|perspective|visual|aesthetic)\b/.test(t)) return "Art & Design";
-  if (/\b(math|algebra|calculus|equation|differentiat|integrat|trigonometry|geometry|probability|statistics|vector|matrix|polynomial|logarithm|quadratic)\b/.test(t)) return "Maths";
+  if (/\b(math|algebra|calculus|equation|differentiat|integrat|trigonometry|geometry|probability|statistics|vector|matrix|polynomial|logarithm|quadratic|times|multiply|divide|fraction|percentage|decimal|squared|cubed|factorial|prime|arithmetic|calculate)\b/.test(t) || /\d\s*[×÷+\-*/^]\s*\d/.test(t) || /\bwhat(?:'?s| is)\s+\d+/.test(t)) return "Maths";
   if (/\b(biology|chemistry|physics|photosynthesis|atom|molecule|cell|dna|evolution|force|energy|wave|element|compound|reaction|enzyme)\b/.test(t)) return "Science";
   if (/\b(essay|literature|poem|poetry|novel|write|writing|argument|thesis|character|theme|metaphor|narrative|prose|language analysis)\b/.test(t)) return "English";
   if (/\b(history|war|revolution|empire|century|medieval|ancient|cold war|world war|industrial|political|government|democracy|monarch)\b/.test(t)) return "History";
