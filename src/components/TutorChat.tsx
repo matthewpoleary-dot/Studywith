@@ -168,6 +168,7 @@ export default function TutorChat({
 
     // For PDFs: extract text first, embed in message content
     let pdfText: string | null = null;
+    let pdfError: string | null = null;
     if (pendingImage && pendingMime === "application/pdf") {
       setIsLoading(true);
       try {
@@ -176,16 +177,31 @@ export default function TutorChat({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageBase64: pendingImage, mimeType: pendingMime }),
         });
-        const data = (await res.json()) as { text?: string };
+        const data = (await res.json()) as { text?: string; error?: string };
         pdfText = data.text ?? null;
-      } catch { /* include file name only */ }
+        if (!pdfText) pdfError = data.error ?? "Couldn't extract PDF text.";
+      } catch (err) {
+        pdfError = err instanceof Error ? err.message : "Network error reading PDF.";
+      }
+    }
+
+    // If PDF extraction failed, surface the error and abort the send
+    if (pdfError) {
+      setIsLoading(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "tutor" as const,
+          content: `I couldn't read that PDF (${pdfError}). Try uploading a photo of the page instead, or paste the text directly.`,
+        },
+      ]);
+      return;
     }
 
     const messageContent = pdfText
       ? `${inputText ? inputText + "\n\n" : ""}[Uploaded file contents:\n${pdfText}]`
-      : pendingMime === "application/pdf"
-        ? `${inputText ? inputText + "\n\n" : ""}📄 ${fileName || "PDF attached"}`
-        : inputText || "📷 [image attached]";
+      : inputText || "📷 [image attached]";
 
     const userMessage: TutorMessage = {
       id: crypto.randomUUID(),

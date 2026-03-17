@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   // Auth check
   const cookieStore = await cookies();
@@ -29,13 +31,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    // PDF: extract text with pdf-parse
+    // PDF: extract text with pdf-parse (use lib path to avoid test-file crash in serverless)
     if (mimeType === "application/pdf") {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+      const pdfParse = require("pdf-parse/lib/pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
       const buffer = Buffer.from(imageBase64, "base64");
-      const data = await pdfParse(buffer) as { text: string };
-      return Response.json({ text: data.text.trim() });
+      const data = await pdfParse(buffer);
+      const text = data.text.trim();
+      if (!text) return Response.json({ error: "No text found in PDF — it may be a scanned image. Try uploading a photo of the page instead." }, { status: 422 });
+      return Response.json({ text });
     }
 
     // Image: use Groq vision model
