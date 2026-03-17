@@ -1,3 +1,4 @@
+import Stripe from "stripe";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
@@ -26,9 +27,37 @@ export async function GET() {
 
   const { data } = await getSupabaseAdmin()
     .from("users")
-    .select("subscribed")
+    .select("subscribed, stripe_customer_id")
     .eq("id", user.id)
     .single();
 
-  return Response.json({ subscribed: data?.subscribed ?? false });
+  // Fast path: DB already says subscribed
+  if (data?.subscribed) {
+    return Response.json({ subscribed: true });
+  }
+
+  // Stripe fallback: if webhook failed or is delayed, check Stripe directly.
+  // This runs whenever subscribed=false AND we have a stripe_customer_id.
+  if (data?.stripe_customer_id) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+      const subs = await stripe.subscriptions.list({
+        customer: data.stripe_customer_id,
+        status: "active",
+        limit: 1,
+      });
+      if (subs.data.length > 0) {
+        // Active subscription found — heal the DB and unblock the user
+        await getSupabaseAdmin()
+          .from("users")
+          .update({ subscribed: true })
+          .eq("id", user.id);
+        return Response.json({ subscribed: true });
+      }
+    } catch {
+      // Stripe API error — fall through and return false
+    }
+  }
+
+  return Response.json({ subscribed: false });
 }

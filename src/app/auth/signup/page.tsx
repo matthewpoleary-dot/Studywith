@@ -54,91 +54,92 @@ export default function SignupPage() {
 
   const buttonLabel =
     status === "creating"
-      ? "Creating account…"
+      ? "Creating account..."
       : status === "redirecting"
-        ? "Redirecting to payment…"
-        : "Create account & subscribe";
+        ? "Redirecting to payment..."
+        : "Create account and subscribe";
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm rounded-3xl border border-zinc-800/80 bg-zinc-950/80 p-8 shadow-2xl shadow-black/60 backdrop-blur">
-        <div className="mb-6 flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-zinc-50">
-            Create your account
+    <div className="flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-sm">
+        <div className="mb-8">
+          <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
+            Start learning smarter
           </h1>
-          <p className="text-xs text-zinc-500">
-            You&apos;ll be taken to payment after signup. €20/month, cancel
-            anytime.
+          <p className="text-sm text-[#57534E]">
+            Create your account, then subscribe for €20/month. Cancel anytime.
           </p>
         </div>
 
-        <form
-          onSubmit={(e) => void handleSignup(e)}
-          className="flex flex-col gap-4"
-        >
-          <div className="flex flex-col gap-1.5">
-            <label
-              className="text-xs font-medium text-zinc-400"
-              htmlFor="email"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-              className="rounded-xl border border-zinc-800 bg-black/40 px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/40"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              className="text-xs font-medium text-zinc-400"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              placeholder="••••••••"
-              minLength={8}
-              className="rounded-xl border border-zinc-800 bg-black/40 px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/40"
-            />
-          </div>
-
-          {error && (
-            <p className="rounded-xl border border-red-900/60 bg-red-950/40 px-3 py-2 text-xs text-red-400">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 inline-flex items-center justify-center rounded-full bg-zinc-100 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-6 shadow-sm">
+          <form
+            onSubmit={(e) => void handleSignup(e)}
+            className="flex flex-col gap-4"
           >
-            {buttonLabel}
-          </button>
+            <div className="flex flex-col gap-1.5">
+              <label
+                className="text-xs font-medium text-[#57534E]"
+                htmlFor="email"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+                className="rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+              />
+            </div>
 
-          <p className="text-center text-xs text-zinc-500">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="text-zinc-300 underline-offset-2 hover:underline"
+            <div className="flex flex-col gap-1.5">
+              <label
+                className="text-xs font-medium text-[#57534E]"
+                htmlFor="password"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                placeholder="At least 8 characters"
+                minLength={8}
+                className="rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+              />
+            </div>
+
+            {error && (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-1 inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#1A1A1A]/80 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Sign in
-            </Link>
-          </p>
-        </form>
+              {buttonLabel}
+            </button>
+
+            <p className="text-center text-xs text-[#57534E]">
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="text-[#D97706] font-medium underline-offset-2 hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

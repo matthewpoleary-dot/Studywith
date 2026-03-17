@@ -38,7 +38,7 @@ function LoginForm() {
   return (
     <form onSubmit={(e) => void handleLogin(e)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-zinc-400" htmlFor="email">
+        <label className="text-xs font-medium text-[#57534E]" htmlFor="email">
           Email
         </label>
         <input
@@ -49,13 +49,13 @@ function LoginForm() {
           required
           autoComplete="email"
           placeholder="you@example.com"
-          className="rounded-xl border border-zinc-800 bg-black/40 px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40"
+          className="rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <label
-          className="text-xs font-medium text-zinc-400"
+          className="text-xs font-medium text-[#57534E]"
           htmlFor="password"
         >
           Password
@@ -68,12 +68,12 @@ function LoginForm() {
           required
           autoComplete="current-password"
           placeholder="••••••••"
-          className="rounded-xl border border-zinc-800 bg-black/40 px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40"
+          className="rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
         />
       </div>
 
       {error && (
-        <p className="rounded-xl border border-red-900/60 bg-red-950/40 px-3 py-2 text-xs text-red-400">
+        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
           {error}
         </p>
       )}
@@ -81,18 +81,18 @@ function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="mt-1 inline-flex items-center justify-center rounded-full bg-emerald-500 px-4 py-2.5 text-sm font-medium text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+        className="mt-1 inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#1A1A1A]/80 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Signing in…" : "Sign in"}
+        {loading ? "Signing in..." : "Sign in"}
       </button>
 
-      <p className="text-center text-xs text-zinc-500">
+      <p className="text-center text-xs text-[#57534E]">
         No account?{" "}
         <Link
           href="/auth/signup"
-          className="text-emerald-400 underline-offset-2 hover:underline"
+          className="text-[#D97706] font-medium underline-offset-2 hover:underline"
         >
-          Sign up
+          Create one
         </Link>
       </p>
     </form>
@@ -101,19 +101,22 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm rounded-3xl border border-zinc-800/80 bg-zinc-950/80 p-8 shadow-2xl shadow-black/60 backdrop-blur">
-        <div className="mb-6 flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-zinc-50">
-            Sign in to StudyWith
+    <div className="flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-sm">
+        <div className="mb-8">
+          <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
+            Welcome back
           </h1>
-          <p className="text-xs text-zinc-500">
-            Enter your email and password to continue.
+          <p className="text-sm text-[#57534E]">
+            Sign in to continue your tutoring sessions.
           </p>
         </div>
-        <Suspense>
-          <LoginForm />
-        </Suspense>
+
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-6 shadow-sm">
+          <Suspense>
+            <LoginForm />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

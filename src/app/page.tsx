@@ -553,6 +553,11 @@ const Pricing = () => {
 const FAQ = () => {
   const faqs = [
     {
+      question: "What is the Socratic method?",
+      answer:
+        "The Socratic method is a teaching technique developed by the ancient Greek philosopher Socrates. Instead of lecturing or giving direct answers, a teacher asks a series of probing questions that lead the student to reason their way to understanding. The idea is that genuine understanding can't be handed to you — it has to be reached through your own thinking. Socrates believed that asking the right questions was more powerful than providing the right answers, because it builds reasoning skills that last. That's exactly the philosophy behind StudyWith.",
+    },
+    {
       question: "How does the Socratic tutoring method work?",
       answer:
         "Instead of giving you direct answers, our AI tutor asks thoughtful questions that guide you to discover the solution yourself. This approach builds deeper understanding and better retention. For example, if you're stuck on a maths problem, we might ask 'What do you know about the relationship between these variables?' rather than showing you the formula.",
