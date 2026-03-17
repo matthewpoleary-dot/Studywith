@@ -31,10 +31,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    // PDF: extract text with pdf-parse v1
+    // PDF: use internal lib path to skip the test-file loading in index.js
     if (mimeType === "application/pdf") {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+      const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buf: Buffer) => Promise<{ text: string }>;
       const buffer = Buffer.from(imageBase64, "base64");
       const data = await pdfParse(buffer);
       const text = data.text.trim();
