@@ -29,6 +29,12 @@ export default function SettingsPage() {
   const [profileDone, setProfileDone] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
+  // Daily goal
+  const [dailyGoal, setDailyGoal] = useState("");
+  const [goalLoading, setGoalLoading] = useState(false);
+  const [goalDone, setGoalDone] = useState(false);
+  const [goalError, setGoalError] = useState<string | null>(null);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -36,6 +42,8 @@ export default function SettingsPage() {
         setUser(user);
         setNewEmail(user.email ?? "");
         setDisplayName((user.user_metadata?.full_name as string) ?? "");
+        const goal = user.user_metadata?.daily_goal;
+        setDailyGoal(goal != null ? String(goal) : "");
       }
     });
   }, []);
@@ -89,6 +97,30 @@ export default function SettingsPage() {
       setConfirmPassword("");
     }
     setPasswordLoading(false);
+  };
+
+  const handleGoalSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGoalLoading(true);
+    setGoalError(null);
+    const parsed =
+      dailyGoal.trim() === "" ? null : parseInt(dailyGoal, 10);
+    if (parsed !== null && (isNaN(parsed) || parsed < 1 || parsed > 20)) {
+      setGoalError("Enter a number between 1 and 20, or leave blank to remove.");
+      setGoalLoading(false);
+      return;
+    }
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.updateUser({
+      data: { daily_goal: parsed },
+    });
+    if (error) {
+      setGoalError(error.message);
+    } else {
+      setGoalDone(true);
+      setTimeout(() => setGoalDone(false), 3000);
+    }
+    setGoalLoading(false);
   };
 
   const handleProfileSave = async (e: React.FormEvent) => {
@@ -316,6 +348,41 @@ export default function SettingsPage() {
                 {profileDone && (
                   <p className="text-sm text-green-600">Saved.</p>
                 )}
+              </div>
+            </form>
+          </section>
+
+          {/* Daily goal */}
+          <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+            <h2 className="font-medium text-[#1A1A1A] mb-1">Daily study goal</h2>
+            <p className="text-sm text-[#57534E] mb-4">
+              Set a target number of sessions per day. Leave blank to disable.
+            </p>
+            <form onSubmit={(e) => void handleGoalSave(e)} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-[#57534E]">
+                  Sessions per day
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={dailyGoal}
+                  onChange={(e) => setDailyGoal(e.target.value)}
+                  placeholder="e.g. 2"
+                  className={inputClass}
+                />
+              </div>
+              {goalError && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                  {goalError}
+                </p>
+              )}
+              <div className="flex items-center gap-3">
+                <button type="submit" disabled={goalLoading} className={primaryBtn}>
+                  {goalLoading ? "Saving…" : "Save goal"}
+                </button>
+                {goalDone && <p className="text-sm text-green-600">Saved.</p>}
               </div>
             </form>
           </section>

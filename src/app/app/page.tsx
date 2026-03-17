@@ -13,6 +13,26 @@ type SessionRow = {
   receipt: unknown | null;
 };
 
+function calcStreak(sessions: { created_at: string }[]): number {
+  const toKey = (d: Date) =>
+    `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const days = new Set(sessions.map((s) => toKey(new Date(s.created_at))));
+  let streak = 0;
+  const now = new Date();
+  for (let i = 0; i <= 365; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    if (days.has(toKey(d))) {
+      streak++;
+    } else if (i === 0) {
+      continue; // no session today yet — streak may still be alive
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 export default async function AppDashboard() {
   const cookieStore = await cookies();
   const supabase = createServerClient<Database>(
@@ -65,6 +85,20 @@ export default async function AppDashboard() {
         )
       : null;
 
+  const streak = calcStreak(allSessions);
+
+  const dailyGoal: number | null =
+    typeof user?.user_metadata?.daily_goal === "number"
+      ? user.user_metadata.daily_goal
+      : null;
+
+  const toKey = (d: Date) =>
+    `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const sessionsToday = allSessions.filter(
+    (s) => toKey(new Date(s.created_at)) === toKey(new Date()),
+  ).length;
+  const dailyGoalMet = dailyGoal !== null && sessionsToday >= dailyGoal;
+
   const sessionLabel = (s: SessionRow) =>
     s.title ?? (s.assignment_text.length > 60 ? s.assignment_text.slice(0, 60) + "…" : s.assignment_text) ?? "Session";
 
@@ -91,6 +125,43 @@ export default async function AppDashboard() {
 
       {allSessions.length > 0 && (
         <div className="space-y-10">
+          {/* Streak + daily goal */}
+          <div className={`grid gap-4 ${dailyGoal !== null ? "grid-cols-2" : "grid-cols-1"}`}>
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+              <p className="text-xs font-medium text-[#57534E] mb-3">Daily streak</p>
+              <div className="flex items-end gap-2">
+                <p className="text-3xl font-serif font-medium text-[#1A1A1A]">{streak}</p>
+                <span className="text-xl mb-0.5">{streak > 0 ? "🔥" : "💤"}</span>
+              </div>
+              <p className="text-xs text-[#A8A29E] mt-1">
+                {streak === 0
+                  ? "Study today to start one"
+                  : streak === 1
+                  ? "1 day in a row"
+                  : `${streak} days in a row`}
+              </p>
+            </div>
+
+            {dailyGoal !== null && (
+              <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+                <p className="text-xs font-medium text-[#57534E] mb-3">Today&apos;s goal</p>
+                <div className="flex items-end gap-1">
+                  <p className="text-3xl font-serif font-medium text-[#1A1A1A]">{sessionsToday}</p>
+                  <span className="text-base text-[#A8A29E] mb-0.5">/{dailyGoal}</span>
+                </div>
+                <div className="mt-2 h-1.5 w-full rounded-full bg-[#E7E5E4] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${dailyGoalMet ? "bg-emerald-500" : "bg-[#D97706]"}`}
+                    style={{ width: `${Math.min(100, Math.round((sessionsToday / dailyGoal) * 100))}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[#A8A29E] mt-1">
+                  {dailyGoalMet ? "Goal complete!" : `${dailyGoal - sessionsToday} more to go`}
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
