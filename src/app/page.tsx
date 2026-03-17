@@ -1,317 +1,691 @@
-import { Suspense } from "react";
-import Link from "next/link";
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import {
+  MessageCircle,
+  TrendingUp,
+  BookOpen,
+  ClipboardList,
+  Lightbulb,
+  Target,
+  GraduationCap,
+  PenLine,
+  Calculator,
+  Check,
+  ChevronRight,
+  ChevronDown,
+  Menu,
+  X,
+  Link,
+} from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 import SubscribeBanner from "@/components/SubscribeBanner";
 
-// ─── Static data ──────────────────────────────────────────────────────────────
+// ─── FAQ Accordion ────────────────────────────────────────────────────────────
 
-const features = [
-  {
-    title: "Socratic method",
-    desc: "The AI never gives you the answer. It asks questions that lead you there yourself — the way every great teacher does.",
-  },
-  {
-    title: "Learning receipts",
-    desc: "Score out of 100, a list of concepts you handled, gaps to review, and a written summary of what you learned.",
-  },
-  {
-    title: "Full session history",
-    desc: "Every session is saved. Come back any time to see how you've improved, what subjects you've covered, and where you keep slipping.",
-  },
-  {
-    title: "Any subject",
-    desc: "English essays, maths problem sets, science questions, history essays, programming — paste it and the tutor adapts.",
-  },
-  {
-    title: "Honest scoring",
-    desc: "The score reflects actual confidence with the material, not effort. No participation trophies — a clear picture of where you stand.",
-  },
-  {
-    title: "Shareable receipts",
-    desc: "Each receipt has a permanent link. Share it with a teacher, tutor, or parent to show exactly what you worked through.",
-  },
-];
+const FAQAccordion = ({
+  items,
+}: {
+  items: { question: string; answer: string }[];
+}) => {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  return (
+    <div className="space-y-4">
+      {items.map((item, index) => (
+        <div
+          key={index}
+          className="bg-white border border-[#E7E5E4] rounded-xl overflow-hidden"
+        >
+          <button
+            onClick={() => setOpenIndex(openIndex === index ? null : index)}
+            className="w-full flex items-center justify-between p-5 text-left font-serif text-lg font-medium text-[#1A1A1A] hover:bg-[#F5F4F0]/50 transition-colors"
+          >
+            {item.question}
+            <ChevronDown
+              className={`w-5 h-5 text-[#57534E] transition-transform duration-200 shrink-0 ml-4 ${
+                openIndex === index ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              openIndex === index ? "max-h-96" : "max-h-0"
+            }`}
+          >
+            <p className="px-5 pb-5 text-[#57534E] leading-relaxed">
+              {item.answer}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
-const steps = [
-  {
-    n: "01",
-    title: "Paste your assignment",
-    desc: "Drop in any homework question, essay prompt, or problem set. The tutor reads it and adapts its approach to your subject.",
-  },
-  {
-    n: "02",
-    title: "Think it through together",
-    desc: "The tutor asks, you answer. It corrects you when you're wrong and pushes you deeper when you're right. No shortcuts.",
-  },
-  {
-    n: "03",
-    title: "Get your receipt",
-    desc: "A scored breakdown of everything you covered, where you struggled, and exactly what to study before your next session.",
-  },
-];
+// ─── Navigation ───────────────────────────────────────────────────────────────
 
-const pricingFeatures = [
-  "Unlimited tutoring sessions",
-  "Learning receipt after every session",
-  "Full session history & dashboard",
-  "Shareable receipt links",
-  "Any subject or assignment type",
-  "Cancel anytime from your dashboard",
-];
+const Navigation = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMobileMenuOpen(false);
+  };
+
+  return (
+    <nav
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-[#FDFCF8]/90 backdrop-blur-md border-b border-[#E7E5E4]/50"
+          : "bg-transparent"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
+        <div className="flex items-center justify-between h-20">
+          <a
+            href="/"
+            className="font-serif text-2xl font-semibold text-[#1A1A1A] hover:opacity-80 transition-opacity"
+          >
+            StudyWith
+          </a>
+
+          <div className="hidden md:flex items-center gap-10">
+            {["how-it-works", "features", "pricing", "faq"].map((id) => (
+              <button
+                key={id}
+                onClick={() => scrollToSection(id)}
+                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium capitalize"
+              >
+                {id.replace("-", " ")}
+              </button>
+            ))}
+          </div>
+
+          <div className="hidden md:flex items-center gap-4">
+            <a
+              href="/auth/login"
+              className="text-sm text-[#57534E] hover:text-[#1A1A1A] transition-colors font-medium"
+            >
+              Sign in
+            </a>
+            <CheckoutButton
+              label="Get started"
+              className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-6 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+            />
+          </div>
+
+          <button
+            className="md:hidden p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6 text-[#1A1A1A]" />
+            ) : (
+              <Menu className="w-6 h-6 text-[#1A1A1A]" />
+            )}
+          </button>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#FDFCF8] border-t border-[#E7E5E4] py-4">
+            <div className="flex flex-col gap-4">
+              {["how-it-works", "features", "pricing", "faq"].map((id) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium py-2 capitalize"
+                >
+                  {id.replace("-", " ")}
+                </button>
+              ))}
+              <CheckoutButton
+                label="Get started"
+                className="bg-[#1A1A1A] text-white rounded-full px-6 py-3 text-sm font-medium mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+
+const Hero = () => {
+  const scrollToSection = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+  return (
+    <section className="pt-32 pb-20 md:pt-40 md:pb-32 px-6 md:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl">
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
+            Learn to <em className="italic text-[#D97706]">think</em>, not just
+            copy
+          </h1>
+
+          <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-2xl mb-10">
+            An AI tutor that guides you through any assignment using the
+            Socratic method. No instant answers — just thoughtful questions that
+            help you reach understanding yourself.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-10">
+            <CheckoutButton
+              label="Start tutoring — €20/month"
+              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+            />
+            <button
+              onClick={() => scrollToSection("how-it-works")}
+              className="inline-flex items-center justify-center bg-transparent border-2 border-[#E7E5E4] text-[#1A1A1A] hover:border-[#1A1A1A] rounded-full px-8 py-4 text-base font-medium transition-all"
+            >
+              See how it works
+              <ChevronRight className="w-4 h-4 ml-2" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <p className="text-sm text-[#57534E]">
+            No contracts.{" "}
+            <a
+              href="/auth/login"
+              className="underline underline-offset-2 hover:text-[#1A1A1A] transition-colors"
+            >
+              Already have an account?
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── How It Works ─────────────────────────────────────────────────────────────
+
+const HowItWorks = () => {
+  const steps = [
+    {
+      number: "01",
+      icon: ClipboardList,
+      title: "Paste your assignment",
+      description:
+        "Share the problem you're working on — an essay prompt, maths question, or any exam topic.",
+    },
+    {
+      number: "02",
+      icon: Lightbulb,
+      title: "Get guided questions",
+      description:
+        "Your AI tutor asks thoughtful questions to help you break down the problem and explore it from every angle.",
+    },
+    {
+      number: "03",
+      icon: Target,
+      title: "Reach the answer yourself",
+      description:
+        "Through guided thinking, you arrive at the solution with genuine understanding — not just a copied answer.",
+    },
+  ];
+
+  return (
+    <section
+      id="how-it-works"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            How it works
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            Learning through discovery
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+          {steps.map((step, index) => (
+            <div key={index} className="relative text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white border border-[#E7E5E4] mb-6">
+                <step.icon
+                  className="w-7 h-7 text-[#D97706]"
+                  strokeWidth={1.5}
+                />
+              </div>
+              <p className="text-xs font-medium tracking-wider uppercase text-[#57534E] mb-3">
+                Step {step.number}
+              </p>
+              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-4">
+                {step.title}
+              </h3>
+              <p className="text-[#57534E] leading-relaxed">{step.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Chat preview */}
+        <div className="mt-20 max-w-2xl mx-auto overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
+          <div className="flex items-center gap-2 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
+            <div className="h-2 w-2 rounded-full bg-[#D97706]" />
+            <p className="text-xs font-medium text-[#57534E]">
+              Example session — Biology assignment
+            </p>
+          </div>
+          <div className="space-y-4 p-5 text-sm">
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                In one sentence — what do you think this assignment is asking
+                you to do?
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
+                I think it wants me to explain how photosynthesis converts light
+                into energy?
+              </div>
+            </div>
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                Good start. What molecule does the plant produce to store that
+                energy — and where does the carbon come from?
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Features ─────────────────────────────────────────────────────────────────
+
+const Features = () => {
+  const features = [
+    {
+      icon: MessageCircle,
+      title: "Socratic Method",
+      description:
+        "Guided questioning that builds real understanding. The tutor never gives you the answer — it helps you find it.",
+    },
+    {
+      icon: BookOpen,
+      title: "Learning Receipts",
+      description:
+        "Every session ends with a scored breakdown — concepts you handled, gaps to review, and an honest score out of 100.",
+    },
+    {
+      icon: TrendingUp,
+      title: "Session History",
+      description:
+        "Every tutoring session is saved to your dashboard. See your progress across subjects over time.",
+    },
+    {
+      icon: Link,
+      title: "Shareable Receipts",
+      description:
+        "Each learning receipt has a unique link. Share it with a teacher or parent to show exactly what you worked through.",
+    },
+  ];
+
+  return (
+    <section
+      id="features"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Features
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] max-w-3xl mx-auto">
+            Everything you need to learn deeply
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="group bg-white border border-[#E7E5E4] p-8 md:p-10 rounded-xl hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex items-start gap-5">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center group-hover:bg-[#D97706]/10 transition-colors">
+                  <feature.icon
+                    className="w-6 h-6 text-[#D97706]"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-[#57534E] leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Use Cases ────────────────────────────────────────────────────────────────
+
+const UseCases = () => {
+  const useCases = [
+    {
+      icon: GraduationCap,
+      title: "Exam Preparation",
+      description:
+        "Work through past papers and practice questions with guided support that helps you understand concepts, not just memorise answers.",
+      example: "Perfect for A-Levels, Leaving Cert, GCSEs, and university",
+    },
+    {
+      icon: PenLine,
+      title: "Essay Writing",
+      description:
+        "Develop stronger arguments and structure your thoughts. Get questions that help you think critically about your thesis and evidence.",
+      example: "Great for history, literature, and social sciences",
+    },
+    {
+      icon: Calculator,
+      title: "Maths Problems",
+      description:
+        "Step through complex problems one question at a time. Build confidence in your approach rather than jumping straight to formulas.",
+      example: "From algebra to calculus and statistics",
+    },
+  ];
+
+  return (
+    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Real use cases
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            How students use it
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+          {useCases.map((useCase, index) => (
+            <div
+              key={index}
+              className="bg-white border border-[#E7E5E4] p-8 rounded-xl hover:-translate-y-1 transition-transform"
+            >
+              <div className="w-14 h-14 rounded-full bg-[#D97706]/10 flex items-center justify-center mb-6">
+                <useCase.icon
+                  className="w-7 h-7 text-[#D97706]"
+                  strokeWidth={1.5}
+                />
+              </div>
+              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-4">
+                {useCase.title}
+              </h3>
+              <p className="text-[#57534E] leading-relaxed mb-4">
+                {useCase.description}
+              </p>
+              <p className="text-sm text-[#D97706] font-medium">
+                {useCase.example}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Pricing ──────────────────────────────────────────────────────────────────
+
+const Pricing = () => {
+  const features = [
+    "Unlimited tutoring sessions",
+    "Learning receipt after every session",
+    "Full session history & dashboard",
+    "Shareable receipt links",
+    "Any subject or assignment type",
+    "Cancel anytime — no contracts",
+  ];
+
+  return (
+    <section
+      id="pricing"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Pricing
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+            Simple, transparent pricing
+          </h2>
+          <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
+            One plan. Everything included. No hidden fees, cancel anytime.
+          </p>
+        </div>
+
+        <div className="max-w-sm mx-auto">
+          <div className="relative bg-white border border-[#D97706] p-8 md:p-10 rounded-2xl hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#D97706] rounded-t-2xl" />
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full">
+              Everything included
+            </span>
+
+            <h3 className="font-serif text-2xl font-medium text-[#1A1A1A] mb-2 mt-2">
+              Pro
+            </h3>
+            <div className="flex items-baseline gap-1 mb-4">
+              <span className="font-serif text-5xl font-medium text-[#1A1A1A]">
+                €20
+              </span>
+              <span className="text-[#57534E]">/ month</span>
+            </div>
+            <p className="text-[#57534E] mb-8">
+              Billed monthly. Cancel from your dashboard anytime.
+            </p>
+
+            <ul className="space-y-4 mb-8">
+              {features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <Check
+                    className="w-5 h-5 text-[#D97706] flex-shrink-0 mt-0.5"
+                    strokeWidth={2}
+                  />
+                  <span className="text-[#1A1A1A]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <CheckoutButton
+              label="Get started"
+              className="w-full rounded-full py-4 text-base font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+            />
+            <p className="text-center text-sm text-[#57534E] mt-3">
+              No commitment. Cancel whenever.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+
+const FAQ = () => {
+  const faqs = [
+    {
+      question: "How does the Socratic tutoring method work?",
+      answer:
+        "Instead of giving you direct answers, our AI tutor asks thoughtful questions that guide you to discover the solution yourself. This approach builds deeper understanding and better retention. For example, if you're stuck on a maths problem, we might ask 'What do you know about the relationship between these variables?' rather than showing you the formula.",
+    },
+    {
+      question: "Does the AI just give away answers directly?",
+      answer:
+        "No — that's exactly what we avoid. The AI will never simply hand over the answer. Instead, it guides you through the reasoning process with questions and hints. When you reach the answer, you'll genuinely understand how you got there.",
+    },
+    {
+      question: "What subjects does StudyWith cover?",
+      answer:
+        "StudyWith covers a wide range of subjects including mathematics, sciences (physics, chemistry, biology), humanities (history, literature, philosophy), languages, programming, and more. Paste any assignment and the tutor adapts.",
+    },
+    {
+      question: "What is a Learning Receipt?",
+      answer:
+        "At the end of each session, StudyWith generates a Learning Receipt — a scored breakdown of the session. It shows your score out of 100, the concepts you demonstrated understanding of, gaps to review, and a written summary. Each receipt has a unique shareable link.",
+    },
+    {
+      question: "Can I cancel my subscription anytime?",
+      answer:
+        "Absolutely. You can cancel your subscription at any time from your dashboard with no questions asked. You'll keep access until the end of your billing period.",
+    },
+    {
+      question: "How is this different from just asking ChatGPT?",
+      answer:
+        "ChatGPT will just give you the answer. StudyWith is specifically designed to refuse that — it uses the Socratic method to guide your thinking. The goal is to make you better at reasoning through problems, not to complete your homework for you.",
+    },
+  ];
+
+  return (
+    <section
+      id="faq"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
+    >
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-16">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            FAQ
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            Frequently asked questions
+          </h2>
+        </div>
+        <FAQAccordion items={faqs} />
+      </div>
+    </section>
+  );
+};
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  const scrollToSection = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+  return (
+    <footer className="py-16 md:py-20 px-6 md:px-12 lg:px-24 border-t border-[#E7E5E4]">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-12 md:gap-8 mb-12">
+          <div className="md:col-span-1">
+            <a
+              href="/"
+              className="font-serif text-2xl font-semibold text-[#1A1A1A] hover:opacity-80 transition-opacity"
+            >
+              StudyWith
+            </a>
+            <p className="text-[#57534E] mt-4 text-sm leading-relaxed">
+              An AI tutor that helps you think, not just copy. Learn through
+              guided discovery.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-[#1A1A1A] mb-4">Product</h4>
+            <ul className="space-y-3">
+              {["how-it-works", "features", "pricing", "faq"].map((id) => (
+                <li key={id}>
+                  <button
+                    onClick={() => scrollToSection(id)}
+                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm capitalize"
+                  >
+                    {id.replace("-", " ")}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-[#1A1A1A] mb-4">Account</h4>
+            <ul className="space-y-3">
+              {[
+                { label: "Sign in", href: "/auth/login" },
+                { label: "Create account", href: "/auth/signup" },
+                { label: "Dashboard", href: "/app" },
+              ].map((item) => (
+                <li key={item.label}>
+                  <a
+                    href={item.href}
+                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-[#1A1A1A] mb-4">Legal</h4>
+            <ul className="space-y-3">
+              {["Privacy Policy", "Terms of Service"].map((item) => (
+                <li key={item}>
+                  <a
+                    href="#"
+                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-[#E7E5E4] flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-[#57534E]">
+            © {currentYear} StudyWith. All rights reserved.
+          </p>
+          <p className="text-sm text-[#57534E]">
+            Made for students who want to actually learn.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Home() {
+export default function StudyWithLanding() {
   return (
-    <div className="min-h-screen bg-white text-zinc-900">
-
-      {/* Subscribe banner — shown when redirected back after signup without payment */}
+    <div className="min-h-screen bg-[#FDFCF8]">
       <Suspense>
         <SubscribeBanner />
       </Suspense>
-
-      {/* ── Nav ───────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-zinc-100 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-sm font-semibold tracking-tight text-zinc-950">
-            StudyWith
-          </span>
-
-          <div className="hidden items-center gap-6 text-sm text-zinc-500 sm:flex">
-            <a href="#how-it-works" className="transition hover:text-zinc-900">
-              How it works
-            </a>
-            <a href="#features" className="transition hover:text-zinc-900">
-              Features
-            </a>
-            <a href="#pricing" className="transition hover:text-zinc-900">
-              Pricing
-            </a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="text-sm text-zinc-500 transition hover:text-zinc-900"
-            >
-              Sign in
-            </Link>
-            <CheckoutButton
-              label="Get started"
-              className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-          </div>
-        </div>
-      </nav>
-
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 pb-28 pt-24">
-        <div className="max-w-3xl">
-          <h1 className="text-5xl font-semibold leading-[1.1] tracking-tight text-zinc-950 sm:text-6xl lg:text-7xl">
-            The AI tutor that refuses to give you the answer.
-          </h1>
-          <p className="mt-7 max-w-xl text-lg leading-relaxed text-zinc-500">
-            StudyWith guides you through any assignment using Socratic
-            questioning. You do the thinking. The AI asks, prompts, and
-            challenges — never skips you to the solution.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <CheckoutButton
-              label="Start tutoring — €20/month"
-              className="rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-            <a
-              href="#how-it-works"
-              className="rounded-full border border-zinc-200 px-6 py-3 text-sm font-medium text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900"
-            >
-              See how it works
-            </a>
-          </div>
-          <p className="mt-5 text-xs text-zinc-400">
-            No contracts. Cancel anytime from your account.
-          </p>
-        </div>
-      </section>
-
-      {/* ── How it works ──────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="border-t border-zinc-100 py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-            How it works
-          </p>
-          <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
-            Three steps to understanding the material
-          </h2>
-
-          <div className="mt-16 grid gap-12 md:grid-cols-3">
-            {steps.map((s) => (
-              <div key={s.n}>
-                <div className="mb-5 text-5xl font-bold text-zinc-100">
-                  {s.n}
-                </div>
-                <h3 className="font-semibold text-zinc-900">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-                  {s.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Conversation preview */}
-          <div className="mt-16 overflow-hidden rounded-2xl border border-zinc-200">
-            <div className="flex items-center gap-2 border-b border-zinc-100 bg-zinc-50 px-5 py-3">
-              <div className="h-2 w-2 rounded-full bg-zinc-300" />
-              <p className="text-xs font-medium text-zinc-400">
-                Example session — Biology assignment
-              </p>
-            </div>
-            <div className="space-y-4 bg-white p-5 text-sm">
-              <div className="flex justify-start">
-                <div className="max-w-[72%] rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 leading-relaxed text-zinc-800">
-                  In one sentence — what do you think this assignment is asking
-                  you to do?
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <div className="max-w-[72%] rounded-2xl rounded-tr-sm bg-zinc-950 px-4 py-3 leading-relaxed text-white">
-                  I think it wants me to explain how photosynthesis converts
-                  light into energy?
-                </div>
-              </div>
-              <div className="flex justify-start">
-                <div className="max-w-[72%] rounded-2xl rounded-tl-sm bg-zinc-100 px-4 py-3 leading-relaxed text-zinc-800">
-                  Good start. What molecule does the plant produce to store that
-                  energy — and where does the carbon come from?
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ──────────────────────────────────────────────────────── */}
-      <section id="features" className="border-t border-zinc-100 bg-zinc-50 py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-            Features
-          </p>
-          <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
-            Everything you need to actually learn
-          </h2>
-
-          <div className="mt-16 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div key={f.title} className="border-t border-zinc-200 pt-5">
-                <h3 className="font-semibold text-zinc-900">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-                  {f.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ───────────────────────────────────────────────────────── */}
-      <section id="pricing" className="border-t border-zinc-100 py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-            Pricing
-          </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
-            One plan. Everything included.
-          </h2>
-          <p className="mt-3 text-sm text-zinc-500">
-            No tiers. No usage limits. No upsells.
-          </p>
-
-          <div className="mt-12 max-w-sm">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-5xl font-semibold tracking-tight text-zinc-950">
-                  €20
-                </span>
-                <span className="text-zinc-500">/ month</span>
-              </div>
-              <p className="mt-2 text-sm text-zinc-500">
-                Billed monthly. Cancel anytime from your dashboard.
-              </p>
-
-              <ul className="mt-8 space-y-3">
-                {pricingFeatures.map((feat) => (
-                  <li
-                    key={feat}
-                    className="flex items-start gap-3 text-sm text-zinc-700"
-                  >
-                    <span className="mt-0.5 shrink-0 text-zinc-400">—</span>
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8">
-                <CheckoutButton
-                  label="Get started"
-                  className="w-full rounded-full bg-zinc-950 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-                />
-              </div>
-              <p className="mt-3 text-center text-xs text-zinc-400">
-                No commitment. Cancel whenever.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Final CTA ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-zinc-100 bg-zinc-950 py-24 text-white">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Ready to actually understand your work?
-          </h2>
-          <p className="mt-4 max-w-lg text-zinc-400">
-            Stop submitting assignments you didn&apos;t fully understand. Start
-            a session, work through it properly, and leave with a score that
-            tells you exactly where you stand.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center gap-5">
-            <CheckoutButton
-              label="Start tutoring — €20/month"
-              className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-            <Link
-              href="/auth/login"
-              className="text-sm text-zinc-400 transition hover:text-white"
-            >
-              Already have an account? Sign in →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-zinc-100 py-10">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6">
-          <span className="text-sm font-semibold text-zinc-950">StudyWith</span>
-          <div className="flex gap-5 text-xs text-zinc-400">
-            <Link href="/auth/login" className="transition hover:text-zinc-700">
-              Sign in
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="transition hover:text-zinc-700"
-            >
-              Create account
-            </Link>
-            <a href="#pricing" className="transition hover:text-zinc-700">
-              Pricing
-            </a>
-          </div>
-          <p className="text-xs text-zinc-400">
-            © {new Date().getFullYear()} StudyWith
-          </p>
-        </div>
-      </footer>
+      <Navigation />
+      <main>
+        <Hero />
+        <HowItWorks />
+        <Features />
+        <UseCases />
+        <Pricing />
+        <FAQ />
+      </main>
+      <Footer />
     </div>
   );
 }
