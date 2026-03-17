@@ -28,7 +28,7 @@ export default async function AppLayout({
   // Fetch sessions for the sidebar
   const { data: sessions } = await getSupabaseAdmin()
     .from("sessions")
-    .select("id, assignment_text, created_at, receipt")
+    .select("id, assignment_text, title, created_at, receipt")
     .eq("user_id", user!.id)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -39,6 +39,7 @@ export default async function AppLayout({
         sessions={(sessions ?? []) as {
           id: string;
           assignment_text: string;
+          title: string | null;
           created_at: string;
           receipt: Record<string, unknown> | null;
         }[]}

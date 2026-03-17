@@ -43,6 +43,7 @@ export type Database = {
           id: string;
           user_id: string;
           assignment_text: string;
+          title: string | null;
           messages: Json;
           receipt: Json | null;
           created_at: string;
@@ -51,11 +52,13 @@ export type Database = {
           id?: string;
           user_id: string;
           assignment_text: string;
+          title?: string | null;
           messages?: Json;
           receipt?: Json | null;
           created_at?: string;
         };
         Update: {
+          title?: string | null;
           messages?: Json;
           receipt?: Json | null;
         };

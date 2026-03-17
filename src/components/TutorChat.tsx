@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Send } from "lucide-react";
+import { Send, ImagePlus, X } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -22,8 +22,13 @@ export default function TutorChat() {
   const [isEnding, setIsEnding] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isAssignmentExpanded, setIsAssignmentExpanded] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageMime, setImageMime] = useState<string>("");
+  const [isExtracting, setIsExtracting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   // Auth guard
@@ -44,8 +49,47 @@ export default function TutorChat() {
     if (isSessionStarted) textareaRef.current?.focus();
   }, [isSessionStarted]);
 
-  const handleStart = () => {
-    if (!assignment.trim()) return;
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // dataUrl = "data:<mime>;base64,<data>"
+      const [meta, data] = dataUrl.split(",");
+      const mime = meta.split(":")[1].split(";")[0];
+      setImagePreview(dataUrl);
+      setImageBase64(data);
+      setImageMime(mime);
+    };
+    reader.readAsDataURL(file);
+    // reset so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleStart = async () => {
+    let finalAssignment = assignment.trim();
+
+    // If image uploaded but no assignment text yet, extract first
+    if (imageBase64 && !finalAssignment) {
+      setIsExtracting(true);
+      try {
+        const res = await fetch("/api/extract-assignment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64, mimeType: imageMime }),
+        });
+        const data = (await res.json()) as { text?: string };
+        if (data.text) {
+          finalAssignment = data.text;
+          setAssignment(data.text);
+        }
+      } finally {
+        setIsExtracting(false);
+      }
+    }
+
+    if (!finalAssignment) return;
     setIsSessionStarted(true);
     setMessages([
       {
@@ -132,6 +176,7 @@ export default function TutorChat() {
 
   // ── Before session starts: centered prompt ─────────────────────────────────
   if (!isSessionStarted) {
+    const canStart = !!assignment.trim() || !!imageBase64;
     return (
       <div className="h-screen flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-xl">
@@ -139,28 +184,73 @@ export default function TutorChat() {
             New tutoring session
           </h1>
           <p className="text-sm text-[#57534E] mb-6 leading-relaxed">
-            Paste your assignment below. Your tutor will guide you to the
-            answer step by step — without giving it away.
+            Paste your assignment below, or upload a photo and we&apos;ll read it for you.
           </p>
+
+          {/* Image preview */}
+          {imagePreview && (
+            <div className="relative mb-4 rounded-2xl overflow-hidden border border-[#E7E5E4] shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview}
+                alt="Assignment"
+                className="w-full max-h-56 object-cover"
+              />
+              <button
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageBase64(null);
+                  setImageMime("");
+                }}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           <textarea
             value={assignment}
             onChange={(e) => setAssignment(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.metaKey) handleStart();
+              if (e.key === "Enter" && e.metaKey) void handleStart();
             }}
-            placeholder="Paste your assignment, problem, or question here..."
+            placeholder={
+              imageBase64
+                ? "Add notes or extra context (optional)..."
+                : "Paste your assignment, problem, or question here..."
+            }
             rows={6}
             className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-4 shadow-sm"
           />
 
-          <button
-            onClick={handleStart}
-            disabled={!assignment.trim()}
-            className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Start session
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => void handleStart()}
+              disabled={!canStart || isExtracting}
+              className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isExtracting ? "Reading image..." : "Start session"}
+            </button>
+
+            {/* Image upload button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-full border border-[#E7E5E4] px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706] hover:text-[#D97706] transition"
+              title="Upload image of assignment"
+            >
+              <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
+              Upload image
+            </button>
+          </div>
+
           <p className="text-xs text-[#A8A29E] mt-3">
             Cmd+Enter to start
           </p>
