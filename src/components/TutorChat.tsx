@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Send, ImagePlus, X, FileText } from "lucide-react";
+import { Send, ImagePlus, X, FileText, ChevronDown } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -24,7 +24,7 @@ const SUBJECT_TO_POOL: Record<Subject, keyof typeof OPENING_MESSAGES> = {
   General: "General", Maths: "Maths", Science: "Science", English: "English",
   History: "History", Languages: "Languages",
   "Computer Science": "General", Engineering: "Maths",
-  Economics: "General", Psychology: "Science", Business: "General", "Art & Design": "English",
+  Economics: "General", Psychology: "General", Business: "General", "Art & Design": "English",
 };
 
 function detectSubject(text: string): Subject {
@@ -122,9 +122,11 @@ export default function TutorChat({
   const [fileName, setFileName] = useState<string>("");
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
+  const [subjectOpen, setSubjectOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const subjectDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // Auth guard
@@ -149,6 +151,17 @@ export default function TutorChat({
   useEffect(() => {
     if (!isSessionStarted) setSubject(detectSubject(assignment));
   }, [assignment, isSessionStarted]);
+
+  // Close subject dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (subjectDropdownRef.current && !subjectDropdownRef.current.contains(e.target as Node)) {
+        setSubjectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // Auto-start when arriving from a "Review this →" link (?topic=...)
   useEffect(() => {
@@ -447,19 +460,35 @@ export default function TutorChat({
             className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-4 shadow-sm"
           />
 
-          {/* Subject — auto-detected, tap to change */}
+          {/* Subject — auto-detected, click to override */}
           <div className="flex items-center gap-2 mb-5">
             <span className="text-xs text-[#A8A29E]">Subject</span>
-            <select
-              value={subject}
-              onChange={(e) => setSubject(e.target.value as Subject)}
-              className="rounded-md bg-[#D97706]/10 px-2.5 py-1 text-xs font-medium text-[#D97706] border-none outline-none cursor-pointer hover:bg-[#D97706]/20 transition appearance-none pr-5"
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23D97706' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center" }}
-            >
-              {SUBJECT_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <div ref={subjectDropdownRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setSubjectOpen((v) => !v)}
+                className="flex items-center gap-1 text-xs font-medium text-[#57534E] hover:text-[#1A1A1A] transition"
+              >
+                {subject}
+                <ChevronDown className="w-3 h-3 text-[#A8A29E]" strokeWidth={2} />
+              </button>
+              {subjectOpen && (
+                <div className="absolute top-full left-0 mt-1.5 w-44 bg-white border border-[#E7E5E4] rounded-xl shadow-lg z-20 py-1.5 overflow-hidden">
+                  {SUBJECT_OPTIONS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => { setSubject(s); setSubjectOpen(false); }}
+                      className={`w-full text-left px-3.5 py-1.5 text-xs transition hover:bg-[#F5F4F0] ${
+                        s === subject ? "text-[#D97706] font-medium" : "text-[#57534E]"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
