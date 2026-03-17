@@ -105,6 +105,20 @@ export default function TutorChat({
     if (isSessionStarted) textareaRef.current?.focus();
   }, [isSessionStarted]);
 
+  // Auto-start when arriving from a "Review this →" link (?topic=...)
+  useEffect(() => {
+    if (!initialAssignment) return;
+    setIsSessionStarted(true);
+    setMessages([
+      {
+        id: crypto.randomUUID(),
+        role: "tutor",
+        content: getOpeningMessage("General"),
+      },
+    ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const clearFile = () => {
     setImagePreview(null);
     setImageBase64(null);
