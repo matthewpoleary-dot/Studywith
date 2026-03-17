@@ -717,8 +717,15 @@ export default function StudyWithLanding() {
     const remember = localStorage.getItem("sw_remember");
     if (remember !== "1") return; // not opted in — stay on landing page
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/app");
+    // getUser() validates the token with the server (unlike getSession which
+    // trusts the local cache). If the user was deleted, this returns null and
+    // we clear sw_remember to break any redirect loop.
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        router.replace("/app");
+      } else {
+        localStorage.removeItem("sw_remember");
+      }
     });
   }, [router]);
 
