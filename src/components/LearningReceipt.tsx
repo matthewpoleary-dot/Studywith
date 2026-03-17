@@ -69,15 +69,12 @@ export default async function LearningReceipt({ sessionId }: LearningReceiptProp
           Learning Receipt
         </p>
         <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-1">
-          {session.title ? (
-            <>{session.title} — <span className="text-[#D97706]">{date}</span></>
-          ) : (
-            <>Session from <span className="text-[#D97706]">{date}</span></>
-          )}
+          {session.title ?? "Session"}
         </h1>
-        <div className="flex items-center gap-3 mt-3 flex-wrap">
+        <p className="text-sm font-medium text-[#D97706] mb-3">{date}</p>
+        <div className="flex items-center gap-3 flex-wrap">
           <p className="text-sm text-[#57534E]">
-            Shareable — never shows exact answers, only what you learned.
+            Shareable. Never shows exact answers, only what you learned.
           </p>
           <CopyLinkButton />
         </div>

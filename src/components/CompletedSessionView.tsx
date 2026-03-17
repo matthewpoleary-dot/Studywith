@@ -84,6 +84,20 @@ export default function CompletedSessionView({ sessionId, assignment, messages, 
 
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto">
+        {tab === "receipt" && receipt && (
+          /* ── Tutor opener ──────────────────────────────────────────────── */
+          <div className="px-6 pt-8 pb-0">
+            <div className="max-w-2xl mx-auto flex items-start gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-[9px] font-bold text-[#D97706]">T</span>
+              </div>
+              <div className="rounded-2xl rounded-bl-sm bg-white border border-[#E7E5E4] px-4 py-3 text-sm text-[#1A1A1A] leading-relaxed shadow-sm">
+                I see we&apos;re reviewing <span className="font-medium">{title ?? "your session"}</span>. What do you remember most from this?
+              </div>
+            </div>
+          </div>
+        )}
+
         {tab === "chat" ? (
           /* ── Read-only chat ────────────────────────────────────────────── */
           <div className="py-8 px-6">
@@ -127,10 +141,11 @@ export default function CompletedSessionView({ sessionId, assignment, messages, 
                   Learning Receipt
                 </p>
                 <h1 className="font-serif text-2xl md:text-3xl font-medium text-[#1A1A1A] mb-1">
-                  {title ? <>{title} — <span className="text-[#D97706]">{date}</span></> : <>Session from <span className="text-[#D97706]">{date}</span></>}
+                  {title ?? "Session"}
                 </h1>
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <p className="text-sm text-[#57534E]">Shareable — never shows exact answers.</p>
+                <p className="text-sm font-medium text-[#D97706] mb-2">{date}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <p className="text-sm text-[#57534E]">Shareable. Never shows exact answers.</p>
                   <CopyLinkButton />
                 </div>
               </div>
