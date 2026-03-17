@@ -219,6 +219,14 @@ export default function TutorChat({
     const canStart = !!assignment.trim() || !!imageBase64;
     return (
       <div className="h-screen flex items-center justify-center px-6 py-12">
+        {/* File input must be mounted here too since active session JSX isn't rendered yet */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
         <div className="w-full max-w-xl">
           <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
             New tutoring session
