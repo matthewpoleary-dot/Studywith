@@ -135,16 +135,21 @@ export default function TutorChat({
   };
 
   const handleSend = async () => {
-    if (!input.trim() || !isSessionStarted || isLoading) return;
+    if ((!input.trim() && !imageBase64) || !isSessionStarted || isLoading) return;
 
     const userMessage: TutorMessage = {
       id: crypto.randomUUID(),
       role: "student",
-      content: input.trim(),
+      content: input.trim() || "📷 [image attached]",
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    const pendingImage = imageBase64;
+    const pendingMime = imageMime;
+    setImagePreview(null);
+    setImageBase64(null);
+    setImageMime("");
     setIsLoading(true);
 
     try {
@@ -156,6 +161,7 @@ export default function TutorChat({
           subject,
           messages: [...messages, userMessage],
           sessionId,
+          ...(pendingImage && { imageBase64: pendingImage, imageMime: pendingMime }),
         }),
       });
 
@@ -295,13 +301,6 @@ export default function TutorChat({
             </button>
 
             {/* Image upload button */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageSelect}
-            />
             <button
               onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center gap-2 rounded-full border border-[#E7E5E4] px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706] hover:text-[#D97706] transition"
@@ -399,6 +398,15 @@ export default function TutorChat({
         </div>
       </div>
 
+      {/* Hidden file input — always mounted */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageSelect}
+      />
+
       {/* Input bar */}
       <div className="sticky bottom-0 bg-[#FDFCF8]/95 backdrop-blur-sm border-t border-[#E7E5E4] px-6 py-4">
         <form
@@ -408,6 +416,27 @@ export default function TutorChat({
             void handleSend();
           }}
         >
+          {/* Image attachment preview */}
+          {imagePreview && (
+            <div className="mb-2 flex">
+              <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagePreview}
+                  alt="attached"
+                  className="h-16 rounded-xl border border-[#E7E5E4] shadow-sm object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setImagePreview(null); setImageBase64(null); setImageMime(""); }}
+                  className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-[#1A1A1A] text-white"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-end gap-3 bg-white border border-[#E7E5E4] rounded-2xl px-4 py-3 shadow-sm focus-within:border-[#D97706] focus-within:ring-1 focus-within:ring-[#D97706]/30 transition">
             <textarea
               ref={textareaRef}
@@ -425,8 +454,16 @@ export default function TutorChat({
               style={{ lineHeight: "1.5rem" }}
             />
             <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[#A8A29E] hover:text-[#D97706] transition"
+              title="Attach image"
+            >
+              <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+            <button
               type="submit"
-              disabled={!input.trim() || isLoading}
+              disabled={(!input.trim() && !imageBase64) || isLoading}
               className="h-8 w-8 shrink-0 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Send className="w-3.5 h-3.5" strokeWidth={2} />

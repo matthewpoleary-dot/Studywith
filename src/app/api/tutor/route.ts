@@ -33,6 +33,8 @@ type RequestBody = {
   subject?: string;
   messages: TutorMessage[];
   sessionId?: string;
+  imageBase64?: string;
+  imageMime?: string;
 };
 
 export async function POST(request: Request) {
@@ -96,17 +98,43 @@ export async function POST(request: Request) {
       .eq("user_id", user.id);
   }
 
+  // Build message list — if image attached, use vision model and inject image into last user message
+  const systemMessage = {
+    role: "system" as const,
+    content: `${BASE_PROMPT}${SUBJECT_ADDONS[body.subject ?? ""] ?? ""}\n\nThe student's assignment is:\n${body.assignment}`,
+  };
+
+  type GroqMessage =
+    | { role: "system" | "user" | "assistant"; content: string }
+    | { role: "user"; content: Array<{ type: "image_url"; image_url: { url: string } } | { type: "text"; text: string }> };
+
+  let groqMessages: GroqMessage[];
+  let model: string;
+
+  if (body.imageBase64 && chatMessages.length > 0) {
+    const lastMsg = chatMessages[chatMessages.length - 1];
+    model = "meta-llama/llama-4-scout-17b-16e-instruct";
+    groqMessages = [
+      systemMessage,
+      ...chatMessages.slice(0, -1),
+      {
+        role: "user" as const,
+        content: [
+          { type: "image_url" as const, image_url: { url: `data:${body.imageMime ?? "image/jpeg"};base64,${body.imageBase64}` } },
+          { type: "text" as const, text: typeof lastMsg.content === "string" ? lastMsg.content : "" },
+        ],
+      },
+    ];
+  } else {
+    model = "llama-3.3-70b-versatile";
+    groqMessages = [systemMessage, ...chatMessages];
+  }
+
   // Call Groq
   let completion;
   try {
-    completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 512,
-      messages: [
-        { role: "system", content: `${BASE_PROMPT}${SUBJECT_ADDONS[body.subject ?? ""] ?? ""}\n\nThe student's assignment is:\n${body.assignment}` },
-        ...chatMessages,
-      ],
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    completion = await groq.chat.completions.create({ model, max_tokens: 512, messages: groqMessages as any });
   } catch (err) {
     console.error("[tutor] Groq error:", err);
     return Response.json({ error: "AI unavailable" }, { status: 502 });
