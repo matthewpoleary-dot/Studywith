@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function PaymentSuccessPage() {
-  const router = useRouter();
   const [attempts, setAttempts] = useState(0);
   const [timedOut, setTimedOut] = useState(false);
 
@@ -20,7 +18,8 @@ export default function PaymentSuccessPage() {
         const res = await fetch("/api/check-subscription");
         const data = (await res.json()) as { subscribed: boolean };
         if (data.subscribed) {
-          router.push("/app");
+          // Full reload so the proxy reads the freshly-healed DB row
+          window.location.href = "/app";
           return;
         }
       } catch {
@@ -59,10 +58,10 @@ export default function PaymentSuccessPage() {
       <div className="text-center max-w-md">
         <div className="w-12 h-12 border-4 border-[#D97706] border-t-transparent rounded-full animate-spin mx-auto mb-6" />
         <h1 className="font-serif text-2xl font-medium text-[#1A1A1A] mb-3">
-          Confirming your payment...
+          Verifying your access...
         </h1>
         <p className="text-[#57534E]">
-          Just a moment while we activate your account.
+          Just a moment while we confirm your subscription.
         </p>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -10,7 +10,6 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,17 +36,19 @@ function LoginForm() {
       const data = (await res.json()) as { subscribed: boolean };
 
       if (data.subscribed) {
+        // Full reload so the proxy reads fresh cookies & DB state (no router cache)
         const redirectTo = searchParams.get("redirectTo") ?? "/app";
-        router.push(redirectTo);
+        window.location.href = redirectTo;
       } else {
-        router.push("/?checkout=required");
+        // Not subscribed yet — send to the polling page which retries up to
+        // 15 times. It runs the Stripe email fallback on each attempt, so even
+        // old accounts whose stripe_customer_id was never saved will heal.
+        window.location.href = "/payment-success";
       }
     } catch {
-      // Network error — fall back to /app and let the proxy decide
-      router.push(searchParams.get("redirectTo") ?? "/app");
+      // Network error — full reload to /app and let the proxy decide
+      window.location.href = searchParams.get("redirectTo") ?? "/app";
     }
-
-    router.refresh();
   };
 
   return (
