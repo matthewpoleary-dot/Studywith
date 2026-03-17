@@ -13,8 +13,35 @@ export type TutorMessage = {
   content: string;
 };
 
-const SUBJECTS = ["General", "Maths", "English", "Science", "History", "Languages"] as const;
-type Subject = (typeof SUBJECTS)[number];
+const SUBJECT_OPTIONS = [
+  "General", "Maths", "Science", "English", "History", "Languages",
+  "Computer Science", "Engineering", "Economics", "Psychology", "Business", "Art & Design",
+] as const;
+type Subject = (typeof SUBJECT_OPTIONS)[number];
+
+// Map display subjects to opening-message pools
+const SUBJECT_TO_POOL: Record<Subject, keyof typeof OPENING_MESSAGES> = {
+  General: "General", Maths: "Maths", Science: "Science", English: "English",
+  History: "History", Languages: "Languages",
+  "Computer Science": "General", Engineering: "Maths",
+  Economics: "General", Psychology: "Science", Business: "General", "Art & Design": "English",
+};
+
+function detectSubject(text: string): Subject {
+  const t = text.toLowerCase();
+  if (/\b(algorithm|programming|code|python|javascript|java|c\+\+|database|software|html|css|function|loop|array|recursion|compiler|network|api|git)\b/.test(t)) return "Computer Science";
+  if (/\b(circuit|thermodynamics|mechanical|structural|stress|strain|fluid|engineering|cad|electronics|statics|dynamics|beam|torque|voltage|current)\b/.test(t)) return "Engineering";
+  if (/\b(economics|supply|demand|gdp|inflation|macroeconom|microeconom|fiscal|monetary|elasticity|equilibrium|market|trade)\b/.test(t)) return "Economics";
+  if (/\b(psychology|behaviour|cognitive|memory|attachment|personality|experiment|mental|stimulus|response|piaget|freud|brain)\b/.test(t)) return "Psychology";
+  if (/\b(business|marketing|management|strategy|finance|accounting|revenue|profit|entrepreneur|stakeholder|swot|cash flow)\b/.test(t)) return "Business";
+  if (/\b(art|design|colour|composition|painting|sculpture|photography|typography|texture|perspective|visual|aesthetic)\b/.test(t)) return "Art & Design";
+  if (/\b(math|algebra|calculus|equation|differentiat|integrat|trigonometry|geometry|probability|statistics|vector|matrix|polynomial|logarithm|quadratic)\b/.test(t)) return "Maths";
+  if (/\b(biology|chemistry|physics|photosynthesis|atom|molecule|cell|dna|evolution|force|energy|wave|element|compound|reaction|enzyme)\b/.test(t)) return "Science";
+  if (/\b(essay|literature|poem|poetry|novel|write|writing|argument|thesis|character|theme|metaphor|narrative|prose|language analysis)\b/.test(t)) return "English";
+  if (/\b(history|war|revolution|empire|century|medieval|ancient|cold war|world war|industrial|political|government|democracy|monarch)\b/.test(t)) return "History";
+  if (/\b(french|spanish|german|italian|japanese|chinese|korean|arabic|latin|translate|conjugat|vocabulary|grammar|verb|tense)\b/.test(t)) return "Languages";
+  return "General";
+}
 
 const OPENING_MESSAGES: Record<string, string[]> = {
   Maths: [
@@ -52,7 +79,8 @@ const OPENING_MESSAGES: Record<string, string[]> = {
 };
 
 function getOpeningMessage(subject: Subject): string {
-  const pool = OPENING_MESSAGES[subject] ?? OPENING_MESSAGES.General;
+  const poolKey = SUBJECT_TO_POOL[subject] ?? "General";
+  const pool = OPENING_MESSAGES[poolKey] ?? OPENING_MESSAGES.General;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -80,7 +108,7 @@ export default function TutorChat({
   initialSessionId = null as string | null,
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
-  const [subject, setSubject] = useState<Subject>("General");
+  const [subject, setSubject] = useState<Subject>(() => detectSubject(initialAssignment));
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<TutorMessage[]>(initialMessages);
   const [isSessionStarted, setIsSessionStarted] = useState(initialMessages.length > 0);
@@ -116,6 +144,11 @@ export default function TutorChat({
   useEffect(() => {
     if (isSessionStarted) textareaRef.current?.focus();
   }, [isSessionStarted]);
+
+  // Auto-detect subject as user types
+  useEffect(() => {
+    if (!isSessionStarted) setSubject(detectSubject(assignment));
+  }, [assignment, isSessionStarted]);
 
   // Auto-start when arriving from a "Review this →" link (?topic=...)
   useEffect(() => {
@@ -414,25 +447,19 @@ export default function TutorChat({
             className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-4 shadow-sm"
           />
 
-          {/* Subject picker */}
-          <div className="mb-5">
-            <p className="text-xs font-medium text-[#57534E] mb-2">Subject</p>
-            <div className="flex flex-wrap gap-2">
-              {SUBJECTS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSubject(s)}
-                  className={`rounded-full px-4 py-1.5 text-sm transition ${
-                    subject === s
-                      ? "bg-[#D97706] text-white"
-                      : "border border-[#E7E5E4] text-[#57534E] hover:border-[#D97706] hover:text-[#D97706]"
-                  }`}
-                >
-                  {s}
-                </button>
+          {/* Subject — auto-detected, tap to change */}
+          <div className="flex items-center gap-2 mb-5">
+            <span className="text-xs text-[#A8A29E]">Subject</span>
+            <select
+              value={subject}
+              onChange={(e) => setSubject(e.target.value as Subject)}
+              className="rounded-md bg-[#D97706]/10 px-2.5 py-1 text-xs font-medium text-[#D97706] border-none outline-none cursor-pointer hover:bg-[#D97706]/20 transition appearance-none pr-5"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23D97706' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center" }}
+            >
+              {SUBJECT_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
               ))}
-            </div>
+            </select>
           </div>
 
           <div className="flex items-center gap-3">
