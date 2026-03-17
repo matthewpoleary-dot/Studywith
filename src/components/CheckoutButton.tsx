@@ -18,11 +18,12 @@ export default function CheckoutButton({
     setLoading(true);
 
     const supabase = createSupabaseBrowserClient();
+    // getUser() validates against the server — avoids stale cached sessions
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (!user) {
       window.location.href = "/auth/signup";
       return;
     }
@@ -34,6 +35,8 @@ export default function CheckoutButton({
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setLoading(false);
       }
     } catch {
       setLoading(false);
