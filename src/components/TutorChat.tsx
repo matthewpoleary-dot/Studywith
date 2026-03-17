@@ -16,6 +16,46 @@ export type TutorMessage = {
 const SUBJECTS = ["General", "Maths", "English", "Science", "History", "Languages"] as const;
 type Subject = (typeof SUBJECTS)[number];
 
+const OPENING_MESSAGES: Record<string, string[]> = {
+  Maths: [
+    "Let's approach this systematically. What does the problem ask you to find, and what information do you have to work with?",
+    "Good. Before we start — what's the mathematical concept or method you think is relevant here?",
+    "Let's think this through carefully. What do you already know, and what are you trying to solve for?",
+  ],
+  English: [
+    "Let's think critically about this. What's the core argument or idea you think this assignment wants you to explore?",
+    "Good choice of topic. What angle do you want to take, and what's the first thing that comes to mind?",
+    "Before we start writing — what do you think makes a strong response to this kind of question?",
+  ],
+  Science: [
+    "Interesting topic. What's the key principle or concept you think this question is built around?",
+    "Let's break this down. What do you already know about this topic, and what feels unclear?",
+    "Good. What scientific idea or law do you think is central to answering this?",
+  ],
+  History: [
+    "Let's dig into this. What's your initial take on the main causes or factors at play here?",
+    "Good. Before we analyse — what do you already know about this period or event?",
+    "Interesting question. What argument do you think this essay wants you to make?",
+  ],
+  Languages: [
+    "Let's work through this together. What grammatical structure or vocabulary do you think is being tested here?",
+    "Good. What's your first attempt at this? Don't worry about being perfect — just try.",
+    "Let's think about the rules at play. What pattern do you notice in this question?",
+  ],
+  General: [
+    "Let's work through this together. What's your first instinct about what this question is really getting at?",
+    "Good. Before we dive in — in your own words, what do you think this assignment wants you to demonstrate?",
+    "Let's think this through properly. What's the core concept or skill being tested here?",
+    "Interesting. What do you already know that feels relevant to this?",
+    "Let's approach this methodically. What's the key thing you need to understand or show here?",
+  ],
+};
+
+function getOpeningMessage(subject: Subject): string {
+  const pool = OPENING_MESSAGES[subject] ?? OPENING_MESSAGES.General;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 type TutorChatProps = {
   initialAssignment?: string;
   initialMessages?: TutorMessage[];
@@ -153,8 +193,7 @@ export default function TutorChat({
       {
         id: crypto.randomUUID(),
         role: "tutor",
-        content:
-          "Got it. I'll help you work through this, but you'll do the thinking. In one sentence, what do you think this assignment is really asking you to do?",
+        content: getOpeningMessage(subject),
       },
     ]);
   };
@@ -403,29 +442,29 @@ export default function TutorChat({
     <div className="flex flex-col h-screen">
       {/* Assignment strip */}
       <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
-        <div className="max-w-2xl mx-auto flex items-start gap-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
+          {/* Subject chip */}
+          {subject !== "General" && (
+            <span className="shrink-0 rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-medium text-[#D97706] uppercase tracking-wide">
+              {subject}
+            </span>
+          )}
+          {/* Truncated assignment — click to expand */}
           <button
             onClick={() => setIsAssignmentExpanded((v) => !v)}
-            className="flex-1 min-w-0 text-left group"
+            className="flex-1 min-w-0 text-left"
+            title={isAssignmentExpanded ? undefined : assignment}
           >
-            <p
-              className={`text-xs text-[#57534E] transition-all ${
-                isAssignmentExpanded ? "" : "truncate"
-              }`}
-            >
-              <span className="font-semibold text-[#1A1A1A]">Assignment:</span>{" "}
+            <p className={`text-xs text-[#57534E] leading-relaxed transition-all ${isAssignmentExpanded ? "" : "line-clamp-1"}`}>
               {assignment}
             </p>
-            <span className="text-[10px] text-[#A8A29E] group-hover:text-[#57534E] transition mt-0.5 block">
-              {isAssignmentExpanded ? "Show less ▲" : "Show more ▼"}
-            </span>
           </button>
           <button
             onClick={() => void handleEndSession()}
             disabled={messages.length === 0 || isEnding || !sessionId}
-            className="shrink-0 rounded-full border border-[#E7E5E4] px-4 py-1.5 text-xs font-medium text-[#57534E] hover:border-red-300 hover:text-red-500 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+            className="shrink-0 rounded-lg border border-[#E7E5E4] px-4 py-1.5 text-xs font-medium text-[#57534E] hover:border-red-300 hover:text-red-500 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isEnding ? "Ending..." : "End session"}
+            {isEnding ? "Ending…" : "End session"}
           </button>
         </div>
       </div>

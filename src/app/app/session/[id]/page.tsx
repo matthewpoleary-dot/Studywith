@@ -7,6 +7,16 @@ import CompletedSessionView from "@/components/CompletedSessionView";
 import type { Database, LearningReceipt } from "@/lib/database.types";
 import type { TutorMessage } from "@/components/TutorChat";
 
+type SessionRow = {
+  id: string;
+  user_id: string;
+  assignment_text: string;
+  title: string | null;
+  messages: unknown;
+  receipt: unknown | null;
+  created_at: string;
+};
+
 export default async function SessionPage({
   params,
 }: {
@@ -24,12 +34,26 @@ export default async function SessionPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login?redirectTo=/app");
 
-  // Fetch the session
-  const { data: session } = await getSupabaseAdmin()
-    .from("sessions")
+  // Try to fetch the session (with title column)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = getSupabaseAdmin().from("sessions") as any;
+  let session: SessionRow | null = null;
+
+  const { data: full, error: fullError } = await admin
     .select("id, user_id, assignment_text, title, messages, receipt, created_at")
     .eq("id", id)
     .single();
+
+  if (!fullError) {
+    session = full as SessionRow;
+  } else {
+    // title column may not exist yet — fall back without it
+    const { data: basic } = await admin
+      .select("id, user_id, assignment_text, messages, receipt, created_at")
+      .eq("id", id)
+      .single();
+    if (basic) session = { ...basic, title: null } as SessionRow;
+  }
 
   if (!session || session.user_id !== user.id) notFound();
 
