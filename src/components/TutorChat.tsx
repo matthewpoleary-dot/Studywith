@@ -36,6 +36,7 @@ export default function TutorChat({
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>("");
   const [isExtracting, setIsExtracting] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,16 +65,29 @@ export default function TutorChat({
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result as string;
-      // dataUrl = "data:<mime>;base64,<data>"
-      const [meta, data] = dataUrl.split(",");
-      const mime = meta.split(":")[1].split(";")[0];
-      setImagePreview(dataUrl);
-      setImageBase64(data);
-      setImageMime(mime);
+      const img = new Image();
+      img.onload = () => {
+        // Compress to max 1024px — keeps base64 well under Next.js 4MB body limit
+        const MAX = 1024;
+        let { width, height } = img;
+        if (width > height) {
+          if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+        } else {
+          if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL("image/jpeg", 0.82);
+        const [, data] = compressed.split(",");
+        setImagePreview(compressed);
+        setImageBase64(data);
+        setImageMime("image/jpeg");
+      };
+      img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
-    // reset so same file can be re-selected
     e.target.value = "";
   };
 
@@ -83,17 +97,22 @@ export default function TutorChat({
     // If image uploaded but no assignment text yet, extract first
     if (imageBase64 && !finalAssignment) {
       setIsExtracting(true);
+      setExtractError(null);
       try {
         const res = await fetch("/api/extract-assignment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageBase64, mimeType: imageMime }),
         });
-        const data = (await res.json()) as { text?: string };
+        const data = (await res.json()) as { text?: string; error?: string };
         if (data.text) {
           finalAssignment = data.text;
           setAssignment(data.text);
+        } else {
+          setExtractError("Couldn't read the image. Try again or type your assignment.");
         }
+      } catch {
+        setExtractError("Network error reading image. Try again.");
       } finally {
         setIsExtracting(false);
       }
@@ -217,6 +236,12 @@ export default function TutorChat({
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
+          )}
+
+          {extractError && (
+            <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+              {extractError}
+            </p>
           )}
 
           <textarea
