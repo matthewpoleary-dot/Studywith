@@ -269,15 +269,18 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
         />
       </aside>
 
-      {/* Desktop collapsed — floating toggle */}
+      {/* Desktop collapsed — floating toggle with brand */}
       {desktopCollapsed && (
-        <button
-          className="hidden md:flex fixed top-4 left-4 z-50 p-2 rounded-xl bg-white border border-[#E7E5E4] shadow-sm text-[#57534E] hover:text-[#1A1A1A] transition-colors"
-          onClick={() => setDesktopCollapsed(false)}
-          title="Open sidebar"
-        >
-          <PanelLeftOpen className="w-4 h-4" strokeWidth={1.5} />
-        </button>
+        <div className="hidden md:flex fixed top-0 left-0 z-50 items-center gap-2.5 px-4 h-[62px] border-b border-[#E7E5E4] bg-[#F5F4F0]">
+          <button
+            onClick={() => setDesktopCollapsed(false)}
+            title="Open sidebar"
+            className="p-1.5 rounded-lg text-[#A8A29E] hover:text-[#57534E] hover:bg-[#E7E5E4] transition-colors"
+          >
+            <PanelLeftOpen className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+          <span className="font-serif text-base font-semibold text-[#1A1A1A]">StudyWith</span>
+        </div>
       )}
 
       {/* Desktop sidebar */}
