@@ -711,9 +711,11 @@ const Footer = () => {
 export default function StudyWithLanding() {
   const router = useRouter();
 
-  // Auto-redirect already-authenticated users straight to the app.
-  // This keeps PWA users signed in — no login prompt on every launch.
+  // Auto-redirect authenticated users who chose "Keep me signed in".
+  // If they unchecked that option, show the landing page so they sign in manually.
   useEffect(() => {
+    const remember = localStorage.getItem("sw_remember");
+    if (remember !== "1") return; // not opted in — stay on landing page
     const supabase = createSupabaseBrowserClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) router.replace("/app");

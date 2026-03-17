@@ -9,6 +9,7 @@ import CheckoutButton from "@/components/CheckoutButton";
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [needsSubscription, setNeedsSubscription] = useState(false);
@@ -28,21 +29,21 @@ function LoginForm() {
       return;
     }
 
+    // Persist the user's "keep me signed in" preference
+    localStorage.setItem("sw_remember", keepSignedIn ? "1" : "0");
+
     // Check subscription — heals DB via Stripe fallback if webhook was missed
     try {
       const res = await fetch("/api/check-subscription");
       const data = (await res.json()) as { subscribed: boolean };
 
       if (data.subscribed) {
-        // Full reload so the proxy reads fresh cookies & DB state
         window.location.href = searchParams.get("redirectTo") ?? "/app";
       } else {
-        // Show subscribe UI inline — no confusing redirect or spinner
         setNeedsSubscription(true);
         setLoading(false);
       }
     } catch {
-      // Network error — go to /app and let the proxy decide
       window.location.href = searchParams.get("redirectTo") ?? "/app";
     }
   };
@@ -97,12 +98,20 @@ function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label
-          className="text-xs font-medium text-[#57534E]"
-          htmlFor="password"
-        >
-          Password
-        </label>
+        <div className="flex items-center justify-between">
+          <label
+            className="text-xs font-medium text-[#57534E]"
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <Link
+            href="/auth/forgot-password"
+            className="text-xs text-[#A8A29E] hover:text-[#D97706] transition-colors"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <input
           id="password"
           type="password"
@@ -114,6 +123,26 @@ function LoginForm() {
           className="rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
         />
       </div>
+
+      {/* Keep me signed in toggle */}
+      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={keepSignedIn}
+          onClick={() => setKeepSignedIn(!keepSignedIn)}
+          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+            keepSignedIn ? "bg-[#1A1A1A]" : "bg-[#E7E5E4]"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+              keepSignedIn ? "translate-x-4" : "translate-x-0"
+            }`}
+          />
+        </button>
+        <span className="text-xs text-[#57534E]">Keep me signed in</span>
+      </label>
 
       {error && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">

@@ -1,0 +1,326 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
+
+type Tab = "account" | "profile";
+
+export default function SettingsPage() {
+  const [tab, setTab] = useState<Tab>("account");
+  const [user, setUser] = useState<User | null>(null);
+
+  // Account tab
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordDone, setPasswordDone] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const [accountError, setAccountError] = useState<string | null>(null);
+
+  // Profile tab
+  const [displayName, setDisplayName] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileDone, setProfileDone] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user);
+        setNewEmail(user.email ?? "");
+        setDisplayName((user.user_metadata?.full_name as string) ?? "");
+      }
+    });
+  }, []);
+
+  const handleEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailLoading(true);
+    setAccountError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    if (error) {
+      setAccountError(error.message);
+    } else {
+      setEmailSent(true);
+    }
+    setEmailLoading(false);
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setAccountError("Passwords don't match.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setAccountError("Password must be at least 8 characters.");
+      return;
+    }
+    setPasswordLoading(true);
+    setAccountError(null);
+
+    const supabase = createSupabaseBrowserClient();
+    // Verify current password first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email ?? "",
+      password: currentPassword,
+    });
+    if (signInError) {
+      setAccountError("Current password is incorrect.");
+      setPasswordLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setAccountError(error.message);
+    } else {
+      setPasswordDone(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    setPasswordLoading(false);
+  };
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    setProfileError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: displayName.trim() },
+    });
+    if (error) {
+      setProfileError(error.message);
+    } else {
+      setProfileDone(true);
+      setTimeout(() => setProfileDone(false), 3000);
+    }
+    setProfileLoading(false);
+  };
+
+  const inputClass =
+    "rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition";
+
+  const primaryBtn =
+    "self-start rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-60 disabled:cursor-not-allowed";
+
+  return (
+    <div className="max-w-2xl mx-auto px-6 py-10 md:py-14">
+      <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-8">
+        Settings
+      </h1>
+
+      {/* Tabs */}
+      <div className="flex gap-0 mb-8 border-b border-[#E7E5E4]">
+        {(
+          [
+            ["account", "Account"],
+            ["profile", "Personal information"],
+          ] as [Tab, string][]
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => {
+              setTab(id);
+              setAccountError(null);
+            }}
+            className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              tab === id
+                ? "border-[#1A1A1A] text-[#1A1A1A]"
+                : "border-transparent text-[#57534E] hover:text-[#1A1A1A]"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Account tab ── */}
+      {tab === "account" && (
+        <div className="space-y-6">
+
+          {/* Email */}
+          <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+            <h2 className="font-medium text-[#1A1A1A] mb-1">Email address</h2>
+            <p className="text-sm text-[#57534E] mb-4">
+              Current:{" "}
+              <span className="font-medium">{user?.email ?? "—"}</span>
+            </p>
+            {emailSent ? (
+              <p className="text-sm text-[#D97706]">
+                Confirmation sent to <span className="font-medium">{newEmail}</span>. Check your inbox to confirm the change.
+              </p>
+            ) : (
+              <form
+                onSubmit={(e) => void handleEmailChange(e)}
+                className="flex gap-3"
+              >
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  required
+                  placeholder="New email address"
+                  className={`flex-1 ${inputClass}`}
+                />
+                <button
+                  type="submit"
+                  disabled={emailLoading || newEmail === user?.email}
+                  className={primaryBtn}
+                >
+                  {emailLoading ? "Saving…" : "Update"}
+                </button>
+              </form>
+            )}
+          </section>
+
+          {/* Password */}
+          <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+            <h2 className="font-medium text-[#1A1A1A] mb-4">
+              Change password
+            </h2>
+            {passwordDone ? (
+              <p className="text-sm text-green-600">
+                Password updated successfully.
+              </p>
+            ) : (
+              <form
+                onSubmit={(e) => void handlePasswordChange(e)}
+                className="flex flex-col gap-3"
+              >
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[#57534E]">
+                    Current password
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[#57534E]">
+                    New password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="At least 8 characters"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-[#57534E]">
+                    Confirm new password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="Repeat new password"
+                    className={inputClass}
+                  />
+                </div>
+
+                {accountError && (
+                  <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                    {accountError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className={`mt-1 ${primaryBtn}`}
+                >
+                  {passwordLoading ? "Updating…" : "Update password"}
+                </button>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
+
+      {/* ── Profile tab ── */}
+      {tab === "profile" && (
+        <div className="space-y-6">
+          <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+            <h2 className="font-medium text-[#1A1A1A] mb-4">
+              Personal information
+            </h2>
+            <form
+              onSubmit={(e) => void handleProfileSave(e)}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-[#57534E]">
+                  Display name
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your name"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-[#57534E]">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  value={user?.email ?? ""}
+                  readOnly
+                  className="rounded-xl border border-[#E7E5E4] bg-[#F5F4F0] px-3 py-2.5 text-sm text-[#A8A29E] outline-none cursor-not-allowed"
+                />
+                <p className="text-xs text-[#A8A29E]">
+                  Change your email in the Account tab.
+                </p>
+              </div>
+
+              {profileError && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                  {profileError}
+                </p>
+              )}
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={profileLoading}
+                  className={primaryBtn}
+                >
+                  {profileLoading ? "Saving…" : "Save changes"}
+                </button>
+                {profileDone && (
+                  <p className="text-sm text-green-600">Saved.</p>
+                )}
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, Menu, X, BookOpen, LogOut, Pencil } from "lucide-react";
+import { Plus, Menu, X, BookOpen, LogOut, Pencil, Settings } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -176,9 +176,21 @@ function SidebarContent({
         )}
       </div>
 
-      {/* Footer: email + sign out */}
+      {/* Footer: email + settings + sign out */}
       <div className="px-3 py-4 border-t border-[#E7E5E4] space-y-1">
-        <p className="text-xs text-[#A8A29E] px-4 truncate">{userEmail}</p>
+        <p className="text-xs text-[#A8A29E] px-4 truncate mb-1">{userEmail}</p>
+        <a
+          href="/app/settings"
+          onClick={onNav}
+          className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
+            pathname === "/app/settings"
+              ? "bg-[#E7E5E4] text-[#1A1A1A]"
+              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+          }`}
+        >
+          <Settings className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Settings
+        </a>
         <button
           onClick={() => void handleSignOut()}
           className="flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A] transition"
