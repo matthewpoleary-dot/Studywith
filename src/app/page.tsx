@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 import {
   MessageCircle,
   TrendingUp,
@@ -210,27 +211,27 @@ const Hero = () => {
             yourself.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-10">
+          <div className="flex flex-col sm:flex-row gap-3 mb-8">
             <CheckoutButton
-              label="Start tutoring for €20/month"
+              label="Get started"
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-full px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <button
               onClick={() => scrollToSection("how-it-works")}
-              className="inline-flex items-center justify-center bg-transparent border-2 border-[#E7E5E4] text-[#1A1A1A] hover:border-[#1A1A1A] rounded-full px-8 py-4 text-base font-medium transition-all"
+              className="inline-flex items-center justify-center text-[#57534E] hover:text-[#1A1A1A] rounded-full px-8 py-4 text-base font-medium transition-colors"
             >
-              See how it works
-              <ChevronRight className="w-4 h-4 ml-2" strokeWidth={1.5} />
+              How it works
+              <ChevronRight className="w-4 h-4 ml-1.5 opacity-60" strokeWidth={1.5} />
             </button>
           </div>
 
-          <p className="text-sm text-[#57534E]">
-            No contracts.{" "}
+          <p className="text-sm text-[#A8A29E]">
+            Already a member?{" "}
             <a
               href="/auth/login"
-              className="underline underline-offset-2 hover:text-[#1A1A1A] transition-colors"
+              className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
             >
-              Already have an account?
+              Sign in
             </a>
           </p>
         </div>
@@ -708,6 +709,17 @@ const Footer = () => {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudyWithLanding() {
+  const router = useRouter();
+
+  // Auto-redirect already-authenticated users straight to the app.
+  // This keeps PWA users signed in — no login prompt on every launch.
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/app");
+    });
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-[#FDFCF8]">
       <Navigation />
