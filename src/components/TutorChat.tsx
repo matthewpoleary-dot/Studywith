@@ -21,6 +21,7 @@ export default function TutorChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isAssignmentExpanded, setIsAssignmentExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
@@ -173,11 +174,23 @@ export default function TutorChat() {
     <div className="flex flex-col h-screen">
       {/* Assignment strip */}
       <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
-        <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <p className="text-xs text-[#57534E] truncate flex-1 min-w-0">
-            <span className="font-semibold text-[#1A1A1A]">Assignment:</span>{" "}
-            {assignment}
-          </p>
+        <div className="max-w-2xl mx-auto flex items-start gap-4">
+          <button
+            onClick={() => setIsAssignmentExpanded((v) => !v)}
+            className="flex-1 min-w-0 text-left group"
+          >
+            <p
+              className={`text-xs text-[#57534E] transition-all ${
+                isAssignmentExpanded ? "" : "truncate"
+              }`}
+            >
+              <span className="font-semibold text-[#1A1A1A]">Assignment:</span>{" "}
+              {assignment}
+            </p>
+            <span className="text-[10px] text-[#A8A29E] group-hover:text-[#57534E] transition mt-0.5 block">
+              {isAssignmentExpanded ? "Show less ▲" : "Show more ▼"}
+            </span>
+          </button>
           <button
             onClick={() => void handleEndSession()}
             disabled={messages.length === 0 || isEnding || !sessionId}
