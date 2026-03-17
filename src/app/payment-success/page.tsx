@@ -29,7 +29,7 @@ export default function PaymentSuccessPage() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [attempts, router]);
+  }, [attempts]);
 
   if (timedOut) {
     return (
