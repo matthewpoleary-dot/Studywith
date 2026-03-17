@@ -16,7 +16,7 @@ export type TutorMessage = {
 type TutorChatProps = {
   initialAssignment?: string;
   initialMessages?: TutorMessage[];
-  initialSessionId?: string;
+  initialSessionId?: string | null;
 };
 
 export default function TutorChat({
