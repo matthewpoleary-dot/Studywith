@@ -13,14 +13,24 @@ export type TutorMessage = {
   content: string;
 };
 
-export default function TutorChat() {
-  const [assignment, setAssignment] = useState("");
+type TutorChatProps = {
+  initialAssignment?: string;
+  initialMessages?: TutorMessage[];
+  initialSessionId?: string;
+};
+
+export default function TutorChat({
+  initialAssignment = "",
+  initialMessages = [],
+  initialSessionId = null as string | null,
+}: TutorChatProps = {}) {
+  const [assignment, setAssignment] = useState(initialAssignment);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<TutorMessage[]>([]);
-  const [isSessionStarted, setIsSessionStarted] = useState(false);
+  const [messages, setMessages] = useState<TutorMessage[]>(initialMessages);
+  const [isSessionStarted, setIsSessionStarted] = useState(initialMessages.length > 0);
   const [isLoading, setIsLoading] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const [isAssignmentExpanded, setIsAssignmentExpanded] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
