@@ -56,6 +56,18 @@ function getOpeningMessage(subject: Subject): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+const REVIEW_OPENERS: Array<(topic: string) => string> = [
+  (t) => `Let's get ${t} properly clear. Walk me through what you do understand about it so far — even if it's just a little.`,
+  (t) => `Good call revisiting this. What's your current understanding of ${t}? Start anywhere and we'll build from there.`,
+  (t) => `Let's work through ${t} together. Tell me what you already know, and I'll help fill in the gaps.`,
+  (t) => `${t.charAt(0).toUpperCase() + t.slice(1)} is worth getting solid on. What do you think is the core idea behind it?`,
+];
+
+function getReviewOpeningMessage(topic: string): string {
+  const opener = REVIEW_OPENERS[Math.floor(Math.random() * REVIEW_OPENERS.length)];
+  return opener(topic);
+}
+
 type TutorChatProps = {
   initialAssignment?: string;
   initialMessages?: TutorMessage[];
@@ -113,7 +125,7 @@ export default function TutorChat({
       {
         id: crypto.randomUUID(),
         role: "tutor",
-        content: getOpeningMessage("General"),
+        content: getReviewOpeningMessage(initialAssignment),
       },
     ]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
