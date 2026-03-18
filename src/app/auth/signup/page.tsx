@@ -163,7 +163,7 @@ export default function SignupPage() {
             Start learning smarter
           </h1>
           <p className="text-sm text-[#57534E]">
-            Create your account, then subscribe for €20/month. Cancel anytime.
+            Create your account to start your 7-day free trial. No card required.
           </p>
         </div>
 

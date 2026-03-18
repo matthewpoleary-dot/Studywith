@@ -36,17 +36,17 @@ export default function PaymentSuccessPage() {
       <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center px-6">
         <div className="text-center max-w-md">
           <h1 className="font-serif text-2xl font-medium text-[#1A1A1A] mb-4">
-            Payment received
+            You&apos;re all set
           </h1>
           <p className="text-[#57534E] mb-8 leading-relaxed">
-            Your payment went through but activation is taking a little longer
-            than expected. Try signing in — your account should be active.
+            Activation is taking a moment longer than expected. Click below to
+            go to your dashboard — your account should be ready.
           </p>
           <a
-            href="/auth/login"
+            href="/app"
             className="inline-block bg-[#1A1A1A] text-white rounded-full px-8 py-3 font-medium hover:bg-[#1A1A1A]/90 transition-all"
           >
-            Sign in
+            Go to dashboard
           </a>
         </div>
       </div>

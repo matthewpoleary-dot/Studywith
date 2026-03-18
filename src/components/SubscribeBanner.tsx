@@ -16,7 +16,7 @@ export default function SubscribeBanner() {
           unlock your tutor.
         </p>
         <CheckoutButton
-          label="Subscribe — €20/month"
+          label="Start free trial"
           className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
         />
       </div>

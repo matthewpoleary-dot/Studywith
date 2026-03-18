@@ -39,14 +39,18 @@ export async function GET() {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+    // Active access = paid subscription OR free trial in progress
+    const hasAccess = (status: string) =>
+      status === "active" || status === "trialing";
+
     // Stripe fallback path 1: we have a customer ID saved — check directly
     if (data?.stripe_customer_id) {
       const subs = await stripe.subscriptions.list({
         customer: data.stripe_customer_id,
-        status: "active",
-        limit: 1,
+        status: "all",
+        limit: 5,
       });
-      if (subs.data.length > 0) {
+      if (subs.data.some((s) => hasAccess(s.status))) {
         await getSupabaseAdmin()
           .from("users")
           .upsert(
@@ -59,7 +63,7 @@ export async function GET() {
 
     // Stripe fallback path 2: no customer ID in DB (e.g. paid before the upsert
     // fix was deployed). Search Stripe by email to find the customer, then save
-    // the ID and check for an active subscription.
+    // the ID and check for an active or trialing subscription.
     if (user.email) {
       const customers = await stripe.customers.list({
         email: user.email,
@@ -69,10 +73,10 @@ export async function GET() {
       for (const customer of customers.data) {
         const subs = await stripe.subscriptions.list({
           customer: customer.id,
-          status: "active",
-          limit: 1,
+          status: "all",
+          limit: 5,
         });
-        if (subs.data.length > 0) {
+        if (subs.data.some((s) => hasAccess(s.status))) {
           // Heal the DB: save stripe_customer_id and mark subscribed
           await getSupabaseAdmin()
             .from("users")
