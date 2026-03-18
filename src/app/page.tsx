@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import {
   MessageCircle,
   TrendingUp,
@@ -92,6 +93,9 @@ const FAQAccordion = ({
 const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -99,10 +103,39 @@ const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setMobileMenuOpen(false);
   };
+
+  const handleSignOut = async () => {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setDropdownOpen(false);
+    window.location.href = "/";
+  };
+
+  const displayName = (user?.user_metadata?.full_name as string | undefined) ?? user?.email?.split("@")[0] ?? "";
 
   return (
     <nav
@@ -139,16 +172,61 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="/auth/login"
-              className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all"
-            >
-              Sign in
-            </a>
-            <CheckoutButton
-              label="Sign up"
-              className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
-            />
+            {user ? (
+              <>
+                <a
+                  href="/app"
+                  className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all whitespace-nowrap"
+                >
+                  Dashboard
+                </a>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 rounded-lg bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/90 transition-all"
+                  >
+                    <span className="max-w-[120px] truncate">{displayName}</span>
+                    <ChevronDown className="w-4 h-4 flex-shrink-0" />
+                  </button>
+                  {dropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#E7E5E4] rounded-xl shadow-lg py-1 z-50">
+                      <a
+                        href="/app"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A1A1A] hover:bg-[#F5F4F0] transition-colors"
+                      >
+                        Dashboard
+                      </a>
+                      <a
+                        href="/app/settings"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A1A1A] hover:bg-[#F5F4F0] transition-colors"
+                      >
+                        Settings
+                      </a>
+                      <div className="my-1 border-t border-[#E7E5E4]" />
+                      <button
+                        onClick={() => void handleSignOut()}
+                        className="w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <a
+                  href="/auth/login"
+                  className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all whitespace-nowrap"
+                >
+                  Sign in
+                </a>
+                <CheckoutButton
+                  label="Sign up"
+                  className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 whitespace-nowrap"
+                />
+              </>
+            )}
           </div>
 
           <button
@@ -175,16 +253,41 @@ const Navigation = () => {
                   {id.replace("-", " ")}
                 </button>
               ))}
-              <a
-                href="/auth/login"
-                className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
-              >
-                Sign in
-              </a>
-              <CheckoutButton
-                label="Sign up"
-                className="bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-              />
+              {user ? (
+                <>
+                  <a
+                    href="/app"
+                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                  >
+                    Dashboard
+                  </a>
+                  <a
+                    href="/app/settings"
+                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                  >
+                    Settings
+                  </a>
+                  <button
+                    onClick={() => void handleSignOut()}
+                    className="rounded-lg bg-red-50 border border-red-200 px-6 py-3 text-sm font-medium text-red-600 text-center"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a
+                    href="/auth/login"
+                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                  >
+                    Sign in
+                  </a>
+                  <CheckoutButton
+                    label="Sign up"
+                    className="bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </>
+              )}
             </div>
           </div>
         )}
