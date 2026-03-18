@@ -78,8 +78,30 @@ export default function SignupPage() {
       // fall through to Stripe
     }
 
+    // Read the plan they chose before signing up (set by CheckoutButton)
+    const storedPlan =
+      typeof window !== "undefined"
+        ? (localStorage.getItem("studywith_plan") as
+            | "trial"
+            | "monthly"
+            | "annual"
+            | null)
+        : null;
+
+    // No plan chosen — send them to the pricing section to pick one
+    if (!storedPlan) {
+      window.location.href = "/#pricing";
+      return;
+    }
+
+    localStorage.removeItem("studywith_plan");
+
     try {
-      const res = await fetch("/api/stripe/create-checkout", { method: "POST" });
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: storedPlan }),
+      });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
         window.location.href = data.url;
@@ -97,7 +119,7 @@ export default function SignupPage() {
       ? "Creating account…"
       : status === "redirecting"
         ? "Redirecting…"
-        : "Create account and subscribe";
+        : "Create account";
 
   const handleResend = async () => {
     if (!confirmEmail || resendLoading) return;
