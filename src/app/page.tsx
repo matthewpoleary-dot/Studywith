@@ -38,7 +38,7 @@ const SubscribeBannerBar = () => {
           Subscribe to unlock your tutor.
         </p>
         <CheckoutButton
-          label="Subscribe for €20/month"
+          label="Start your free trial"
           className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
         />
       </div>
@@ -543,7 +543,7 @@ const Comparison = () => {
             </div>
             <div className="p-5 text-center border-l border-[#E7E5E4] bg-[#FDFAF5]">
               <p className="text-sm font-semibold text-[#D97706]">StudyWith</p>
-              <p className="text-xs text-[#A8A29E]">€20/month</p>
+              <p className="text-xs text-[#A8A29E]">from €12.99/mo</p>
             </div>
           </div>
 
@@ -645,6 +645,8 @@ const UseCases = () => {
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 
 const Pricing = () => {
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+
   const features = [
     "Unlimited tutoring sessions",
     "Learning receipt after every session",
@@ -654,13 +656,19 @@ const Pricing = () => {
     "Cancel anytime, no contracts",
   ];
 
+  const price = billing === "monthly" ? "€12.99" : "€7.42";
+  const subtext =
+    billing === "monthly"
+      ? "Billed monthly. Cancel anytime."
+      : "Billed as €89/year. Cancel anytime.";
+
   return (
     <section
       id="pricing"
       className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
+        <div className="text-center mb-12 md:mb-16">
           <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
             Pricing
           </p>
@@ -668,15 +676,48 @@ const Pricing = () => {
             Simple, transparent pricing
           </h2>
           <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
-            One plan. Everything included. No hidden fees, cancel anytime.
+            Start free for 7 days. No credit card required.
           </p>
+        </div>
+
+        {/* Billing toggle */}
+        <div className="flex items-center justify-center gap-2 mb-10">
+          <button
+            onClick={() => setBilling("monthly")}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+              billing === "monthly"
+                ? "bg-[#1A1A1A] text-white"
+                : "text-[#57534E] hover:text-[#1A1A1A]"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBilling("annual")}
+            className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${
+              billing === "annual"
+                ? "bg-[#1A1A1A] text-white"
+                : "text-[#57534E] hover:text-[#1A1A1A]"
+            }`}
+          >
+            Annual
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded-full ${
+                billing === "annual"
+                  ? "bg-white/20 text-white"
+                  : "bg-emerald-100 text-emerald-700"
+              }`}
+            >
+              Save 43%
+            </span>
+          </button>
         </div>
 
         <div className="max-w-sm mx-auto">
           <div className="relative bg-white border border-[#D97706] p-8 md:p-10 rounded-2xl hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-1 bg-[#D97706] rounded-t-2xl" />
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full">
-              Everything included
+              7-day free trial
             </span>
 
             <h3 className="font-serif text-2xl font-medium text-[#1A1A1A] mb-2 mt-2">
@@ -684,13 +725,13 @@ const Pricing = () => {
             </h3>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="font-serif text-5xl font-medium text-[#1A1A1A]">
-                €20
+                {price}
               </span>
               <span className="text-[#57534E]">/ month</span>
             </div>
-            <p className="text-xs text-[#A8A29E] mb-4">vs €40/hr for a human tutor</p>
-            <p className="text-[#57534E] mb-8">
-              Billed monthly. Cancel from your dashboard anytime.
+            <p className="text-xs text-[#A8A29E] mb-1">{subtext}</p>
+            <p className="text-xs text-[#57534E] mb-6">
+              Have a .edu or academic email? Student pricing (€5.99/mo or €39/yr) is applied automatically at checkout.
             </p>
 
             <ul className="space-y-4 mb-8">
@@ -706,11 +747,12 @@ const Pricing = () => {
             </ul>
 
             <CheckoutButton
-              label="Get started"
+              plan={billing}
+              label="Start free trial"
               className="w-full rounded-lg py-4 text-base font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
-            <p className="text-center text-sm text-[#57534E] mt-3">
-              No commitment. Cancel whenever.
+            <p className="text-center text-sm text-[#A8A29E] mt-3">
+              No credit card required to start.
             </p>
           </div>
         </div>
@@ -888,6 +930,14 @@ export default function StudyWithLanding() {
       }
     });
   }, [router]);
+
+  // Capture referral code from /?ref=... so CheckoutButton can send it
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) {
+      localStorage.setItem("studywith_referral", ref);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FDFCF8]">

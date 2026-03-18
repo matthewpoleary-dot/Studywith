@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-service";
 import Link from "next/link";
 import { BookOpen, CheckCircle, Star } from "lucide-react";
 import type { Database, LearningReceipt } from "@/lib/database.types";
+import ReferralLink from "@/components/ReferralLink";
 
 type SessionRow = {
   id: string;
@@ -98,6 +99,12 @@ export default async function AppDashboard() {
     (s) => toKey(new Date(s.created_at)) === toKey(new Date()),
   ).length;
   const dailyGoalMet = dailyGoal !== null && sessionsToday >= dailyGoal;
+
+  // Referral — deterministic code derived from user ID (no DB storage needed)
+  const referralCode = user!.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://studywith-phi.vercel.app";
+  const referralUrl = `${siteUrl}/?ref=${referralCode}`;
 
   const sessionLabel = (s: SessionRow) =>
     s.title ?? (s.assignment_text.length > 60 ? s.assignment_text.slice(0, 60) + "…" : s.assignment_text) ?? "Session";
@@ -236,6 +243,15 @@ export default async function AppDashboard() {
               </div>
             </div>
           )}
+
+          {/* Refer a friend */}
+          <div className="bg-[#F5F4F0] border border-[#E7E5E4] rounded-2xl p-6">
+            <p className="text-sm font-medium text-[#1A1A1A] mb-1">Refer a friend</p>
+            <p className="text-xs text-[#57534E] mb-4">
+              Share your link. Friends get 14 days free instead of the usual 7.
+            </p>
+            <ReferralLink url={referralUrl} />
+          </div>
 
           {/* Completed sessions */}
           {completedSessions.length > 0 && (

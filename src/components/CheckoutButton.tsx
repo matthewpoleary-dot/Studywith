@@ -6,11 +6,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 type Props = {
   label?: string;
   className?: string;
+  plan?: "monthly" | "annual";
 };
 
 export default function CheckoutButton({
-  label = "Start tutoring session",
+  label = "Get started",
   className,
+  plan = "monthly",
 }: Props) {
   const [loading, setLoading] = useState(false);
 
@@ -18,19 +20,30 @@ export default function CheckoutButton({
     setLoading(true);
 
     const supabase = createSupabaseBrowserClient();
-    // getUser() validates against the server — avoids stale cached sessions
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
+      // Persist the intended plan so we can resume after signup
+      if (typeof window !== "undefined") {
+        localStorage.setItem("studywith_plan", plan);
+      }
       window.location.href = "/auth/signup";
       return;
     }
 
+    // Pick up referral code if visitor arrived via /?ref=...
+    const referredBy =
+      typeof window !== "undefined"
+        ? (localStorage.getItem("studywith_referral") ?? undefined)
+        : undefined;
+
     try {
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, referred_by: referredBy }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
@@ -50,7 +63,11 @@ export default function CheckoutButton({
     <button
       onClick={() => void handleClick()}
       disabled={loading}
-      className={loading ? `${className ?? defaultClass} opacity-60 cursor-not-allowed` : (className ?? defaultClass)}
+      className={
+        loading
+          ? `${className ?? defaultClass} opacity-60 cursor-not-allowed`
+          : (className ?? defaultClass)
+      }
     >
       {loading ? "Redirecting…" : label}
     </button>
