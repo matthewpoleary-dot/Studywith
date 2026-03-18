@@ -645,8 +645,6 @@ const UseCases = () => {
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 
 const Pricing = () => {
-  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
-
   const features = [
     "Unlimited tutoring sessions",
     "Learning receipt after every session",
@@ -655,12 +653,6 @@ const Pricing = () => {
     "Any subject or assignment type",
     "Cancel anytime, no contracts",
   ];
-
-  const price = billing === "monthly" ? "€12.99" : "€7.42";
-  const subtext =
-    billing === "monthly"
-      ? "Billed monthly. Cancel anytime."
-      : "Billed as €89/year. Cancel anytime.";
 
   return (
     <section
@@ -676,86 +668,90 @@ const Pricing = () => {
             Simple, transparent pricing
           </h2>
           <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
-            Start free for 7 days. No credit card required.
+            Pick the plan that suits you. Student pricing applied automatically at checkout.
           </p>
         </div>
 
-        {/* Billing toggle */}
-        <div className="flex items-center justify-center gap-2 mb-10">
-          <button
-            onClick={() => setBilling("monthly")}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-              billing === "monthly"
-                ? "bg-[#1A1A1A] text-white"
-                : "text-[#57534E] hover:text-[#1A1A1A]"
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBilling("annual")}
-            className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${
-              billing === "annual"
-                ? "bg-[#1A1A1A] text-white"
-                : "text-[#57534E] hover:text-[#1A1A1A]"
-            }`}
-          >
-            Annual
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded-full ${
-                billing === "annual"
-                  ? "bg-white/20 text-white"
-                  : "bg-emerald-100 text-emerald-700"
-              }`}
-            >
-              Save 43%
-            </span>
-          </button>
-        </div>
-
-        <div className="max-w-sm mx-auto">
-          <div className="relative bg-white border border-[#D97706] p-8 md:p-10 rounded-2xl hover:shadow-xl transition-all duration-300">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-[#D97706] rounded-t-2xl" />
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full">
-              7-day free trial
-            </span>
-
-            <h3 className="font-serif text-2xl font-medium text-[#1A1A1A] mb-2 mt-2">
-              Pro
-            </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* Free Trial */}
+          <div className="relative bg-white border border-[#E7E5E4] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
+            <h3 className="font-serif text-xl font-medium text-[#1A1A1A] mb-1">Free trial</h3>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="font-serif text-5xl font-medium text-[#1A1A1A]">
-                {price}
-              </span>
-              <span className="text-[#57534E]">/ month</span>
+              <span className="font-serif text-4xl font-medium text-[#1A1A1A]">€0</span>
+              <span className="text-[#57534E] text-sm">today</span>
             </div>
-            <p className="text-xs text-[#A8A29E] mb-1">{subtext}</p>
-            <p className="text-xs text-[#57534E] mb-6">
-              Have a .edu or academic email? Student pricing (€5.99/mo or €39/yr) is applied automatically at checkout.
-            </p>
-
-            <ul className="space-y-4 mb-8">
+            <p className="text-xs text-[#A8A29E] mb-6">Then €12.99/mo. Card required to start.</p>
+            <ul className="space-y-3 mb-8 flex-1">
               {features.map((feature, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <Check
-                    className="w-5 h-5 text-[#D97706] flex-shrink-0 mt-0.5"
-                    strokeWidth={2}
-                  />
-                  <span className="text-[#1A1A1A]">{feature}</span>
+                <li key={i} className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" strokeWidth={2} />
+                  <span className="text-sm text-[#1A1A1A]">{feature}</span>
                 </li>
               ))}
             </ul>
-
             <CheckoutButton
-              plan={billing}
-              label="Start free trial"
-              className="w-full rounded-lg py-4 text-base font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+              plan="trial"
+              label="Start 7-day free trial"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
-            <p className="text-center text-sm text-[#A8A29E] mt-3">
-              No credit card required to start.
-            </p>
+            <p className="text-center text-xs text-[#A8A29E] mt-2">7 days free, then auto-renews.</p>
+          </div>
+
+          {/* Monthly */}
+          <div className="relative bg-white border border-[#E7E5E4] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
+            <h3 className="font-serif text-xl font-medium text-[#1A1A1A] mb-1">Monthly</h3>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="font-serif text-4xl font-medium text-[#1A1A1A]">€12.99</span>
+              <span className="text-[#57534E] text-sm">/ month</span>
+            </div>
+            <p className="text-xs text-[#A8A29E] mb-6">Billed monthly. Cancel anytime.</p>
+            <ul className="space-y-3 mb-8 flex-1">
+              {features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" strokeWidth={2} />
+                  <span className="text-sm text-[#1A1A1A]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <CheckoutButton
+              plan="monthly"
+              label="Get monthly"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            <p className="text-center text-xs text-[#A8A29E] mt-2">No trial. Access starts immediately.</p>
+          </div>
+
+          {/* Annual — highlighted */}
+          <div className="relative bg-[#1A1A1A] border border-[#1A1A1A] p-8 rounded-2xl hover:shadow-xl transition-all duration-300 flex flex-col">
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full whitespace-nowrap">
+              Best value — save 43%
+            </span>
+            <h3 className="font-serif text-xl font-medium text-white mb-1 mt-2">Annual</h3>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="font-serif text-4xl font-medium text-white">€7.42</span>
+              <span className="text-zinc-400 text-sm">/ month</span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-6">Billed as €89/year. Cancel anytime.</p>
+            <ul className="space-y-3 mb-8 flex-1">
+              {features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" strokeWidth={2} />
+                  <span className="text-sm text-white">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <CheckoutButton
+              plan="annual"
+              label="Get annual"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-white text-[#1A1A1A] hover:bg-zinc-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            <p className="text-center text-xs text-zinc-500 mt-2">No trial. Access starts immediately.</p>
           </div>
         </div>
+
+        <p className="text-center text-xs text-[#A8A29E] mt-8">
+          Have a .edu or academic email? Student pricing (€5.99/mo or €39/yr) is applied automatically.
+        </p>
       </div>
     </section>
   );

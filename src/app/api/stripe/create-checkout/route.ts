@@ -4,19 +4,10 @@ import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import type { Database } from "@/lib/database.types";
 
-// Academic email domains that qualify for student pricing
+// Academic email domains for student pricing
 const STUDENT_DOMAINS = [
-  ".edu",
-  ".ac.uk",
-  ".ac.ie",
-  ".ac.nz",
-  ".ac.za",
-  ".ac.in",
-  ".ac.au",
-  ".edu.au",
-  ".edu.ie",
-  ".edu.sg",
-  ".edu.hk",
+  ".edu", ".ac.uk", ".ac.ie", ".ac.nz", ".ac.za", ".ac.in", ".ac.au",
+  ".edu.au", ".edu.ie", ".edu.sg", ".edu.hk",
 ];
 
 function isStudentEmail(email: string): boolean {
@@ -24,31 +15,59 @@ function isStudentEmail(email: string): boolean {
   return STUDENT_DOMAINS.some((d) => lower.includes(d));
 }
 
-type Plan = "monthly" | "annual";
+type Plan = "trial" | "monthly" | "annual";
+
+// Check whether this customer/email has ever had a Stripe trial
+async function hasUsedTrial(
+  stripe: Stripe,
+  customerId: string | null,
+  email: string,
+): Promise<boolean> {
+  const customerIds = new Set<string>();
+  if (customerId) customerIds.add(customerId);
+
+  // Also search by email — catches deleted accounts that re-registered
+  if (email) {
+    const customers = await stripe.customers.list({ email, limit: 5 });
+    for (const c of customers.data) customerIds.add(c.id);
+  }
+
+  for (const cid of customerIds) {
+    const subs = await stripe.subscriptions.list({
+      customer: cid,
+      status: "all",
+      limit: 20,
+    });
+    if (subs.data.some((s) => s.trial_start != null)) return true;
+  }
+  return false;
+}
 
 function getPriceData(plan: Plan, student: boolean) {
+  const monthly = {
+    currency: "eur",
+    product_data: {
+      name: student ? "StudyWith Pro (Student)" : "StudyWith Pro",
+      description: "Unlimited guided tutoring sessions and learning receipts.",
+    },
+    unit_amount: student ? 599 : 1299, // €5.99 or €12.99
+    recurring: { interval: "month" as const },
+  };
+
   if (plan === "annual") {
     return {
       currency: "eur",
       product_data: {
-        name: student ? "StudyWith Annual (Student)" : "StudyWith Annual",
-        description:
-          "Unlimited guided tutoring sessions and learning receipts.",
+        name: student ? "StudyWith Pro Annual (Student)" : "StudyWith Pro Annual",
+        description: "Unlimited guided tutoring sessions and learning receipts.",
       },
       unit_amount: student ? 3900 : 8900, // €39 or €89
       recurring: { interval: "year" as const },
     };
   }
-  return {
-    currency: "eur",
-    product_data: {
-      name: student ? "StudyWith Monthly (Student)" : "StudyWith Monthly",
-      description:
-        "Unlimited guided tutoring sessions and learning receipts.",
-    },
-    unit_amount: student ? 599 : 1299, // €5.99 or €12.99
-    recurring: { interval: "month" as const },
-  };
+
+  // trial and monthly use the same monthly pricing
+  return monthly;
 }
 
 export async function POST(request: Request) {
@@ -62,10 +81,11 @@ export async function POST(request: Request) {
       plan?: Plan;
       referred_by?: string;
     };
-    if (body.plan === "annual") plan = "annual";
+    if (body.plan === "trial" || body.plan === "annual") plan = body.plan;
+    if (body.plan === "monthly") plan = "monthly";
     referredBy = body.referred_by || undefined;
   } catch {
-    // No body or old call — default to monthly
+    // No body — default to monthly
   }
 
   // Authenticate user
@@ -88,7 +108,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch user record to get existing Stripe customer ID
   const { data: userData } = await getSupabaseAdmin()
     .from("users")
     .select("stripe_customer_id, email")
@@ -97,7 +116,6 @@ export async function POST(request: Request) {
 
   let customerId = userData?.stripe_customer_id ?? null;
 
-  // Create Stripe customer if not yet set up
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: userData?.email ?? user.email ?? undefined,
@@ -119,16 +137,20 @@ export async function POST(request: Request) {
   const email = userData?.email ?? user.email ?? "";
   const student = isStudentEmail(email);
 
-  // Referred users get 14 days (double the standard 7-day trial)
-  const trialDays = referredBy ? 14 : 7;
+  // Trial abuse prevention — one trial per person, tracked via Stripe history
+  if (plan === "trial") {
+    const trialUsed = await hasUsedTrial(stripe, customerId, email);
+    if (trialUsed) {
+      return Response.json({ error: "trial_used" }, { status: 400 });
+    }
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-  const session = await stripe.checkout.sessions.create({
+  const sessionConfig: Stripe.Checkout.SessionCreateParams = {
     customer: customerId,
     mode: "subscription",
-    // No credit card required to start the free trial
-    payment_method_collection: "if_required",
+    payment_method_collection: "always", // Card always required
     payment_method_types: ["card"],
     line_items: [
       {
@@ -136,17 +158,26 @@ export async function POST(request: Request) {
         quantity: 1,
       },
     ],
-    subscription_data: {
-      trial_period_days: trialDays,
+    success_url: `${siteUrl}/payment-success`,
+    cancel_url: `${siteUrl}/?payment=cancelled`,
+    metadata: { supabase_user_id: user.id },
+  };
+
+  // Free trial — 7 days (14 for referred users)
+  if (plan === "trial") {
+    sessionConfig.subscription_data = {
+      trial_period_days: referredBy ? 14 : 7,
       metadata: {
         supabase_user_id: user.id,
         referred_by: referredBy ?? "",
       },
-    },
-    success_url: `${siteUrl}/payment-success`,
-    cancel_url: `${siteUrl}/?payment=cancelled`,
-    metadata: { supabase_user_id: user.id },
-  });
+    };
+  } else {
+    sessionConfig.subscription_data = {
+      metadata: { supabase_user_id: user.id },
+    };
+  }
 
+  const session = await stripe.checkout.sessions.create(sessionConfig);
   return Response.json({ url: session.url });
 }

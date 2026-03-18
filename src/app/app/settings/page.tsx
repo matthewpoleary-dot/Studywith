@@ -23,6 +23,11 @@ export default function SettingsPage() {
 
   const [accountError, setAccountError] = useState<string | null>(null);
 
+  // Delete account
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   // Profile tab
   const [displayName, setDisplayName] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -121,6 +126,25 @@ export default function SettingsPage() {
       setTimeout(() => setGoalDone(false), 3000);
     }
     setGoalLoading(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/delete-account", { method: "DELETE" });
+      const data = (await res.json()) as { success?: boolean; error?: string };
+      if (data.success) {
+        window.location.href = "/";
+      } else {
+        setDeleteError(data.error ?? "Failed to delete account.");
+        setDeleteLoading(false);
+      }
+    } catch {
+      setDeleteError("Network error. Please try again.");
+      setDeleteLoading(false);
+    }
   };
 
   const handleProfileSave = async (e: React.FormEvent) => {
@@ -288,6 +312,40 @@ export default function SettingsPage() {
                 </button>
               </form>
             )}
+          </section>
+
+          {/* Danger zone */}
+          <section className="bg-white border border-red-200 rounded-2xl p-6">
+            <h2 className="font-medium text-red-700 mb-1">Delete account</h2>
+            <p className="text-sm text-[#57534E] mb-4">
+              This permanently deletes your account and cancels any active subscription. Your trial usage is tracked so a new account with the same email won&apos;t be eligible for another free trial.
+            </p>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-[#57534E]">
+                  Type <span className="font-mono font-bold text-red-600">DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  placeholder="DELETE"
+                  className="rounded-xl border border-red-200 bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-red-400 focus:ring-1 focus:ring-red-200 transition"
+                />
+              </div>
+              {deleteError && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                  {deleteError}
+                </p>
+              )}
+              <button
+                onClick={() => void handleDeleteAccount()}
+                disabled={deleteConfirm !== "DELETE" || deleteLoading}
+                className="self-start rounded-full bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deleteLoading ? "Deleting…" : "Delete my account"}
+              </button>
+            </div>
           </section>
         </div>
       )}
