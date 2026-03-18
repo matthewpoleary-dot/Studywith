@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, Menu, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -225,6 +225,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [sessions, setSessions] = useState<Session[]>(initialSessions);
+  const pathname = usePathname();
 
   // Re-fetch on mount to always get fresh sessions (bypasses SSR caching issues)
   useEffect(() => {
@@ -238,18 +239,12 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
       });
   }, []);
 
+  // Hide bottom nav during active sessions (maximise chat space)
+  const isSessionPage = pathname?.startsWith("/app/session/");
+
   return (
     <>
-      {!mobileOpen && (
-        <button
-          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-white border border-[#E7E5E4] shadow-sm"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5 text-[#1A1A1A]" />
-        </button>
-      )}
-
+      {/* Mobile: sessions drawer overlay */}
       {mobileOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/20 z-40"
@@ -257,6 +252,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
         />
       )}
 
+      {/* Mobile: sessions slide-in drawer */}
       <aside
         className={`md:hidden fixed top-0 left-0 h-full w-72 bg-[#F5F4F0] border-r border-[#E7E5E4] z-50 transform transition-transform duration-200 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -268,6 +264,50 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
           onNav={() => setMobileOpen(false)}
         />
       </aside>
+
+      {/* Mobile: bottom nav bar */}
+      {!isSessionPage && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4] flex h-14 safe-bottom">
+          <a
+            href="/app"
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+              pathname === "/app" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+            }`}
+          >
+            <Home className={`w-5 h-5 ${pathname === "/app" ? "stroke-[#1A1A1A]" : ""}`} strokeWidth={pathname === "/app" ? 2 : 1.5} />
+            Home
+          </a>
+
+          <a
+            href="/app/new"
+            className="flex-1 flex flex-col items-center justify-center"
+          >
+            <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center">
+              <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </div>
+          </a>
+
+          <button
+            onClick={() => setMobileOpen(true)}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+              mobileOpen ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+            }`}
+          >
+            <BookOpen className="w-5 h-5" strokeWidth={1.5} />
+            Sessions
+          </button>
+
+          <a
+            href="/app/settings"
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+              pathname === "/app/settings" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+            }`}
+          >
+            <Settings className={`w-5 h-5`} strokeWidth={pathname === "/app/settings" ? 2 : 1.5} />
+            Settings
+          </a>
+        </nav>
+      )}
 
       {/* Desktop collapsed — floating toggle with brand */}
       {desktopCollapsed && (
@@ -285,7 +325,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden md:flex md:flex-col shrink-0 h-screen sticky top-0 bg-[#F5F4F0] border-r border-[#E7E5E4] overflow-hidden transition-all duration-200 ease-in-out ${
+        className={`hidden md:flex md:flex-col shrink-0 h-full bg-[#F5F4F0] border-r border-[#E7E5E4] overflow-hidden transition-all duration-200 ease-in-out ${
           desktopCollapsed ? "w-0 border-r-0" : "w-64"
         }`}
       >

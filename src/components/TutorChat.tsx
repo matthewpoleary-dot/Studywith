@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Send, ImagePlus, X, FileText, ChevronDown } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -124,10 +124,22 @@ export default function TutorChat({
   const [extractError, setExtractError] = useState<string | null>(null);
   const [subjectOpen, setSubjectOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subjectDropdownRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
   const router = useRouter();
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "instant" });
+  }, []);
+
+  const handleContainerScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
 
   // Auth guard
   useEffect(() => {
@@ -137,10 +149,23 @@ export default function TutorChat({
     });
   }, [router]);
 
-  // Auto-scroll to latest message
+  // Smart auto-scroll: always scroll on new tutor messages; respect user position otherwise
+  const prevMessageCountRef = useRef(messages.length);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+    const prev = prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+    if (messages.length <= prev) return; // no new messages
+    const last = messages[messages.length - 1];
+    // Always scroll for tutor messages. For user messages, only scroll if near bottom.
+    if (last?.role === "tutor" || isNearBottomRef.current) {
+      scrollToBottom();
+      isNearBottomRef.current = true;
+    }
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (isLoading && isNearBottomRef.current) scrollToBottom();
+  }, [isLoading, scrollToBottom]);
 
   // Focus input when session starts
   useEffect(() => {
@@ -401,7 +426,7 @@ export default function TutorChat({
   if (!isSessionStarted) {
     const canStart = !!assignment.trim() || !!imageBase64;
     return (
-      <div className="h-screen flex items-center justify-center px-6 py-12">
+      <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center px-6 py-12">
         {/* File input must be mounted here too since active session JSX isn't rendered yet */}
         <input
           ref={fileInputRef}
@@ -545,7 +570,7 @@ export default function TutorChat({
 
   // ── Session active ─────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex-1 min-h-0 flex flex-col">
       {/* Assignment strip */}
       <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
@@ -576,7 +601,11 @@ export default function TutorChat({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-8 px-6">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleContainerScroll}
+        className="flex-1 overflow-y-auto overscroll-contain py-8 px-6"
+      >
         <div className="max-w-2xl mx-auto space-y-4">
           {messages.map((m) => (
             <div
