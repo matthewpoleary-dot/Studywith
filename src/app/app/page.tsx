@@ -110,7 +110,7 @@ export default async function AppDashboard() {
     s.title ?? (s.assignment_text.length > 60 ? s.assignment_text.slice(0, 60) + "…" : s.assignment_text) ?? "Session";
 
   return (
-    <div className="max-w-2xl mx-auto px-6 md:px-10 py-12 md:py-16">
+    <div className="w-full max-w-2xl mx-auto px-6 md:px-10 py-12 md:py-16">
       {/* Greeting */}
       <div className="mb-10">
         <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-2">
@@ -233,7 +233,7 @@ export default async function AppDashboard() {
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="text-xs text-[#A8A29E]">{date}</span>
-                        <span className="text-xs text-[#D97706] opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="hidden md:inline text-xs text-[#D97706] opacity-0 group-hover:opacity-100 transition-opacity">
                           Continue →
                         </span>
                       </div>
@@ -270,15 +270,15 @@ export default async function AppDashboard() {
                       href={`/app/session/${s.id}`}
                       className="flex items-center justify-between gap-4 bg-white border border-[#E7E5E4] rounded-xl px-5 py-4 hover:border-[#D97706]/40 hover:shadow-sm transition-all group"
                     >
-                      <p className="text-sm text-[#1A1A1A] truncate flex-1">{sessionLabel(s)}</p>
-                      <div className="flex items-center gap-4 shrink-0">
+                      <p className="text-sm text-[#1A1A1A] truncate flex-1 min-w-0">{sessionLabel(s)}</p>
+                      <div className="flex items-center gap-3 md:gap-4 shrink-0">
                         {score !== null && (
                           <span className={`text-sm font-medium ${
                             score >= 75 ? "text-emerald-600" : score >= 50 ? "text-amber-600" : "text-red-500"
                           }`}>{score}/100</span>
                         )}
                         <span className="text-xs text-[#A8A29E]">{date}</span>
-                        <span className="text-xs text-[#D97706] opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="hidden md:inline text-xs text-[#D97706] opacity-0 group-hover:opacity-100 transition-opacity">
                           View →
                         </span>
                       </div>

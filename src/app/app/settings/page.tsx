@@ -171,7 +171,7 @@ export default function SettingsPage() {
     "self-start rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-60 disabled:cursor-not-allowed";
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10 md:py-14">
+    <div className="w-full max-w-2xl mx-auto px-6 py-10 md:py-14">
       <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-8">
         Settings
       </h1>
