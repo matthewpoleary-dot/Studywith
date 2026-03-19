@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       ...(body.imageBase64 ? { image_base64: body.imageBase64, image_mime: body.imageMime ?? "image/jpeg" } : {}),
       ...(body.fileUrl ? { file_url: body.fileUrl, file_name: body.fileName ?? "", file_type: body.fileType ?? "" } : {}),
     })
-    .select("id, title, content, created_at")
+    .select("id, title, content, file_url, file_name, file_type, created_at")
     .single();
 
   if (error) {

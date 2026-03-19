@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   // Fetch assignments
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: assignments } = await (admin.from("room_assignments") as any)
-    .select("id, title, content, image_base64, image_mime, created_at")
+    .select("id, title, content, image_base64, image_mime, file_url, file_name, file_type, created_at")
     .eq("room_id", room.id)
     .order("created_at", { ascending: false });
 

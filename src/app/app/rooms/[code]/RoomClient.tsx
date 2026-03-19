@@ -392,17 +392,24 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                                 className="rounded-xl border border-[#E7E5E4] max-w-full"
                               />
                             ) : a.file_type?.includes("pdf") ? (
-                              <div className="space-y-2">
-                                <iframe
-                                  src={a.file_url}
-                                  className="w-full h-96 rounded-xl border border-[#E7E5E4]"
-                                  title={a.file_name ?? "PDF"}
-                                />
+                              <div className="space-y-3">
+                                <object
+                                  data={`${a.file_url!}#toolbar=1&view=FitH`}
+                                  type="application/pdf"
+                                  className="w-full rounded-xl border border-[#E7E5E4]"
+                                  style={{ height: "520px" }}
+                                >
+                                  {/* Fallback for browsers that can't embed PDFs */}
+                                  <div className="flex flex-col items-center justify-center h-40 bg-[#F5F4F0] rounded-xl gap-3">
+                                    <FileText className="w-8 h-8 text-red-400" strokeWidth={1.5} />
+                                    <p className="text-sm text-[#57534E]">PDF cannot be previewed here.</p>
+                                  </div>
+                                </object>
                                 <a
-                                  href={a.file_url}
+                                  href={a.file_url!}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 text-xs text-[#D97706] hover:underline"
+                                  className="inline-flex items-center gap-1.5 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-4 py-1.5 text-xs font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
                                 >
                                   <FileText className="w-3.5 h-3.5" strokeWidth={1.5} />
                                   Open PDF in new tab
