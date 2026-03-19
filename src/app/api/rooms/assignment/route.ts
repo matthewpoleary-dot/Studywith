@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     content: string;
     imageBase64?: string;
     imageMime?: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileType?: string;
   };
 
   if (!body.roomId || !body.title?.trim()) {
@@ -47,6 +50,7 @@ export async function POST(request: Request) {
       title: body.title.trim(),
       content: body.content ?? "",
       ...(body.imageBase64 ? { image_base64: body.imageBase64, image_mime: body.imageMime ?? "image/jpeg" } : {}),
+      ...(body.fileUrl ? { file_url: body.fileUrl, file_name: body.fileName ?? "", file_type: body.fileType ?? "" } : {}),
     })
     .select("id, title, content, created_at")
     .single();

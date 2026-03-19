@@ -117,6 +117,9 @@ export type Database = {
           content: string;
           image_base64: string | null;
           image_mime: string | null;
+          file_url: string | null;
+          file_name: string | null;
+          file_type: string | null;
           created_at: string;
         };
         Insert: {
@@ -126,11 +129,17 @@ export type Database = {
           content: string;
           image_base64?: string | null;
           image_mime?: string | null;
+          file_url?: string | null;
+          file_name?: string | null;
+          file_type?: string | null;
           created_at?: string;
         };
         Update: {
           title?: string;
           content?: string;
+          file_url?: string | null;
+          file_name?: string | null;
+          file_type?: string | null;
         };
         Relationships: [];
       };
