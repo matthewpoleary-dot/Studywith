@@ -223,10 +223,7 @@ export default function TutorChat({
     setFileName("");
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     // PDF: read as base64 directly (no compression)
     if (file.type === "application/pdf") {
       const reader = new FileReader();
@@ -235,14 +232,14 @@ export default function TutorChat({
         setImagePreview(null);
         setImageBase64(data);
         setImageMime("application/pdf");
-        setFileName(file.name);
+        setFileName(file.name || "document.pdf");
       };
       reader.readAsDataURL(file);
-      e.target.value = "";
       return;
     }
 
     // Image: compress to max 1024px
+    if (!file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
@@ -263,12 +260,32 @@ export default function TutorChat({
         setImagePreview(compressed);
         setImageBase64(data);
         setImageMime("image/jpeg");
-        setFileName(file.name);
+        setFileName(file.name || "screenshot.jpg");
       };
       img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
     e.target.value = "";
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === "file" && (items[i].type.startsWith("image/") || items[i].type === "application/pdf")) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          processFile(file);
+          return;
+        }
+      }
+    }
   };
 
   const handleStart = async () => {
@@ -487,6 +504,7 @@ export default function TutorChat({
           <textarea
             value={assignment}
             onChange={(e) => setAssignment(e.target.value)}
+            onPaste={handlePaste}
             onKeyDown={(e) => {
               if (e.key === "Enter" && e.metaKey) void handleStart();
             }}
@@ -715,6 +733,7 @@ export default function TutorChat({
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onPaste={handlePaste}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();

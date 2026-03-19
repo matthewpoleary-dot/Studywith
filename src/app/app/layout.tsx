@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import AppSidebar from "@/components/AppSidebar";
+import { MainContent } from "@/components/MainContent";
 import type { Database } from "@/lib/database.types";
 
 export default async function AppLayout({
@@ -47,7 +48,7 @@ export default async function AppLayout({
         }[]}
         userEmail={user?.email ?? ""}
       />
-      <main className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden pb-14 md:pb-0">{children}</main>
+      <MainContent>{children}</MainContent>
     </div>
   );
 }
