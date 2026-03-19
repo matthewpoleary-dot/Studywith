@@ -81,7 +81,20 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null);
-  const [deletingAssignment, setDeletingAssignment] = useState<string | null>(null);
+
+  // Delete state — separate confirm vs loading
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+
+  // Edit state
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editFilePreview, setEditFilePreview] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const void_unused = userId + userEmail;
   void void_unused;
@@ -192,7 +205,8 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
   };
 
   const handleDeleteAssignment = async (assignmentId: string) => {
-    setDeletingAssignment(assignmentId);
+    setDeleteLoadingId(assignmentId);
+    setConfirmDeleteId(null);
     try {
       await fetch("/api/rooms/assignment/delete", {
         method: "DELETE",
@@ -207,7 +221,87 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
     } catch {
       // silently handle
     } finally {
-      setDeletingAssignment(null);
+      setDeleteLoadingId(null);
+    }
+  };
+
+  const openEdit = (a: Assignment) => {
+    setEditingAssignment(a);
+    setEditTitle(a.title);
+    setEditContent(a.content ?? "");
+    setEditFile(null);
+    setEditFilePreview(null);
+    setEditError(null);
+  };
+
+  const handleEditFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditFile(file);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => setEditFilePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setEditFilePreview(null);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingAssignment || !editTitle.trim()) return;
+    setEditSaving(true);
+    setEditError(null);
+
+    let fileUrl: string | undefined;
+    let fileName: string | undefined;
+    let fileType: string | undefined;
+
+    if (editFile) {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const ext = editFile.name.split(".").pop() ?? "bin";
+        const path = `${editingAssignment.id}-edit-${Date.now()}.${ext}`;
+        const { error: storageErr } = await supabase.storage
+          .from("room-files")
+          .upload(path, editFile, { contentType: editFile.type, upsert: true });
+        if (storageErr) throw new Error(storageErr.message);
+        const { data: urlData } = supabase.storage.from("room-files").getPublicUrl(path);
+        fileUrl = urlData.publicUrl;
+        fileName = editFile.name;
+        fileType = editFile.type;
+      } catch (err) {
+        setEditError(err instanceof Error ? err.message : "File upload failed");
+        setEditSaving(false);
+        return;
+      }
+    }
+
+    try {
+      const res = await fetch("/api/rooms/assignment/edit", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignmentId: editingAssignment.id,
+          title: editTitle.trim(),
+          content: editContent,
+          ...(fileUrl ? { fileUrl, fileName, fileType } : {}),
+        }),
+      });
+      const result = (await res.json()) as { assignment?: Assignment; error?: string };
+      if (result.error) { setEditError(result.error); return; }
+      if (result.assignment) {
+        setData((prev) => prev ? {
+          ...prev,
+          assignments: prev.assignments.map((a) =>
+            a.id === editingAssignment.id ? { ...a, ...result.assignment } : a,
+          ),
+        } : prev);
+        setEditingAssignment(null);
+      }
+    } catch {
+      setEditError("Something went wrong.");
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -486,26 +580,37 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                             </button>
                           )}
-                          {isTeacher && deletingAssignment !== a.id && (
-                            <button
-                              onClick={() => setDeletingAssignment(a.id)}
-                              className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-500 transition"
-                            >
-                              <Trash2 className="w-3 h-3" strokeWidth={1.5} />
-                              Remove assignment
-                            </button>
+                          {isTeacher && confirmDeleteId !== a.id && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openEdit(a); }}
+                                className="inline-flex items-center gap-1.5 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-3 py-1.5 text-xs font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(a.id); }}
+                                disabled={deleteLoadingId === a.id}
+                                className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-500 transition disabled:opacity-40"
+                              >
+                                {deleteLoadingId === a.id
+                                  ? <Loader2 className="w-3 h-3 animate-spin" />
+                                  : <Trash2 className="w-3 h-3" strokeWidth={1.5} />}
+                                {deleteLoadingId === a.id ? "Removing..." : "Remove"}
+                              </button>
+                            </>
                           )}
-                          {isTeacher && deletingAssignment === a.id && (
-                            <div className="flex items-center gap-2">
+                          {isTeacher && confirmDeleteId === a.id && (
+                            <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
                               <span className="text-xs text-[#57534E]">Remove this assignment?</span>
                               <button
-                                onClick={() => void handleDeleteAssignment(a.id)}
-                                className="text-xs font-medium text-red-500 hover:text-red-600 transition px-2 py-1 rounded-lg border border-red-200 hover:bg-red-50"
+                                onClick={(e) => { e.stopPropagation(); void handleDeleteAssignment(a.id); }}
+                                className="text-xs font-semibold text-red-500 hover:text-red-600 transition"
                               >
                                 Yes, remove
                               </button>
                               <button
-                                onClick={() => setDeletingAssignment(null)}
+                                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
                                 className="text-xs text-[#A8A29E] hover:text-[#57534E] transition"
                               >
                                 Cancel
@@ -572,6 +677,87 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
 
         </div>
       </div>
+
+      {/* Edit assignment modal */}
+      {editingAssignment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setEditingAssignment(null)}>
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif text-xl font-medium text-[#1A1A1A]">Edit assignment</h2>
+              <button onClick={() => setEditingAssignment(null)} className="text-[#A8A29E] hover:text-[#57534E] transition">
+                <X className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Assignment title"
+              className="w-full rounded-xl border border-[#E7E5E4] bg-[#FDFCF8] px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+            />
+
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="Instructions or description (optional)..."
+              rows={4}
+              className="w-full resize-none rounded-xl border border-[#E7E5E4] bg-[#FDFCF8] px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+            />
+
+            {/* Replace file */}
+            <div>
+              <p className="text-xs text-[#A8A29E] mb-2">
+                {editingAssignment.file_url || editingAssignment.image_base64
+                  ? "Replace file (optional)"
+                  : "Attach file (optional)"}
+              </p>
+              {!editFile ? (
+                <button
+                  onClick={() => editFileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 border border-dashed border-[#E7E5E4] rounded-xl py-3 text-xs text-[#A8A29E] hover:border-[#D97706]/40 hover:text-[#57534E] transition"
+                >
+                  <Upload className="w-4 h-4" strokeWidth={1.5} />
+                  {editingAssignment.file_name ?? (editingAssignment.image_base64 ? "Current file attached" : "Click to attach")}
+                </button>
+              ) : (
+                <div className="flex items-center gap-3 bg-[#F5F4F0] border border-[#E7E5E4] rounded-xl px-4 py-2.5">
+                  {fileIcon(editFile.type)}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-[#1A1A1A] truncate">{editFile.name}</p>
+                    <p className="text-[10px] text-[#A8A29E]">{(editFile.size / 1024).toFixed(0)} KB</p>
+                  </div>
+                  {editFilePreview && <img src={editFilePreview} alt="" className="w-8 h-8 rounded-lg object-cover" />}
+                  <button onClick={() => { setEditFile(null); setEditFilePreview(null); }} className="text-[#A8A29E] hover:text-red-400 transition">
+                    <X className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                </div>
+              )}
+              <input ref={editFileInputRef} type="file" accept={ACCEPTED_TYPES} className="hidden" onChange={handleEditFileSelect} />
+            </div>
+
+            {editError && <p className="text-xs text-red-500">{editError}</p>}
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => void handleSaveEdit()}
+                disabled={!editTitle.trim() || editSaving}
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition disabled:opacity-40"
+              >
+                {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save changes"}
+              </button>
+              <button
+                onClick={() => setEditingAssignment(null)}
+                className="px-4 py-2 rounded-xl border border-[#E7E5E4] text-sm text-[#57534E] hover:bg-[#F5F4F0] transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
