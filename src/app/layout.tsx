@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "StudyWith",
   description:
-    "An AI tutor that guides you through assignments using the Socratic method. No instant answers — just guided thinking.",
+    "An AI tutor that guides you through assignments using the Socratic method. No instant answers, just guided thinking.",
   manifest: "/manifest.json",
 };
 

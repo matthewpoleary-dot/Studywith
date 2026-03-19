@@ -49,7 +49,7 @@ export default function OnboardingModal() {
                 Paste any question or topic
               </p>
               <p className="text-xs text-[#57534E] leading-relaxed">
-                An assignment, exam question, concept you&apos;re stuck on — anything works.
+                An assignment, exam question, or concept you&apos;re stuck on. Anything works.
               </p>
             </div>
           </div>
@@ -63,7 +63,7 @@ export default function OnboardingModal() {
                 Sage asks you questions
               </p>
               <p className="text-xs text-[#57534E] leading-relaxed">
-                Instead of just giving answers, Sage helps you think it through — so it actually sticks.
+                Instead of just giving answers, Sage helps you think it through, so it actually sticks.
               </p>
             </div>
           </div>

@@ -134,106 +134,128 @@ function SidebarContent({
 
       {/* Sessions list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {sessions.length === 0 ? (
-          <p className="text-xs text-[#A8A29E] px-4 py-3">
-            No sessions yet. Start one above.
-          </p>
-        ) : (
-          <>
-            <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-2 uppercase tracking-widest">
-              History
-            </p>
-            <div className="space-y-0.5">
-              {sessions.filter((s) => !deletedIds.has(s.id)).map((session) => {
-                const href = `/app/session/${session.id}`;
-                const isActive =
-                  pathname === `/receipt/${session.id}` ||
-                  pathname === `/app/session/${session.id}`;
-                const isRenaming = renamingId === session.id;
-                const isConfirmingDelete = deletingId === session.id;
+        {(() => {
+          const visible = sessions.filter((s) => !deletedIds.has(s.id));
+          const inProgress = visible.filter((s) => s.receipt === null);
+          const completed = visible.filter((s) => s.receipt !== null);
 
-                return (
-                  <div
-                    key={session.id}
-                    className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl transition ${
-                      isActive
-                        ? "bg-[#E7E5E4] text-[#1A1A1A]"
-                        : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
-                    }`}
+          const renderItem = (session: Session, allowEdit: boolean) => {
+            const href = `/app/session/${session.id}`;
+            const isActive =
+              pathname === `/receipt/${session.id}` ||
+              pathname === `/app/session/${session.id}` ||
+              pathname === `/app/session/${session.id}/summary`;
+            const isRenaming = renamingId === session.id;
+            const isConfirmingDelete = deletingId === session.id;
+
+            return (
+              <div
+                key={session.id}
+                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl transition ${
+                  isActive
+                    ? "bg-[#E7E5E4] text-[#1A1A1A]"
+                    : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+                }`}
+              >
+                <BookOpen
+                  className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${session.receipt ? "text-[#A8A29E]" : "text-[#D97706]"}`}
+                  strokeWidth={1.5}
+                />
+                {isRenaming ? (
+                  <input
+                    ref={renameInputRef}
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={() => void saveRename(session.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void saveRename(session.id);
+                      if (e.key === "Escape") setRenamingId(null);
+                    }}
+                    className="flex-1 min-w-0 bg-white border border-[#D97706]/50 rounded-lg px-2 py-0.5 text-xs text-[#1A1A1A] outline-none focus:ring-1 focus:ring-[#D97706]/30"
+                    autoFocus
+                  />
+                ) : (
+                  <a
+                    href={href}
+                    onClick={onNav}
+                    className="flex-1 min-w-0 flex flex-col"
                   >
-                    <BookOpen
-                      className="w-3.5 h-3.5 shrink-0 text-[#D97706] mt-0.5"
-                      strokeWidth={1.5}
-                    />
-
-                    {isRenaming ? (
-                      <input
-                        ref={renameInputRef}
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onBlur={() => void saveRename(session.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") void saveRename(session.id);
-                          if (e.key === "Escape") setRenamingId(null);
-                        }}
-                        className="flex-1 min-w-0 bg-white border border-[#D97706]/50 rounded-lg px-2 py-0.5 text-xs text-[#1A1A1A] outline-none focus:ring-1 focus:ring-[#D97706]/30"
-                        autoFocus
-                      />
-                    ) : (
-                      <a
-                        href={href}
-                        onClick={onNav}
-                        className="flex-1 min-w-0 flex flex-col"
-                      >
-                        <span className="text-sm truncate leading-snug">
-                          {getTitle(session)}
-                        </span>
-                        <span className="text-[10px] text-[#A8A29E] mt-0.5">
-                          {getDate(session)}
-                        </span>
-                      </a>
-                    )}
-
-                    {!isRenaming && !isConfirmingDelete && (
-                      <div className="shrink-0 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
-                        <button
-                          onClick={(e) => startRename(session, e)}
-                          className="p-0.5 text-[#A8A29E] hover:text-[#57534E] transition"
-                          title="Rename"
-                        >
-                          <Pencil className="w-3 h-3" strokeWidth={1.5} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(session.id); }}
-                          className="p-0.5 text-[#A8A29E] hover:text-red-400 transition"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3 h-3" strokeWidth={1.5} />
-                        </button>
-                      </div>
-                    )}
-                    {isConfirmingDelete && (
-                      <div className="shrink-0 flex items-center gap-1">
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); void confirmDelete(session.id); }}
-                          className="text-[10px] font-medium text-red-500 hover:text-red-600 px-1 py-0.5 rounded transition"
-                        >
-                          Delete
-                        </button>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(null); }}
-                          className="text-[10px] text-[#A8A29E] hover:text-[#57534E] px-1 py-0.5 rounded transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
+                    <span className="text-sm truncate leading-snug">{getTitle(session)}</span>
+                    <span className="text-[10px] text-[#A8A29E] mt-0.5">{getDate(session)}</span>
+                  </a>
+                )}
+                {allowEdit && !isRenaming && !isConfirmingDelete && (
+                  <div className="shrink-0 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
+                    <button
+                      onClick={(e) => startRename(session, e)}
+                      className="p-0.5 text-[#A8A29E] hover:text-[#57534E] transition"
+                      title="Rename"
+                    >
+                      <Pencil className="w-3 h-3" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(session.id); }}
+                      className="p-0.5 text-[#A8A29E] hover:text-red-400 transition"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                    </button>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                )}
+                {allowEdit && isConfirmingDelete && (
+                  <div className="shrink-0 flex items-center gap-1">
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); void confirmDelete(session.id); }}
+                      className="text-[10px] font-medium text-red-500 hover:text-red-600 px-1 py-0.5 rounded transition"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(null); }}
+                      className="text-[10px] text-[#A8A29E] hover:text-[#57534E] px-1 py-0.5 rounded transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          };
+
+          if (visible.length === 0) {
+            return (
+              <p className="text-xs text-[#A8A29E] px-4 py-3">No sessions yet. Start one above.</p>
+            );
+          }
+
+          return (
+            <>
+              {/* In-progress sessions */}
+              {inProgress.length > 0 && (
+                <>
+                  <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-2 uppercase tracking-widest">
+                    Continue
+                  </p>
+                  <div className="space-y-0.5">
+                    {inProgress.map((s) => renderItem(s, true))}
+                  </div>
+                </>
+              )}
+
+              {/* Completed sessions */}
+              {completed.length > 0 && (
+                <>
+                  <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-2 uppercase tracking-widest">
+                    History
+                  </p>
+                  <div className="space-y-0.5">
+                    {completed.map((s) => renderItem(s, false))}
+                  </div>
+                </>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* Footer: email + stats + settings + sign out */}

@@ -48,7 +48,20 @@ export async function POST(request: Request) {
     .map((m) => `${m.role === "student" ? "Student" : "Tutor"}: ${m.content}`)
     .join("\n");
 
-  const receiptPrompt = `Analyse this tutoring session and return a JSON learning receipt.
+  const receiptPrompt = `You are Sage, a study tutor. A student just completed a session. Return ONLY a valid JSON object with no markdown or preamble:
+{
+  "title": "3-5 word topic title",
+  "subject": "detected subject area",
+  "closingMessage": "A warm 1-2 sentence message. If the student clearly worked it out themselves, say so genuinely. If they struggled, be encouraging. Never be generic.",
+  "directAnswer": "The clear, complete answer to the original question or topic, written as if explaining to a student who just worked through it. 2-4 sentences.",
+  "conceptsCovered": ["concept 1", "concept 2"],
+  "understoodWell": ["thing student showed clear grasp of 1", "thing 2"],
+  "toRevisit": ["topic worth revisiting 1", "topic 2"],
+  "followUpQuestion": "One thought-provoking question for the student to think about next.",
+  "gaps": ["gap 1"],
+  "score": 75,
+  "summary": "One paragraph summarising learning progress and what to review."
+}
 
 Assignment:
 ${body.assignment}
@@ -56,19 +69,7 @@ ${body.assignment}
 Transcript:
 ${transcript}
 
-Return ONLY valid JSON — no markdown fences, no explanation — with exactly this shape:
-{
-  "title": "3-5 word topic title",
-  "conceptsCovered": ["concept 1", "concept 2"],
-  "gaps": ["gap 1", "gap 2"],
-  "score": 75,
-  "summary": "One paragraph summarising learning progress and what to review.",
-  "understoodWell": ["thing student showed clear grasp of 1", "thing 2"],
-  "toRevisit": ["topic worth revisiting 1", "topic 2"],
-  "followUpQuestion": "One thought-provoking question for the student to think about next."
-}
-
-SCORING RULES — this is a LEARNING score (0–100), not a knowledge test score. You are rewarding growth and effort, not prior knowledge.
+SCORING RULES: this is a LEARNING score (0-100), not a knowledge test score. You are rewarding growth and effort, not prior knowledge.
 
 Score based on these factors (in order of importance):
 1. PROGRESSION: Did the student's understanding visibly improve from the start of the session to the end? A student who started clueless but ended with real grasp should score well.
@@ -84,7 +85,7 @@ Scoring benchmarks:
 - Little engagement, ignored hints, no visible improvement: 10–35
 - Moderate effort, some improvement but gaps remain: 35–60
 
-Do NOT penalise a student for starting with low knowledge. Do NOT give a high score just because they knew the answer upfront — reward the journey, not the destination.
+Do NOT penalise a student for starting with low knowledge. Do NOT give a high score just because they knew the answer upfront. Reward the journey, not the destination.
 
 The summary should mention where they started, how they progressed, and specifically what they should review next.
 The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitochondria & ATP synthesis", "Basic addition facts").`;
@@ -118,6 +119,9 @@ The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitoch
       ...(receiptFields.understoodWell ? { understoodWell: receiptFields.understoodWell } : {}),
       ...(receiptFields.toRevisit ? { toRevisit: receiptFields.toRevisit } : {}),
       ...(receiptFields.followUpQuestion ? { followUpQuestion: receiptFields.followUpQuestion } : {}),
+      ...(receiptFields.closingMessage ? { closingMessage: receiptFields.closingMessage } : {}),
+      ...(receiptFields.directAnswer ? { directAnswer: receiptFields.directAnswer } : {}),
+      ...(receiptFields.subject ? { subject: receiptFields.subject } : {}),
     };
   } catch {
     receipt = {

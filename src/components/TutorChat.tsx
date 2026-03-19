@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Send, ImagePlus, X, FileText, ChevronDown } from "lucide-react";
+import { Send, ImagePlus, X, FileText } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -46,13 +46,13 @@ function detectSubject(text: string): Subject {
 const OPENING_MESSAGES: Record<string, string[]> = {
   Maths: [
     "Let's approach this systematically. What does the problem ask you to find, and what information do you have to work with?",
-    "Good. Before we start — what's the mathematical concept or method you think is relevant here?",
+    "Good. Before we start: what's the mathematical concept or method you think is relevant here?",
     "Let's think this through carefully. What do you already know, and what are you trying to solve for?",
   ],
   English: [
     "Let's think critically about this. What's the core argument or idea you think this assignment wants you to explore?",
     "Good choice of topic. What angle do you want to take, and what's the first thing that comes to mind?",
-    "Before we start writing — what do you think makes a strong response to this kind of question?",
+    "Before we start writing: what do you think makes a strong response to this kind of question?",
   ],
   Science: [
     "Interesting topic. What's the key principle or concept you think this question is built around?",
@@ -61,17 +61,17 @@ const OPENING_MESSAGES: Record<string, string[]> = {
   ],
   History: [
     "Let's dig into this. What's your initial take on the main causes or factors at play here?",
-    "Good. Before we analyse — what do you already know about this period or event?",
+    "Good. Before we analyse: what do you already know about this period or event?",
     "Interesting question. What argument do you think this essay wants you to make?",
   ],
   Languages: [
     "Let's work through this together. What grammatical structure or vocabulary do you think is being tested here?",
-    "Good. What's your first attempt at this? Don't worry about being perfect — just try.",
+    "Good. What's your first attempt at this? Don't worry about being perfect, just try.",
     "Let's think about the rules at play. What pattern do you notice in this question?",
   ],
   General: [
     "Let's work through this together. What's your first instinct about what this question is really getting at?",
-    "Good. Before we dive in — in your own words, what do you think this assignment wants you to demonstrate?",
+    "Good. Before we dive in: in your own words, what do you think this assignment wants you to demonstrate?",
     "Let's think this through properly. What's the core concept or skill being tested here?",
     "Interesting. What do you already know that feels relevant to this?",
     "Let's approach this methodically. What's the key thing you need to understand or show here?",
@@ -85,7 +85,7 @@ function getOpeningMessage(subject: Subject): string {
 }
 
 const REVIEW_OPENERS: Array<(topic: string) => string> = [
-  (t) => `Let's get ${t} properly clear. Walk me through what you do understand about it so far — even if it's just a little.`,
+  (t) => `Let's get ${t} properly clear. Walk me through what you do understand about it so far, even if it's just a little.`,
   (t) => `Good call revisiting this. What's your current understanding of ${t}? Start anywhere and we'll build from there.`,
   (t) => `Let's work through ${t} together. Tell me what you already know, and I'll help fill in the gaps.`,
   (t) => `${t.charAt(0).toUpperCase() + t.slice(1)} is worth getting solid on. What do you think is the core idea behind it?`,
@@ -125,6 +125,7 @@ export default function TutorChat({
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [subjectPulsing, setSubjectPulsing] = useState(false);
   const prevSubjectRef = useRef<Subject>(detectSubject(initialAssignment));
+  const [sageAvatar, setSageAvatar] = useState("🌿");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -157,11 +158,13 @@ export default function TutorChat({
     return () => vv.removeEventListener("resize", onResize);
   }, [scrollToBottom]);
 
-  // Auth guard
+  // Auth guard + load sage avatar
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push("/auth/login?redirectTo=/app");
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push("/auth/login?redirectTo=/app"); return; }
+      const avatar = user.user_metadata?.sage_avatar as string | undefined;
+      if (avatar) setSageAvatar(avatar);
     });
   }, [router]);
 
@@ -481,7 +484,7 @@ export default function TutorChat({
             What are we working on?
           </h1>
           <p className="text-sm text-[#57534E] mb-6 leading-relaxed">
-            Paste a question, topic, or assignment — or upload a photo of your notes.
+            Paste a question, topic, or assignment, or upload a photo of your notes.
           </p>
 
           {/* File preview */}
@@ -558,45 +561,7 @@ export default function TutorChat({
             </div>
           )}
 
-          {/* Subject — auto-detected, click to override */}
-          <div className="flex items-center gap-2 mb-5">
-            <span className="text-xs text-[#A8A29E]">Subject</span>
-            <div ref={subjectDropdownRef} className="relative group">
-              <button
-                type="button"
-                onClick={() => setSubjectOpen((v) => !v)}
-                className={`flex items-center gap-1 text-xs font-medium text-[#57534E] hover:text-[#1A1A1A] transition rounded-md px-1.5 py-0.5 border border-transparent hover:border-[#D97706]/30 hover:bg-[#D97706]/5 ${
-                  subjectPulsing ? "scale-105 text-[#D97706] border-[#D97706]/30 bg-[#D97706]/5" : ""
-                } transition-all duration-200`}
-                title="Auto-detected from your topic — click to change"
-              >
-                {subject}
-                <ChevronDown className="w-3 h-3 text-[#A8A29E]" strokeWidth={2} />
-              </button>
-              {/* Tooltip */}
-              <div className="pointer-events-none absolute left-0 top-full mt-1.5 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                <div className="bg-[#1A1A1A] text-white text-[10px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg">
-                  Auto-detected — click to change
-                </div>
-              </div>
-              {subjectOpen && (
-                <div className="absolute top-full left-0 mt-1.5 w-44 bg-white border border-[#E7E5E4] rounded-xl shadow-lg z-20 py-1.5 overflow-hidden">
-                  {SUBJECT_OPTIONS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => { setSubject(s); setSubjectOpen(false); }}
-                      className={`w-full text-left px-3.5 py-1.5 text-xs transition hover:bg-[#F5F4F0] ${
-                        s === subject ? "text-[#D97706] font-medium" : "text-[#57534E]"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Subject auto-detected silently in background — no dropdown shown */}
 
           <div className="flex items-center gap-3">
             <button
@@ -674,8 +639,8 @@ export default function TutorChat({
             >
               {m.role === "tutor" && (
                 <div className="flex flex-col items-center mr-2.5 shrink-0">
-                  <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center mt-0.5">
-                    <span className="text-[9px] font-bold text-[#D97706]">S</span>
+                  <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
+                    {sageAvatar}
                   </div>
                   <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
                 </div>
@@ -696,8 +661,8 @@ export default function TutorChat({
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex flex-col items-center mr-2.5 shrink-0">
-                <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center mt-0.5">
-                  <span className="text-[9px] font-bold text-[#D97706]">S</span>
+                <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
+                  {sageAvatar}
                 </div>
                 <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
               </div>

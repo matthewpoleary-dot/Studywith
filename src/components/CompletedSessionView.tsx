@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookOpen, FileText, ExternalLink, Plus } from "lucide-react";
 import type { TutorMessage } from "./TutorChat";
 import type { LearningReceipt } from "@/lib/database.types";
 import CopyLinkButton from "./CopyLinkButton";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type Props = {
   sessionId: string;
@@ -25,6 +26,15 @@ function scoreBand(score: number): { label: string; pillClass: string } {
 
 export default function CompletedSessionView({ sessionId, assignment, messages, receipt, title, createdAt }: Props) {
   const [tab, setTab] = useState<"chat" | "receipt">("receipt");
+  const [sageAvatar, setSageAvatar] = useState("🌿");
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      const avatar = user?.user_metadata?.sage_avatar as string | undefined;
+      if (avatar) setSageAvatar(avatar);
+    });
+  }, []);
 
   const date = new Date(createdAt).toLocaleDateString("en-GB", {
     day: "numeric", month: "long", year: "numeric",
@@ -101,8 +111,8 @@ export default function CompletedSessionView({ sessionId, assignment, messages, 
                 >
                   {m.role === "tutor" && (
                     <div className="flex flex-col items-center mr-2.5 shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center mt-0.5">
-                        <span className="text-[9px] font-bold text-[#D97706]">S</span>
+                      <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
+                        {sageAvatar}
                       </div>
                       <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
                     </div>
@@ -203,7 +213,7 @@ export default function CompletedSessionView({ sessionId, assignment, messages, 
                       <p className="font-medium text-[#1A1A1A] text-sm">Ready to keep learning?</p>
                       <p className="text-xs text-[#57534E] mt-0.5">
                         {receipt.gaps.length > 0
-                          ? "You have gaps to review — or start something new."
+                          ? "You have gaps to review, or start something new."
                           : "Great session. Start a new one to keep the momentum going."}
                       </p>
                     </div>

@@ -4,8 +4,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import Link from "next/link";
-import { BookOpen, CheckCircle, Star } from "lucide-react";
-import type { Database, LearningReceipt } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types";
+import StatsClient from "./StatsClient";
 
 type SessionRow = {
   id: string;
@@ -33,16 +33,6 @@ function calcStreak(sessions: { created_at: string }[]): number {
     }
   }
   return streak;
-}
-
-function sessionLabel(s: SessionRow) {
-  const raw =
-    s.title ??
-    (s.assignment_text.length > 60
-      ? s.assignment_text.slice(0, 60) + "…"
-      : s.assignment_text) ??
-    "Session";
-  return raw.replace(/^#+\s*/, "").trim();
 }
 
 export default async function StatsPage() {
@@ -83,18 +73,6 @@ export default async function StatsPage() {
     );
   }
 
-  const completedSessions = allSessions.filter((s) => s.receipt !== null);
-
-  const avgScore =
-    completedSessions.length > 0
-      ? Math.round(
-          completedSessions.reduce((acc, s) => {
-            const r = s.receipt as unknown as LearningReceipt;
-            return acc + (r?.score ?? 0);
-          }, 0) / completedSessions.length,
-        )
-      : null;
-
   const streak = calcStreak(allSessions);
 
   const dailyGoal: number | null =
@@ -120,7 +98,6 @@ export default async function StatsPage() {
 
       {allSessions.length === 0 ? (
         <div className="space-y-5">
-          {/* Engaging empty state */}
           <div className="rounded-2xl border border-[#E7E5E4] bg-white px-6 py-10 text-center">
             <div className="text-4xl mb-4">📈</div>
             <h2 className="font-serif text-xl font-medium text-[#1A1A1A] mb-2">
@@ -131,7 +108,6 @@ export default async function StatsPage() {
             </p>
           </div>
 
-          {/* Ghost preview of what stats will look like */}
           <div className="opacity-40 pointer-events-none select-none">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
@@ -166,121 +142,13 @@ export default async function StatsPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
-
-          {/* Streak + daily goal */}
-          <div className={`grid gap-4 ${dailyGoal !== null ? "grid-cols-2" : "grid-cols-1"}`}>
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <p className="text-xs font-medium text-[#57534E] mb-3">Daily streak</p>
-              <div className="flex items-end gap-2">
-                <p className="text-3xl font-serif font-medium text-[#1A1A1A]">{streak}</p>
-                <span className="text-xl mb-0.5">{streak > 0 ? "🔥" : "💤"}</span>
-              </div>
-              <p className="text-xs text-[#A8A29E] mt-1">
-                {streak === 0
-                  ? "Study today to start one"
-                  : streak === 1
-                  ? "1 day in a row"
-                  : `${streak} days in a row`}
-              </p>
-            </div>
-
-            {dailyGoal !== null && (
-              <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-                <p className="text-xs font-medium text-[#57534E] mb-3">Today&apos;s goal</p>
-                <div className="flex items-end gap-1">
-                  <p className="text-3xl font-serif font-medium text-[#1A1A1A]">{sessionsToday}</p>
-                  <span className="text-base text-[#A8A29E] mb-0.5">/{dailyGoal}</span>
-                </div>
-                <div className="mt-2 h-1.5 w-full rounded-full bg-[#E7E5E4] overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${dailyGoalMet ? "bg-emerald-500" : "bg-[#D97706]"}`}
-                    style={{ width: `${Math.min(100, Math.round((sessionsToday / dailyGoal) * 100))}%` }}
-                  />
-                </div>
-                <p className="text-xs text-[#A8A29E] mt-1">
-                  {dailyGoalMet ? "Goal complete!" : `${dailyGoal - sessionsToday} more to go`}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Counts + avg score */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-3 md:p-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] md:text-xs font-medium text-[#57534E]">Sessions</p>
-                <BookOpen className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#A8A29E]" strokeWidth={1.5} />
-              </div>
-              <p className="text-2xl md:text-3xl font-serif font-medium text-[#1A1A1A]">{allSessions.length}</p>
-            </div>
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-3 md:p-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] md:text-xs font-medium text-[#57534E]">Completed</p>
-                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#A8A29E]" strokeWidth={1.5} />
-              </div>
-              <p className="text-2xl md:text-3xl font-serif font-medium text-[#1A1A1A]">{completedSessions.length}</p>
-            </div>
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-3 md:p-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] md:text-xs font-medium text-[#57534E]">Avg score</p>
-                <Star className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#A8A29E]" strokeWidth={1.5} />
-              </div>
-              <p className={`text-2xl md:text-3xl font-serif font-medium ${
-                avgScore === null ? "text-[#A8A29E]"
-                : avgScore >= 75 ? "text-emerald-600"
-                : avgScore >= 50 ? "text-amber-600"
-                : "text-red-500"
-              }`}>
-                {avgScore !== null ? avgScore : "--"}
-                {avgScore !== null && <span className="text-sm md:text-base text-[#A8A29E]">/100</span>}
-              </p>
-              {avgScore !== null && (
-                <div className="mt-2 h-1 w-full rounded-full bg-[#E7E5E4] overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      avgScore >= 75 ? "bg-emerald-500" : avgScore >= 50 ? "bg-amber-500" : "bg-red-400"
-                    }`}
-                    style={{ width: `${avgScore}%` }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Completed session history */}
-          {completedSessions.length > 0 && (
-            <div>
-              <h2 className="font-medium text-[#1A1A1A] mb-3">Session receipts</h2>
-              <div className="space-y-2">
-                {completedSessions.map((s) => {
-                  const receipt = s.receipt as unknown as LearningReceipt;
-                  const score = receipt?.score ?? null;
-                  const date = new Date(s.created_at).toLocaleDateString("en-GB", {
-                    day: "numeric", month: "short", year: "numeric",
-                  });
-                  return (
-                    <Link
-                      key={s.id}
-                      href={`/app/session/${s.id}`}
-                      className="flex items-center justify-between gap-4 bg-white border border-[#E7E5E4] rounded-xl px-5 py-4 hover:border-[#D97706]/40 hover:shadow-sm transition-all"
-                    >
-                      <p className="text-sm text-[#1A1A1A] truncate flex-1 min-w-0">{sessionLabel(s)}</p>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {score !== null && (
-                          <span className={`text-sm font-medium ${
-                            score >= 75 ? "text-emerald-600" : score >= 50 ? "text-amber-600" : "text-red-500"
-                          }`}>{score}/100</span>
-                        )}
-                        <span className="text-xs text-[#A8A29E]">{date}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+        <StatsClient
+          initialSessions={allSessions}
+          streak={streak}
+          dailyGoal={dailyGoal}
+          sessionsToday={sessionsToday}
+          dailyGoalMet={dailyGoalMet}
+        />
       )}
     </div>
   );

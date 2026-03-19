@@ -40,7 +40,6 @@ export default async function SessionSummaryPage({
   if (!data || data.user_id !== user.id) notFound();
   const session = data as SessionRow;
 
-  // If no receipt yet (session still active), redirect to active session
   if (!session.receipt) redirect(`/app/session/${id}`);
 
   const receipt = session.receipt as unknown as LearningReceipt;
@@ -48,45 +47,53 @@ export default async function SessionSummaryPage({
   const title =
     session.title ??
     (session.assignment_text.length > 50
-      ? session.assignment_text.slice(0, 50) + "…"
+      ? session.assignment_text.slice(0, 50) + "..."
       : session.assignment_text);
 
   const date = new Date(session.created_at).toLocaleDateString("en-GB", {
     day: "numeric", month: "long", year: "numeric",
   });
 
-  const scoreColor =
-    receipt.score >= 75 ? "text-emerald-600" :
-    receipt.score >= 50 ? "text-[#D97706]" :
-    "text-red-500";
-
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="w-full max-w-2xl mx-auto px-6 py-10 md:py-14">
 
-        {/* Session title + subject badge */}
-        <div className="mb-8">
-          <p className="text-xs font-medium uppercase tracking-widest text-[#A8A29E] mb-3">
-            Session complete · {date}
-          </p>
-          <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-3 leading-tight">
-            {title}
-          </h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className={`text-2xl font-serif font-medium ${scoreColor}`}>
-              {receipt.score}<span className="text-sm text-[#A8A29E]">/100</span>
-            </span>
-            <Link
-              href={`/app/session/${id}`}
-              className="text-xs text-[#A8A29E] hover:text-[#57534E] transition underline underline-offset-2"
-            >
-              View full chat →
-            </Link>
+        {/* 1. Closing message — emotional beat, centered, prominent */}
+        {receipt.closingMessage && (
+          <div className="text-center mb-10 px-4">
+            <p className="font-serif text-2xl md:text-3xl text-[#1A1A1A] leading-snug">
+              {receipt.closingMessage}
+            </p>
+            <p className="text-xs text-[#A8A29E] mt-4 uppercase tracking-widest">
+              {title} &middot; {date}
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* Header when no closing message */}
+        {!receipt.closingMessage && (
+          <div className="mb-8">
+            <p className="text-xs font-medium uppercase tracking-widest text-[#A8A29E] mb-2">
+              Session complete &middot; {date}
+            </p>
+            <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] leading-tight">
+              {title}
+            </h1>
+          </div>
+        )}
 
         <div className="space-y-4">
-          {/* What you covered */}
+          {/* 2. The answer */}
+          {receipt.directAnswer && (
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 pl-5 pr-5 py-5 border-l-4 border-l-amber-400">
+              <p className="text-xs font-semibold uppercase tracking-widest text-amber-700 mb-2">
+                The answer
+              </p>
+              <p className="text-sm leading-relaxed text-[#1A1A1A]">{receipt.directAnswer}</p>
+            </section>
+          )}
+
+          {/* 3. What you covered */}
           {receipt.conceptsCovered && receipt.conceptsCovered.length > 0 && (
             <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-3">
@@ -95,7 +102,7 @@ export default async function SessionSummaryPage({
               <ul className="space-y-2">
                 {receipt.conceptsCovered.map((topic, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[#1A1A1A]">
-                    <span className="text-[#D97706] mt-0.5 shrink-0">✦</span>
+                    <span className="text-[#D97706] mt-0.5 shrink-0">&#10022;</span>
                     {topic}
                   </li>
                 ))}
@@ -103,7 +110,7 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* You understood well */}
+          {/* 4. You understood well */}
           {receipt.understoodWell && receipt.understoodWell.length > 0 && (
             <section className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-3">
@@ -112,7 +119,7 @@ export default async function SessionSummaryPage({
               <ul className="space-y-2">
                 {receipt.understoodWell.map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[#1A1A1A]">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                    <span className="text-emerald-500 mt-0.5 shrink-0">&#10003;</span>
                     {item}
                   </li>
                 ))}
@@ -120,7 +127,7 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* Worth revisiting */}
+          {/* 5. Worth revisiting — links to Study Page */}
           {(receipt.toRevisit ?? receipt.gaps).length > 0 && (
             <section className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 mb-3">
@@ -129,13 +136,13 @@ export default async function SessionSummaryPage({
               <ul className="space-y-2">
                 {(receipt.toRevisit ?? receipt.gaps).map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[#1A1A1A]">
-                    <span className="text-amber-500 mt-0.5 shrink-0">→</span>
+                    <span className="text-amber-500 mt-0.5 shrink-0">&#8594;</span>
                     <span className="flex-1">{item}</span>
                     <Link
-                      href={`/app/new?topic=${encodeURIComponent(item)}`}
+                      href={`/app/study/${encodeURIComponent(item)}`}
                       className="shrink-0 text-[11px] font-medium text-amber-600 hover:underline"
                     >
-                      Review →
+                      Study this
                     </Link>
                   </li>
                 ))}
@@ -143,7 +150,7 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* Think about this */}
+          {/* 6. Think about this */}
           {receipt.followUpQuestion && (
             <section className="bg-[#F5F4F0] border border-[#E7E5E4] rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-3">
@@ -155,17 +162,25 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* Summary */}
-          {receipt.summary && (
-            <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-3">
-                Sage&apos;s summary
-              </p>
-              <p className="text-sm leading-relaxed text-[#57534E]">{receipt.summary}</p>
-            </section>
-          )}
+          {/* Score + view full chat link */}
+          <div className="flex items-center justify-between py-1">
+            {receipt.score > 0 && (
+              <span className={`text-sm font-medium ${
+                receipt.score >= 75 ? "text-emerald-600" :
+                receipt.score >= 50 ? "text-[#D97706]" : "text-red-500"
+              }`}>
+                Learning score: {receipt.score}/100
+              </span>
+            )}
+            <Link
+              href={`/app/session/${id}`}
+              className="text-xs text-[#A8A29E] hover:text-[#57534E] transition underline underline-offset-2 ml-auto"
+            >
+              View full chat
+            </Link>
+          </div>
 
-          {/* Action buttons */}
+          {/* 7. Action buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Link
               href="/app/new"

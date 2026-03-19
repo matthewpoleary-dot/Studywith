@@ -40,7 +40,7 @@ export default function PaymentSuccessPage() {
           </h1>
           <p className="text-[#57534E] mb-8 leading-relaxed">
             Activation is taking a moment longer than expected. Click below to
-            go to your dashboard — your account should be ready.
+            go to your dashboard. Your account should be ready.
           </p>
           <a
             href="/app"

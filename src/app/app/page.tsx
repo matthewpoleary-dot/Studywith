@@ -126,7 +126,7 @@ export default async function AppDashboard() {
             Ready when you are
           </h2>
           <p className="text-sm text-[#57534E] mb-6 max-w-sm mx-auto leading-relaxed">
-            Start a session with any question, assignment, or topic — Sage will guide you through it.
+            Start a session with any question, assignment, or topic. Sage will guide you through it.
           </p>
           <Link
             href="/app/new"

@@ -335,10 +335,10 @@ const Hero = () => {
             />
             <button
               onClick={() => scrollToSection("how-it-works")}
-              className="inline-flex items-center justify-center text-[#57534E] hover:text-[#1A1A1A] rounded-lg px-8 py-4 text-base font-medium transition-colors"
+              className="inline-flex items-center gap-2 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-5 py-2 text-sm font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
             >
               See how it works
-              <ChevronRight className="w-4 h-4 ml-1.5 opacity-60" strokeWidth={1.5} />
+              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
 
@@ -829,7 +829,7 @@ const Pricing = () => {
           {/* Annual — highlighted */}
           <div className="relative bg-[#1A1A1A] border border-[#1A1A1A] p-8 rounded-2xl hover:shadow-xl transition-all duration-300 flex flex-col">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full whitespace-nowrap">
-              Best value — save 43%
+              Best value, save 43%
             </span>
             <h3 className="font-serif text-xl font-medium text-white mb-1 mt-2">Annual</h3>
             <div className="flex items-baseline gap-1 mb-1">

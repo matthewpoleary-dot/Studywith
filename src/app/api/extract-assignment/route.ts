@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       const buffer = Buffer.from(imageBase64, "base64");
       const data = await pdfParse(buffer);
       const text = data.text.trim();
-      if (!text) return Response.json({ error: "No text found in PDF — it may be a scanned image. Try uploading a photo of the page instead." }, { status: 422 });
+      if (!text) return Response.json({ error: "No text found in PDF. It may be a scanned image. Try uploading a photo of the page instead." }, { status: 422 });
       return Response.json({ text });
     }
 

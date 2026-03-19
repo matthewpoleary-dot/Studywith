@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
-import ReferralLink from "@/components/ReferralLink";
 
-type Tab = "account" | "profile" | "billing";
+type Tab = "account" | "profile" | "tutor";
+
+const SAGE_AVATARS = ["🌿", "🦉", "✨", "🧠", "🔥", "🎯", "📚", "🌟"] as const;
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("account");
@@ -41,25 +42,32 @@ export default function SettingsPage() {
   const [goalDone, setGoalDone] = useState(false);
   const [goalError, setGoalError] = useState<string | null>(null);
 
+  // Tutor avatar
+  const [sageAvatar, setSageAvatar] = useState("🌿");
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarDone, setAvatarDone] = useState(false);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUser(user);
-        setNewEmail(user.email ?? "");
+        // Email intentionally left empty (Task 10: user types new email)
         setDisplayName((user.user_metadata?.full_name as string) ?? "");
         const goal = user.user_metadata?.daily_goal;
         setDailyGoal(goal != null ? String(goal) : "");
+        setSageAvatar((user.user_metadata?.sage_avatar as string) ?? "🌿");
       }
     });
   }, []);
 
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newEmail.trim()) return;
     setEmailLoading(true);
     setAccountError(null);
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
     if (error) {
       setAccountError(error.message);
     } else {
@@ -82,7 +90,6 @@ export default function SettingsPage() {
     setAccountError(null);
 
     const supabase = createSupabaseBrowserClient();
-    // Verify current password first
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user?.email ?? "",
       password: currentPassword,
@@ -109,8 +116,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setGoalLoading(true);
     setGoalError(null);
-    const parsed =
-      dailyGoal.trim() === "" ? null : parseInt(dailyGoal, 10);
+    const parsed = dailyGoal.trim() === "" ? null : parseInt(dailyGoal, 10);
     if (parsed !== null && (isNaN(parsed) || parsed < 1 || parsed > 20)) {
       setGoalError("Enter a number between 1 and 20, or leave blank to remove.");
       setGoalLoading(false);
@@ -165,6 +171,16 @@ export default function SettingsPage() {
     setProfileLoading(false);
   };
 
+  const handleAvatarSave = async (emoji: string) => {
+    setSageAvatar(emoji);
+    setAvatarLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.updateUser({ data: { sage_avatar: emoji } });
+    setAvatarLoading(false);
+    setAvatarDone(true);
+    setTimeout(() => setAvatarDone(false), 2000);
+  };
+
   const inputClass =
     "rounded-xl border border-[#E7E5E4] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition";
 
@@ -183,7 +199,7 @@ export default function SettingsPage() {
           [
             ["account", "Account"],
             ["profile", "Personal information"],
-            ["billing", "Plan & Billing"],
+            ["tutor", "Tutor"],
           ] as [Tab, string][]
         ).map(([id, label]) => (
           <button
@@ -203,40 +219,34 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {/* ── Account tab ── */}
+      {/* Account tab */}
       {tab === "account" && (
         <div className="space-y-6">
-
           {/* Email */}
           <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
             <h2 className="font-medium text-[#1A1A1A] mb-1">Email address</h2>
             <p className="text-sm text-[#57534E] mb-4">
-              Current:{" "}
-              <span className="font-medium">{user?.email ?? "—"}</span>
+              Current: <span className="font-medium">{user?.email ?? "loading..."}</span>
             </p>
             {emailSent ? (
               <p className="text-sm text-[#D97706]">
                 Confirmation sent to <span className="font-medium">{newEmail}</span>. Check your inbox to confirm the change.
               </p>
             ) : (
-              <form
-                onSubmit={(e) => void handleEmailChange(e)}
-                className="flex gap-3"
-              >
+              <form onSubmit={(e) => void handleEmailChange(e)} className="flex gap-3">
                 <input
                   type="email"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  required
-                  placeholder="New email address"
+                  placeholder="Enter new email address"
                   className={`flex-1 ${inputClass}`}
                 />
                 <button
                   type="submit"
-                  disabled={emailLoading || newEmail === user?.email}
+                  disabled={emailLoading || !newEmail.trim()}
                   className={primaryBtn}
                 >
-                  {emailLoading ? "Saving…" : "Update"}
+                  {emailLoading ? "Saving..." : "Update"}
                 </button>
               </form>
             )}
@@ -244,22 +254,13 @@ export default function SettingsPage() {
 
           {/* Password */}
           <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
-            <h2 className="font-medium text-[#1A1A1A] mb-4">
-              Change password
-            </h2>
+            <h2 className="font-medium text-[#1A1A1A] mb-4">Change password</h2>
             {passwordDone ? (
-              <p className="text-sm text-green-600">
-                Password updated successfully.
-              </p>
+              <p className="text-sm text-green-600">Password updated successfully.</p>
             ) : (
-              <form
-                onSubmit={(e) => void handlePasswordChange(e)}
-                className="flex flex-col gap-3"
-              >
+              <form onSubmit={(e) => void handlePasswordChange(e)} className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[#57534E]">
-                    Current password
-                  </label>
+                  <label className="text-xs font-medium text-[#57534E]">Current password</label>
                   <input
                     type="password"
                     value={currentPassword}
@@ -271,9 +272,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[#57534E]">
-                    New password
-                  </label>
+                  <label className="text-xs font-medium text-[#57534E]">New password</label>
                   <input
                     type="password"
                     value={newPassword}
@@ -285,9 +284,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-[#57534E]">
-                    Confirm new password
-                  </label>
+                  <label className="text-xs font-medium text-[#57534E]">Confirm new password</label>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -298,19 +295,13 @@ export default function SettingsPage() {
                     className={inputClass}
                   />
                 </div>
-
                 {accountError && (
                   <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
                     {accountError}
                   </p>
                 )}
-
-                <button
-                  type="submit"
-                  disabled={passwordLoading}
-                  className={`mt-1 ${primaryBtn}`}
-                >
-                  {passwordLoading ? "Updating…" : "Update password"}
+                <button type="submit" disabled={passwordLoading} className={`mt-1 ${primaryBtn}`}>
+                  {passwordLoading ? "Updating..." : "Update password"}
                 </button>
               </form>
             )}
@@ -320,7 +311,7 @@ export default function SettingsPage() {
           <section className="bg-white border border-red-200 rounded-2xl p-6">
             <h2 className="font-medium text-red-700 mb-1">Delete account</h2>
             <p className="text-sm text-[#57534E] mb-4">
-              This permanently deletes your account and cancels any active subscription. Your trial usage is tracked so a new account with the same email won&apos;t be eligible for another free trial.
+              This permanently deletes your account and all your sessions. This cannot be undone.
             </p>
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
@@ -345,81 +336,21 @@ export default function SettingsPage() {
                 disabled={deleteConfirm !== "DELETE" || deleteLoading}
                 className="self-start rounded-full bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {deleteLoading ? "Deleting…" : "Delete my account"}
+                {deleteLoading ? "Deleting..." : "Delete my account"}
               </button>
             </div>
           </section>
         </div>
       )}
 
-      {/* ── Billing tab ── */}
-      {tab === "billing" && (() => {
-        const referralCode = user?.id.replace(/-/g, "").slice(0, 8).toUpperCase() ?? "";
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studywith-phi.vercel.app";
-        const referralUrl = `${siteUrl}/?ref=${referralCode}`;
-        return (
-          <div className="space-y-6">
-            {/* Current plan */}
-            <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
-              <h2 className="font-medium text-[#1A1A1A] mb-4">Your plan</h2>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Monthly Plan — Active
-                </span>
-              </div>
-              <ul className="space-y-2 mb-5">
-                {[
-                  "Unlimited tutoring sessions",
-                  "Post-session summaries",
-                  "Progress tracking & statistics",
-                  "Image & PDF assignment upload",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-sm text-[#57534E]">
-                    <span className="text-[#D97706]">✓</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="https://billing.stripe.com/p/login/test_00000"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${primaryBtn} inline-flex`}
-              >
-                Manage subscription
-              </a>
-            </section>
-
-            {/* Refer a friend */}
-            {referralCode && (
-              <section className="bg-[#F5F4F0] border border-[#E7E5E4] rounded-2xl p-6">
-                <h2 className="font-medium text-[#1A1A1A] mb-1">Refer a friend</h2>
-                <p className="text-sm text-[#57534E] mb-4">
-                  Share your link. Friends get 14 days free instead of the usual 7.
-                </p>
-                <ReferralLink url={referralUrl} />
-              </section>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* ── Profile tab ── */}
+      {/* Profile tab */}
       {tab === "profile" && (
         <div className="space-y-6">
           <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
-            <h2 className="font-medium text-[#1A1A1A] mb-4">
-              Personal information
-            </h2>
-            <form
-              onSubmit={(e) => void handleProfileSave(e)}
-              className="flex flex-col gap-4"
-            >
+            <h2 className="font-medium text-[#1A1A1A] mb-4">Personal information</h2>
+            <form onSubmit={(e) => void handleProfileSave(e)} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-[#57534E]">
-                  Display name
-                </label>
+                <label className="text-xs font-medium text-[#57534E]">Display name</label>
                 <input
                   type="text"
                   value={displayName}
@@ -428,39 +359,26 @@ export default function SettingsPage() {
                   className={inputClass}
                 />
               </div>
-
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-[#57534E]">
-                  Email address
-                </label>
+                <label className="text-xs font-medium text-[#57534E]">Email address</label>
                 <input
                   type="email"
                   value={user?.email ?? ""}
                   readOnly
                   className="rounded-xl border border-[#E7E5E4] bg-[#F5F4F0] px-3 py-2.5 text-sm text-[#A8A29E] outline-none cursor-not-allowed"
                 />
-                <p className="text-xs text-[#A8A29E]">
-                  Change your email in the Account tab.
-                </p>
+                <p className="text-xs text-[#A8A29E]">Change your email in the Account tab.</p>
               </div>
-
               {profileError && (
                 <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
                   {profileError}
                 </p>
               )}
-
               <div className="flex items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={profileLoading}
-                  className={primaryBtn}
-                >
-                  {profileLoading ? "Saving…" : "Save changes"}
+                <button type="submit" disabled={profileLoading} className={primaryBtn}>
+                  {profileLoading ? "Saving..." : "Save changes"}
                 </button>
-                {profileDone && (
-                  <p className="text-sm text-green-600">Saved.</p>
-                )}
+                {profileDone && <p className="text-sm text-green-600">Saved.</p>}
               </div>
             </form>
           </section>
@@ -473,9 +391,7 @@ export default function SettingsPage() {
             </p>
             <form onSubmit={(e) => void handleGoalSave(e)} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-[#57534E]">
-                  Sessions per day
-                </label>
+                <label className="text-xs font-medium text-[#57534E]">Sessions per day</label>
                 <input
                   type="number"
                   min={1}
@@ -493,11 +409,60 @@ export default function SettingsPage() {
               )}
               <div className="flex items-center gap-3">
                 <button type="submit" disabled={goalLoading} className={primaryBtn}>
-                  {goalLoading ? "Saving…" : "Save goal"}
+                  {goalLoading ? "Saving..." : "Save goal"}
                 </button>
                 {goalDone && <p className="text-sm text-green-600">Saved.</p>}
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {/* Tutor tab */}
+      {tab === "tutor" && (
+        <div className="space-y-6">
+          {/* Free early access card */}
+          <section className="bg-[#FDFCF8] border border-[#E7E5E4] rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Early access
+              </span>
+            </div>
+            <p className="text-sm text-[#57534E] mt-3">
+              StudyWith is free while we&apos;re in early access. Thanks for being here.
+            </p>
+          </section>
+
+          {/* Sage avatar picker */}
+          <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+            <h2 className="font-medium text-[#1A1A1A] mb-1">Sage&apos;s avatar</h2>
+            <p className="text-sm text-[#57534E] mb-5">
+              Pick an emoji to represent Sage in your sessions.
+            </p>
+            <div className="flex flex-wrap gap-3 mb-4">
+              {SAGE_AVATARS.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => void handleAvatarSave(emoji)}
+                  disabled={avatarLoading}
+                  className={`w-12 h-12 text-2xl rounded-2xl border-2 flex items-center justify-center transition-all hover:scale-110 ${
+                    sageAvatar === emoji
+                      ? "border-[#D97706] bg-[#D97706]/8 shadow-sm scale-110"
+                      : "border-[#E7E5E4] bg-white hover:border-[#D97706]/40"
+                  }`}
+                  title={emoji}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[#57534E]">
+                Current: <span className="text-lg">{sageAvatar}</span>
+              </span>
+              {avatarDone && <span className="text-xs text-green-600">Saved.</span>}
+            </div>
           </section>
         </div>
       )}

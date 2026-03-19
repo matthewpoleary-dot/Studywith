@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check subscription status via service-role client (bypasses RLS)
+  // Auto-create the users row if the DB trigger never fired
   const adminClient = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -50,24 +50,17 @@ export async function proxy(request: NextRequest) {
 
   const { data: userData } = await adminClient
     .from("users")
-    .select("subscribed")
+    .select("id")
     .eq("id", user.id)
     .single();
 
-  // Auto-create the users row if the DB trigger never fired
   if (!userData) {
     await adminClient
       .from("users")
       .upsert(
-        { id: user.id, email: user.email ?? "", subscribed: false },
+        { id: user.id, email: user.email ?? "", subscribed: true },
         { onConflict: "id" },
       );
-  }
-
-  if (!userData?.subscribed) {
-    return NextResponse.redirect(
-      new URL("/?checkout=required", request.url),
-    );
   }
 
   return response;
