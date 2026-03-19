@@ -430,13 +430,29 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                           </div>
                         )}
 
-                        {/* Legacy base64 image support */}
+                        {/* Legacy base64 support (images and PDFs stored before Storage migration) */}
                         {!a.file_url && a.image_base64 && (
-                          <img
-                            src={`data:${a.image_mime ?? "image/jpeg"};base64,${a.image_base64}`}
-                            alt="Assignment"
-                            className="rounded-xl border border-[#E7E5E4] max-w-full"
-                          />
+                          a.image_mime?.includes("pdf") ? (
+                            <div className="space-y-3">
+                              <object
+                                data={`data:application/pdf;base64,${a.image_base64}`}
+                                type="application/pdf"
+                                className="w-full rounded-xl border border-[#E7E5E4]"
+                                style={{ height: "520px" }}
+                              >
+                                <div className="flex flex-col items-center justify-center h-40 bg-[#F5F4F0] rounded-xl gap-3">
+                                  <FileText className="w-8 h-8 text-red-400" strokeWidth={1.5} />
+                                  <p className="text-sm text-[#57534E]">PDF cannot be previewed in this browser.</p>
+                                </div>
+                              </object>
+                            </div>
+                          ) : (
+                            <img
+                              src={`data:${a.image_mime ?? "image/jpeg"};base64,${a.image_base64}`}
+                              alt="Assignment"
+                              className="rounded-xl border border-[#E7E5E4] max-w-full"
+                            />
+                          )
                         )}
 
                         <div className="flex items-center gap-3 pt-1">
