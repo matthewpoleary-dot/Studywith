@@ -170,34 +170,34 @@ export default async function AppDashboard() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-[#57534E]">Sessions</p>
-                <BookOpen className="w-4 h-4 text-[#A8A29E]" strokeWidth={1.5} />
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-3 md:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] md:text-xs font-medium text-[#57534E]">Sessions</p>
+                <BookOpen className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#A8A29E]" strokeWidth={1.5} />
               </div>
-              <p className="text-3xl font-serif font-medium text-[#1A1A1A]">{allSessions.length}</p>
+              <p className="text-2xl md:text-3xl font-serif font-medium text-[#1A1A1A]">{allSessions.length}</p>
             </div>
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-[#57534E]">Completed</p>
-                <CheckCircle className="w-4 h-4 text-[#A8A29E]" strokeWidth={1.5} />
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-3 md:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] md:text-xs font-medium text-[#57534E]">Completed</p>
+                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#A8A29E]" strokeWidth={1.5} />
               </div>
-              <p className="text-3xl font-serif font-medium text-[#1A1A1A]">{completedSessions.length}</p>
+              <p className="text-2xl md:text-3xl font-serif font-medium text-[#1A1A1A]">{completedSessions.length}</p>
             </div>
-            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-[#57534E]">Avg score</p>
-                <Star className="w-4 h-4 text-[#A8A29E]" strokeWidth={1.5} />
+            <div className="bg-white border border-[#E7E5E4] rounded-2xl p-3 md:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] md:text-xs font-medium text-[#57534E]">Avg score</p>
+                <Star className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#A8A29E]" strokeWidth={1.5} />
               </div>
-              <p className={`text-3xl font-serif font-medium ${
+              <p className={`text-2xl md:text-3xl font-serif font-medium ${
                 avgScore === null ? "text-[#A8A29E]"
                 : avgScore >= 75 ? "text-emerald-600"
                 : avgScore >= 50 ? "text-amber-600"
                 : "text-red-500"
               }`}>
                 {avgScore !== null ? avgScore : "--"}
-                {avgScore !== null && <span className="text-base text-[#A8A29E]">/100</span>}
+                {avgScore !== null && <span className="text-sm md:text-base text-[#A8A29E]">/100</span>}
               </p>
               {avgScore !== null && (
                 <div className="mt-2 h-1 w-full rounded-full bg-[#E7E5E4] overflow-hidden">

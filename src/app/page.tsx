@@ -633,7 +633,8 @@ const Comparison = () => {
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-[#E7E5E4]">
+          <div className="min-w-[480px] bg-white">
           {/* Header */}
           <div className="grid grid-cols-4 border-b border-[#E7E5E4]">
             <div className="p-5 col-span-1" />
@@ -671,6 +672,7 @@ const Comparison = () => {
               </div>
             </div>
           ))}
+          </div>
         </div>
       </div>
     </section>
@@ -1039,7 +1041,7 @@ export default function StudyWithLanding() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFCF8]">
+    <div className="min-h-screen bg-[#FDFCF8] overflow-x-hidden">
       <Navigation />
       <main>
         <Hero />
