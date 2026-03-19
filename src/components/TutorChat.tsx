@@ -101,6 +101,7 @@ type TutorChatProps = {
   initialMessages?: TutorMessage[];
   initialSessionId?: string | null;
   initialImageUrl?: string;
+  autoFetchOpener?: boolean;
 };
 
 export default function TutorChat({
@@ -108,6 +109,7 @@ export default function TutorChat({
   initialMessages = [],
   initialSessionId = null as string | null,
   initialImageUrl,
+  autoFetchOpener = false,
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
   const [subject, setSubject] = useState<Subject>(() => detectSubject(initialAssignment));
@@ -220,17 +222,60 @@ export default function TutorChat({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Auto-start when arriving from a "Review this →" link (?topic=...)
+  // Auto-start when arriving from a room assignment (?prefill=..&autoStart=1) or review link (?topic=...)
   useEffect(() => {
     if (!initialAssignment) return;
-    setIsSessionStarted(true);
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        role: "tutor",
-        content: getReviewOpeningMessage(initialAssignment),
-      },
-    ]);
+
+    if (autoFetchOpener) {
+      // Room assignment: start session and fetch Sage's real opener (knows actual questions)
+      setIsSessionStarted(true);
+      setIsLoading(true);
+
+      const pendingUrl = pendingImageUrlRef.current;
+      if (pendingUrl) pendingImageUrlRef.current = null;
+
+      void fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignment: initialAssignment,
+          subject: detectSubject(initialAssignment),
+          messages: [{ id: "opener", role: "student", content: "Ready to begin." }],
+          ...(pendingUrl && { imageUrl: pendingUrl }),
+        }),
+      })
+        .then((r) => r.json())
+        .then((data: { content?: string; sessionId?: string | null }) => {
+          if (data.sessionId) setSessionId(data.sessionId);
+          setMessages([
+            {
+              id: crypto.randomUUID(),
+              role: "tutor",
+              content: data.content ?? getReviewOpeningMessage(initialAssignment),
+            },
+          ]);
+        })
+        .catch(() => {
+          setMessages([
+            {
+              id: crypto.randomUUID(),
+              role: "tutor",
+              content: getReviewOpeningMessage(initialAssignment),
+            },
+          ]);
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      // Study-page review link: instant hardcoded opener
+      setIsSessionStarted(true);
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          role: "tutor",
+          content: getReviewOpeningMessage(initialAssignment),
+        },
+      ]);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

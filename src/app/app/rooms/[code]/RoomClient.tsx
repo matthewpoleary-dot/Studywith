@@ -86,6 +86,9 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
 
+  // "Start with Sage" loading (PDF extraction can take a moment)
+  const [startingSessionId, setStartingSessionId] = useState<string | null>(null);
+
   // Edit state
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -305,23 +308,41 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
     }
   };
 
-  const startSession = (assignment: Assignment) => {
+  const startSession = async (assignment: Assignment) => {
+    setStartingSessionId(assignment.id);
     const parts = [assignment.title, assignment.content].filter(Boolean);
     const params = new URLSearchParams();
 
     if (assignment.file_url && assignment.file_type?.startsWith("image/")) {
       // Pass image URL so Sage can see it via vision model
       params.set("imageUrl", assignment.file_url);
+    } else if (assignment.file_url && assignment.file_type?.includes("pdf")) {
+      // Extract PDF text server-side so Sage knows the actual questions
+      try {
+        const res = await fetch("/api/extract-assignment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileUrl: assignment.file_url }),
+        });
+        const data = (await res.json()) as { text?: string; error?: string };
+        if (data.text) {
+          parts.push(data.text);
+        } else {
+          parts.push(`[PDF: ${assignment.file_name ?? "assignment.pdf"} — student should open it in the tab to read along]`);
+        }
+      } catch {
+        parts.push(`[PDF: ${assignment.file_name ?? "assignment.pdf"}]`);
+      }
     } else if (assignment.file_url) {
-      // Non-image file — note it in the assignment text
       parts.push(`[Attached file: ${assignment.file_name ?? assignment.file_url}]`);
     } else if (assignment.image_base64 && assignment.image_mime?.startsWith("image/")) {
-      // Legacy base64 image — too large for URL params; note it so student knows to describe it
       parts.push("[Your teacher has attached an image to this assignment. Describe what you see in it or paste the questions here.]");
     }
 
-    params.set("prefill", parts.join("\n\n").slice(0, 4000));
+    params.set("prefill", parts.join("\n\n").slice(0, 8000));
+    params.set("autoStart", "1");
     router.push(`/app/new?${params.toString()}`);
+    setStartingSessionId(null);
   };
 
   if (loading) {
@@ -585,11 +606,15 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                         <div className="flex items-center gap-3 pt-1 flex-wrap">
                           {!isTeacher && (
                             <button
-                              onClick={() => startSession(a)}
-                              className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.01]"
+                              onClick={() => void startSession(a)}
+                              disabled={startingSessionId === a.id}
+                              className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
                             >
-                              Start with Sage
-                              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+                              {startingSessionId === a.id ? (
+                                <><Loader2 className="w-4 h-4 animate-spin" /> Preparing...</>
+                              ) : (
+                                <>Start with Sage <ArrowRight className="w-4 h-4" strokeWidth={1.5} /></>
+                              )}
                             </button>
                           )}
                           {isTeacher && confirmDeleteId !== a.id && (
