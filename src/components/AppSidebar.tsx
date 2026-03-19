@@ -239,8 +239,9 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
       });
   }, []);
 
-  // Hide bottom nav during active sessions (maximise chat space)
-  const isSessionPage = pathname?.startsWith("/app/session/");
+  // Hide bottom nav on any chat/session page (full-screen layout)
+  const isSessionPage =
+    pathname?.startsWith("/app/session/") || pathname === "/app/new";
 
   return (
     <>
@@ -267,45 +268,56 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
 
       {/* Mobile: bottom nav bar */}
       {!isSessionPage && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4] flex h-14 safe-bottom">
-          <a
-            href="/app"
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-              pathname === "/app" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
-            }`}
-          >
-            <Home className={`w-5 h-5 ${pathname === "/app" ? "stroke-[#1A1A1A]" : ""}`} strokeWidth={pathname === "/app" ? 2 : 1.5} />
-            Home
-          </a>
+        <nav
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4]"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          {/* 4 equal zones: Home | Sessions | (spacer) | Settings */}
+          {/* + button is absolutely centered over the middle boundary */}
+          <div className="flex h-14 relative">
+            <a
+              href="/app"
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                pathname === "/app" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+              }`}
+            >
+              <Home className="w-5 h-5" strokeWidth={pathname === "/app" ? 2 : 1.5} />
+              Home
+            </a>
 
-          <a
-            href="/app/new"
-            className="flex-1 flex flex-col items-center justify-center"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center">
-              <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </div>
-          </a>
+            <button
+              onClick={() => setMobileOpen(true)}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                mobileOpen ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+              }`}
+            >
+              <BookOpen className="w-5 h-5" strokeWidth={1.5} />
+              Sessions
+            </button>
 
-          <button
-            onClick={() => setMobileOpen(true)}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-              mobileOpen ? "text-[#1A1A1A]" : "text-[#A8A29E]"
-            }`}
-          >
-            <BookOpen className="w-5 h-5" strokeWidth={1.5} />
-            Sessions
-          </button>
+            {/* invisible spacer — keeps Settings on far right */}
+            <div className="flex-1" />
 
-          <a
-            href="/app/settings"
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-              pathname === "/app/settings" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
-            }`}
-          >
-            <Settings className={`w-5 h-5`} strokeWidth={pathname === "/app/settings" ? 2 : 1.5} />
-            Settings
-          </a>
+            <a
+              href="/app/settings"
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                pathname === "/app/settings" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+              }`}
+            >
+              <Settings className="w-5 h-5" strokeWidth={pathname === "/app/settings" ? 2 : 1.5} />
+              Settings
+            </a>
+
+            {/* + button: absolutely centered */}
+            <a
+              href="/app/new"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
+              <div className="w-11 h-11 rounded-full bg-[#1A1A1A] flex items-center justify-center shadow-md">
+                <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
+              </div>
+            </a>
+          </div>
         </nav>
       )}
 

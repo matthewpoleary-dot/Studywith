@@ -131,7 +131,8 @@ export default function TutorChat({
   const isNearBottomRef = useRef(true);
   const router = useRouter();
   const pathname = usePathname();
-  const isSessionRoute = !!pathname?.startsWith("/app/session/");
+  const isSessionRoute =
+    !!pathname?.startsWith("/app/session/") || pathname === "/app/new";
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "instant" });
@@ -142,6 +143,17 @@ export default function TutorChat({
     if (!el) return;
     isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   };
+
+  // Scroll to bottom when soft keyboard opens (visualViewport shrinks)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      if (isNearBottomRef.current) scrollToBottom(false);
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, [scrollToBottom]);
 
   // Auth guard
   useEffect(() => {
