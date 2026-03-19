@@ -22,26 +22,31 @@ export async function POST(request: Request) {
 
   const { topic } = (await request.json()) as { topic: string };
 
-  const prompt = `You are Sage. A student needs to study the following topic: "${topic}". Return ONLY a valid JSON object with no markdown or preamble:
+  const prompt = `You are Sage, a friendly study tutor. A student needs to deeply understand: "${topic}". Return ONLY a valid JSON object with no markdown or preamble:
 {
-  "title": "Topic title",
-  "subject": "subject area",
-  "introduction": "2-3 sentence plain-English intro to the topic",
-  "sections": [
-    {
-      "heading": "Section heading",
-      "body": "3-5 sentence explanation. Clear, accurate, student-friendly.",
-      "keyPoint": "One sentence takeaway for this section"
-    }
+  "title": "Clear topic title",
+  "subject": "subject area (e.g. Maths, Biology, History)",
+  "mentalModel": "Two full paragraphs that explain this concept using one vivid everyday analogy. First paragraph: introduce the analogy and map it to the concept. Second paragraph: push the analogy further to explain nuance or a common point of confusion.",
+  "fastFacts": [
+    "The single most important thing to know",
+    "A critical second fact students often miss",
+    "A third practical or exam-relevant fact"
   ],
-  "summary": "3-4 sentence recap of the whole topic",
-  "quickQuiz": ["2-3 short questions the student can ask themselves to test understanding"]
+  "activeRecall": [
+    { "question": "A meaningful question requiring real understanding, not recall", "answer": "A clear, accurate answer in 1-3 sentences" },
+    { "question": "A second question testing application or a related concept", "answer": "Clear answer" },
+    { "question": "A third question, perhaps about a common misconception", "answer": "Clear answer that corrects the misconception" }
+  ],
+  "commonMistakes": [
+    "First common mistake: describe what students get wrong and why it happens",
+    "Second common mistake: describe what students get wrong and why it happens"
+  ]
 }`;
 
   try {
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      max_tokens: 1500,
+      max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
     const raw = completion.choices[0]?.message?.content ?? "{}";

@@ -36,6 +36,9 @@ export default async function AppLayout({
     .order("created_at", { ascending: false })
     .limit(50);
 
+  const meta = user?.user_metadata ?? {};
+  const gritStreak: number = typeof meta.grit_streak === "number" ? meta.grit_streak : 0;
+
   return (
     <div className="flex h-[100dvh] bg-[#FDFCF8] overflow-hidden">
       <AppSidebar
@@ -47,6 +50,7 @@ export default async function AppLayout({
           receipt: Record<string, unknown> | null;
         }[]}
         userEmail={user?.email ?? ""}
+        gritStreak={gritStreak}
       />
       <MainContent>{children}</MainContent>
     </div>

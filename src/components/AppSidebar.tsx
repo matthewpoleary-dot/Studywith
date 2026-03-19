@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2 } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, School } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -17,11 +17,13 @@ interface Session {
 interface AppSidebarProps {
   sessions: Session[];
   userEmail: string;
+  gritStreak?: number;
 }
 
 function SidebarContent({
   sessions,
   userEmail,
+  gritStreak = 0,
   onNav,
   onCollapse,
 }: AppSidebarProps & { onNav?: () => void; onCollapse?: () => void }) {
@@ -258,9 +260,28 @@ function SidebarContent({
         })()}
       </div>
 
-      {/* Footer: email + stats + settings + sign out */}
+      {/* Footer: email + grit streak + nav + sign out */}
       <div className="px-3 py-4 border-t border-[#E7E5E4] space-y-1">
-        <p className="text-xs text-[#A8A29E] px-4 truncate mb-1">{userEmail}</p>
+        <div className="flex items-center justify-between px-4 mb-1">
+          <p className="text-xs text-[#A8A29E] truncate flex-1">{userEmail}</p>
+          {gritStreak > 0 && (
+            <span className="shrink-0 flex items-center gap-1 text-xs font-medium text-[#D97706]" title={`${gritStreak}-day streak`}>
+              🔥 {gritStreak}
+            </span>
+          )}
+        </div>
+        <a
+          href="/app/rooms"
+          onClick={onNav}
+          className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
+            pathname?.startsWith("/app/rooms")
+              ? "bg-[#E7E5E4] text-[#1A1A1A]"
+              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+          }`}
+        >
+          <School className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Rooms
+        </a>
         <a
           href="/app/stats"
           onClick={onNav}
@@ -297,7 +318,7 @@ function SidebarContent({
   );
 }
 
-export default function AppSidebar({ sessions: initialSessions, userEmail }: AppSidebarProps) {
+export default function AppSidebar({ sessions: initialSessions, userEmail, gritStreak = 0 }: AppSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [sessions, setSessions] = useState<Session[]>(initialSessions);
@@ -338,6 +359,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
         <SidebarContent
           sessions={sessions}
           userEmail={userEmail}
+          gritStreak={gritStreak}
           onNav={() => setMobileOpen(false)}
         />
       </aside>
@@ -429,6 +451,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
         <SidebarContent
           sessions={sessions}
           userEmail={userEmail}
+          gritStreak={gritStreak}
           onCollapse={() => setDesktopCollapsed(true)}
         />
       </aside>

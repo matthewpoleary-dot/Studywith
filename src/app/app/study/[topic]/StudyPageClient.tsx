@@ -3,21 +3,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import Link from "next/link";
-import { Send } from "lucide-react";
+import { Send, ChevronDown, Download, ClipboardCopy, Check } from "lucide-react";
 
-type StudySection = {
-  heading: string;
-  body: string;
-  keyPoint: string;
-};
+type ActiveRecallItem = { question: string; answer: string };
 
 type StudyContent = {
   title: string;
   subject: string;
-  introduction: string;
-  sections: StudySection[];
-  summary: string;
-  quickQuiz: string[];
+  mentalModel: string;
+  fastFacts: string[];
+  activeRecall: ActiveRecallItem[];
+  commonMistakes: string[];
 };
 
 type Props = { topic: string; userId: string };
@@ -31,9 +27,11 @@ export default function StudyPageClient({ topic, userId }: Props) {
   const [followUp, setFollowUp] = useState("");
   const [followUpAnswer, setFollowUpAnswer] = useState<string | null>(null);
   const [followUpLoading, setFollowUpLoading] = useState(false);
+  const [revealedCards, setRevealedCards] = useState<Set<number>>(new Set());
+  const [ankiCopied, setAnkiCopied] = useState(false);
+  const [notionCopied, setNotionCopied] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load study content from AI
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
 
@@ -56,7 +54,6 @@ export default function StudyPageClient({ topic, userId }: Props) {
       }
     };
 
-    // Load saved notes
     const loadNotes = async () => {
       try {
         const { data } = await (supabase.from("study_notes") as ReturnType<typeof supabase.from>)
@@ -68,7 +65,7 @@ export default function StudyPageClient({ topic, userId }: Props) {
           setNotes(data.notes);
         }
       } catch {
-        // study_notes table may not exist yet; silently ignore
+        // study_notes table may not exist yet
       }
     };
 
@@ -113,6 +110,58 @@ export default function StudyPageClient({ topic, userId }: Props) {
     }
   };
 
+  const toggleReveal = (i: number) => {
+    setRevealedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
+  // Task 17: Anki CSV download
+  const downloadAnki = () => {
+    if (!content?.activeRecall) return;
+    const rows = content.activeRecall.map((c) => `"${c.question.replace(/"/g, '""')}","${c.answer.replace(/"/g, '""')}"`);
+    const csv = ["#separator:comma", "#html:false", ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${topic.slice(0, 40)}-anki.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setAnkiCopied(true);
+    setTimeout(() => setAnkiCopied(false), 2000);
+  };
+
+  // Task 17: Notion Markdown copy
+  const copyNotion = () => {
+    if (!content) return;
+    const lines: string[] = [
+      `# ${content.title}`,
+      `**Subject:** ${content.subject}`,
+      ``,
+      `## Understanding it`,
+      content.mentalModel,
+      ``,
+      `## Fast facts`,
+      ...content.fastFacts.map((f) => `- ${f}`),
+      ``,
+      `## Active recall`,
+      ...content.activeRecall.map((c) => `**Q:** ${c.question}\n**A:** ${c.answer}`),
+      ``,
+      `## Common mistakes`,
+      ...content.commonMistakes.map((m) => `- ${m}`),
+      ``,
+      `## My notes`,
+      notes || "_No notes yet._",
+    ];
+    void navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setNotionCopied(true);
+      setTimeout(() => setNotionCopied(false), 2000);
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-0">
@@ -138,8 +187,16 @@ export default function StudyPageClient({ topic, userId }: Props) {
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
-      <div className="w-full max-w-2xl mx-auto px-6 py-10 md:py-14">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-[#FDFCF8]">
+      {/* Subtle notebook line background */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: "repeating-linear-gradient(transparent, transparent 27px, #1A1A1A 28px)",
+          backgroundSize: "100% 28px",
+        }}
+      />
+      <div className="relative w-full max-w-2xl mx-auto px-6 py-10 md:py-14">
 
         {/* Header */}
         <div className="mb-8">
@@ -154,73 +211,126 @@ export default function StudyPageClient({ topic, userId }: Props) {
               {content.title}
             </h1>
           </div>
-          {content.subject && (
-            <span className="inline-block rounded-md bg-[#D97706]/10 px-2.5 py-1 text-xs font-medium text-[#D97706] uppercase tracking-wide">
-              {content.subject}
-            </span>
-          )}
+          <div className="flex items-center gap-3 flex-wrap">
+            {content.subject && (
+              <span className="inline-block rounded-md bg-[#D97706]/10 px-2.5 py-1 text-xs font-medium text-[#D97706] uppercase tracking-wide">
+                {content.subject}
+              </span>
+            )}
+            {/* Export buttons */}
+            <button
+              onClick={downloadAnki}
+              className="inline-flex items-center gap-1.5 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-3 py-1 text-xs font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
+              title="Download as Anki flashcard deck"
+            >
+              {ankiCopied ? <Check className="w-3 h-3" /> : <Download className="w-3 h-3" />}
+              Anki export
+            </button>
+            <button
+              onClick={copyNotion}
+              className="inline-flex items-center gap-1.5 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-3 py-1 text-xs font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
+              title="Copy as Notion-ready Markdown"
+            >
+              {notionCopied ? <Check className="w-3 h-3" /> : <ClipboardCopy className="w-3 h-3" />}
+              {notionCopied ? "Copied!" : "Copy to Notion"}
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Introduction */}
-          <section>
-            <p className="text-sm leading-relaxed text-[#57534E]">{content.introduction}</p>
+        <div className="space-y-5">
+
+          {/* 1. Mental model */}
+          <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-3">
+              Understanding it
+            </p>
+            {content.mentalModel.split("\n\n").map((para, i) => (
+              <p key={i} className={`text-sm leading-relaxed text-[#57534E] ${i > 0 ? "mt-3" : ""}`}>
+                {para}
+              </p>
+            ))}
           </section>
 
-          {/* Sections */}
-          {content.sections.map((section, i) => (
-            <section key={i} className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <h2 className="font-serif text-lg font-medium text-[#1A1A1A] mb-2">
-                {section.heading}
-              </h2>
-              <p className="text-sm leading-relaxed text-[#57534E] mb-3">{section.body}</p>
-              <div className="bg-[#D97706]/8 border-l-4 border-[#D97706] rounded-r-xl pl-4 pr-3 py-2.5">
-                <p className="text-xs font-semibold text-[#D97706] uppercase tracking-wider mb-1">
-                  Key point
-                </p>
-                <p className="text-sm text-[#1A1A1A] leading-relaxed">{section.keyPoint}</p>
-              </div>
-            </section>
-          ))}
-
-          {/* Summary */}
-          {content.summary && (
-            <section className="bg-[#F5F4F0] border border-[#E7E5E4] rounded-2xl p-5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">
-                Summary
+          {/* 2. Fast facts */}
+          {content.fastFacts && content.fastFacts.length > 0 && (
+            <section className="bg-[#D97706]/5 border border-[#D97706]/20 rounded-2xl p-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#D97706] mb-3">
+                Fast facts
               </p>
-              <p className="text-sm leading-relaxed text-[#1A1A1A]">{content.summary}</p>
-            </section>
-          )}
-
-          {/* Quick quiz */}
-          {content.quickQuiz && content.quickQuiz.length > 0 && (
-            <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-3">
-                Quick quiz
-              </p>
-              <p className="text-xs text-[#A8A29E] mb-3">Think through each question yourself first.</p>
-              <ol className="space-y-3">
-                {content.quickQuiz.map((q, i) => (
+              <ul className="space-y-2.5">
+                {content.fastFacts.map((fact, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[#1A1A1A]">
-                    <span className="w-5 h-5 rounded-full bg-[#E7E5E4] flex items-center justify-center text-[10px] font-bold text-[#57534E] shrink-0 mt-0.5">
+                    <span className="w-5 h-5 rounded-full bg-[#D97706] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">
                       {i + 1}
                     </span>
-                    {q}
+                    {fact}
                   </li>
                 ))}
-              </ol>
+              </ul>
             </section>
           )}
 
-          {/* Notes area */}
+          {/* 3. Active recall (toggle to reveal) */}
+          {content.activeRecall && content.activeRecall.length > 0 && (
+            <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-1">
+                Active recall
+              </p>
+              <p className="text-xs text-[#A8A29E] mb-4">Answer each question yourself, then reveal the answer.</p>
+              <div className="space-y-3">
+                {content.activeRecall.map((card, i) => (
+                  <div key={i} className="border border-[#E7E5E4] rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => toggleReveal(i)}
+                      className="w-full flex items-start justify-between gap-3 px-4 py-3 text-left hover:bg-[#F5F4F0] transition-colors"
+                    >
+                      <span className="text-sm font-medium text-[#1A1A1A] leading-snug">{card.question}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 shrink-0 text-[#A8A29E] mt-0.5 transition-transform duration-200 ${
+                          revealedCards.has(i) ? "rotate-180" : ""
+                        }`}
+                        strokeWidth={1.5}
+                      />
+                    </button>
+                    {revealedCards.has(i) && (
+                      <div className="px-4 py-3 bg-emerald-50 border-t border-emerald-100">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">Answer</p>
+                        <p className="text-sm text-[#1A1A1A] leading-relaxed">{card.answer}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 4. Common mistakes */}
+          {content.commonMistakes && content.commonMistakes.length > 0 && (
+            <section className="bg-red-50 border border-red-100 rounded-2xl p-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-red-500 mb-3">
+                Common mistakes
+              </p>
+              <ul className="space-y-3">
+                {content.commonMistakes.map((mistake, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-[#1A1A1A]">
+                    <span className="text-red-400 mt-0.5 shrink-0 text-base leading-none">&#9888;</span>
+                    {mistake}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* 5. Notes area */}
           <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E]">
                 Your notes
               </p>
               {notesSaved && (
-                <span className="text-xs text-green-600">Saved</span>
+                <span className="text-xs text-emerald-600 flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Saved
+                </span>
               )}
             </div>
             <textarea
@@ -229,16 +339,22 @@ export default function StudyPageClient({ topic, userId }: Props) {
               placeholder="Write anything here. Your notes save automatically."
               rows={5}
               className="w-full resize-none rounded-xl border border-[#E7E5E4] bg-[#FDFCF8] px-3 py-2.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+              style={{
+                backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, #E7E5E4 24px)",
+                lineHeight: "24px",
+              }}
             />
           </section>
 
-          {/* Follow-up question input */}
+          {/* 6. Follow-up (Still confused?) */}
           <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-3">
-              Ask Sage a follow-up question about this topic
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-1">
+              Still confused?
             </p>
+            <p className="text-xs text-[#A8A29E] mb-4">Ask Sage one follow-up question about this topic.</p>
             {followUpAnswer && (
-              <div className="mb-4 bg-[#F5F4F0] rounded-xl px-4 py-3">
+              <div className="mb-4 bg-[#F5F4F0] border border-[#E7E5E4] rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-[#A8A29E] mb-1.5 uppercase tracking-wider">Sage</p>
                 <p className="text-sm leading-relaxed text-[#1A1A1A]">{followUpAnswer}</p>
               </div>
             )}
@@ -252,7 +368,7 @@ export default function StudyPageClient({ topic, userId }: Props) {
                     void handleFollowUp();
                   }
                 }}
-                placeholder="e.g. Can you explain the second section differently?"
+                placeholder="e.g. Can you explain the analogy in a different way?"
                 rows={2}
                 className="flex-1 resize-none bg-transparent text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E]"
               />

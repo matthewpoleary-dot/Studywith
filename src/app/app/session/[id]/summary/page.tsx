@@ -162,8 +162,8 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* Score + view full chat link */}
-          <div className="flex items-center justify-between py-1">
+          {/* Score + grit earned */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between py-1">
             {receipt.score > 0 && (
               <span className={`text-sm font-medium ${
                 receipt.score >= 75 ? "text-emerald-600" :
@@ -172,9 +172,23 @@ export default async function SessionSummaryPage({
                 Learning score: {receipt.score}/100
               </span>
             )}
+            {receipt.gritEarned !== undefined && receipt.gritEarned > 0 && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5 sm:ml-auto">
+                <span className="text-base leading-none">🔥</span>
+                <div>
+                  <p className="text-xs font-semibold text-amber-700">+{receipt.gritEarned} Grit earned</p>
+                  <div className="mt-1 h-1.5 w-28 bg-amber-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#D97706] rounded-full transition-all"
+                      style={{ width: `${Math.min(100, (receipt.gritEarned / 50) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
             <Link
               href={`/app/session/${id}`}
-              className="text-xs text-[#A8A29E] hover:text-[#57534E] transition underline underline-offset-2 ml-auto"
+              className="text-xs text-[#A8A29E] hover:text-[#57534E] transition underline underline-offset-2 sm:ml-3"
             >
               View full chat
             </Link>

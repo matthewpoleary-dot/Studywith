@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import type { Database, LearningReceipt } from "@/lib/database.types";
+import { calculateGrit } from "@/lib/grit";
 
 export const dynamic = "force-dynamic";
 
@@ -132,6 +133,12 @@ The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitoch
     };
   }
 
+  // Calculate grit for this session
+  const gritEarned = calculateGrit(
+    body.messages as { role: "student" | "tutor" | "system"; content: string }[],
+  );
+  receipt = { ...receipt, gritEarned };
+
   // Persist receipt, title and final messages to Supabase
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (getSupabaseAdmin().from("sessions") as any)
@@ -143,5 +150,32 @@ The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitoch
     .eq("id", body.sessionId)
     .eq("user_id", user.id);
 
-  return Response.json({ receiptId: body.sessionId });
+  // Sync grit to user_metadata (increment total, update streak)
+  try {
+    const adminAuth = getSupabaseAdmin().auth;
+    const { data: { user: fullUser } } = await adminAuth.admin.getUserById(user.id);
+    const meta = fullUser?.user_metadata ?? {};
+    const prevTotal: number = typeof meta.total_grit_points === "number" ? meta.total_grit_points : 0;
+    const lastSessionDate: string | undefined = typeof meta.last_session_date === "string" ? meta.last_session_date : undefined;
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const prevStreak: number = typeof meta.grit_streak === "number" ? meta.grit_streak : 0;
+    const newStreak = lastSessionDate === today
+      ? prevStreak
+      : lastSessionDate === yesterday
+        ? prevStreak + 1
+        : 1;
+    await adminAuth.admin.updateUserById(user.id, {
+      user_metadata: {
+        ...meta,
+        total_grit_points: prevTotal + gritEarned,
+        grit_streak: newStreak,
+        last_session_date: today,
+      },
+    });
+  } catch {
+    // Non-critical, silently skip
+  }
+
+  return Response.json({ receiptId: body.sessionId, gritEarned });
 }

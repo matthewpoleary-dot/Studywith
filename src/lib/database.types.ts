@@ -18,6 +18,8 @@ export type LearningReceipt = {
   closingMessage?: string;
   directAnswer?: string;
   subject?: string;
+  // Grit
+  gritEarned?: number;
 };
 
 export type Database = {
@@ -68,6 +70,67 @@ export type Database = {
           title?: string | null;
           messages?: Json;
           receipt?: Json | null;
+        };
+        Relationships: [];
+      };
+      rooms: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          teacher_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          teacher_id: string;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+        };
+        Relationships: [];
+      };
+      room_members: {
+        Row: {
+          id: string;
+          room_id: string;
+          user_id: string;
+          joined_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          user_id: string;
+          joined_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      room_assignments: {
+        Row: {
+          id: string;
+          room_id: string;
+          title: string;
+          content: string;
+          image_base64: string | null;
+          image_mime: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          title: string;
+          content: string;
+          image_base64?: string | null;
+          image_mime?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          title?: string;
+          content?: string;
         };
         Relationships: [];
       };
