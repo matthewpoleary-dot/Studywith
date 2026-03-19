@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   "title": "3-5 word topic title",
   "subject": "detected subject area",
   "closingMessage": "A warm 1-2 sentence message. If the student clearly worked it out themselves, say so genuinely. If they struggled, be encouraging. Never be generic.",
-  "directAnswer": "The clear, complete answer to the original question or topic, written as if explaining to a student who just worked through it. 2-4 sentences.",
+  "directAnswer": "A 2-4 sentence session overview: which questions or parts of the assignment were actually worked through this session (be specific), and where the student's understanding currently stands. Do NOT reveal answers — describe progress only. If the student only covered a small fraction of the questions, say so honestly.",
   "conceptsCovered": ["concept 1", "concept 2"],
   "understoodWell": ["thing student showed clear grasp of 1", "thing 2"],
   "toRevisit": ["topic worth revisiting 1", "topic 2"],
@@ -72,21 +72,24 @@ ${transcript}
 
 SCORING RULES: this is a LEARNING score (0-100), not a knowledge test score. You are rewarding growth and effort, not prior knowledge.
 
+CRITICAL: First, assess coverage. If the assignment has many questions and the student only touched one or two without completing them, the score MUST reflect that — do not award a generous score for an incomplete session regardless of attitude.
+
 Score based on these factors (in order of importance):
-1. PROGRESSION: Did the student's understanding visibly improve from the start of the session to the end? A student who started clueless but ended with real grasp should score well.
-2. RESPONSIVENESS: Did they pick up on hints and build from them? Did they try to reason through prompts rather than guess or give up?
-3. EFFORT & ENGAGEMENT: Did they keep trying even when stuck? Did they ask good follow-up questions? Did they attempt answers rather than saying "I don't know"?
-4. CONSOLIDATION: By the end, could they explain ideas in their own words or apply them to a step they hadn't seen yet?
+1. COVERAGE: How much of the assignment was actually worked through? If 15 questions exist and only 1 was partially attempted, the score ceiling is around 25-35 regardless of other factors.
+2. PROGRESSION: Did the student's understanding visibly improve within what they did cover?
+3. RESPONSIVENESS: Did they pick up on hints and build from them?
+4. EFFORT & ENGAGEMENT: Did they keep trying even when stuck?
+5. CONSOLIDATION: By the end of what they covered, could they explain ideas in their own words?
 
 Scoring benchmarks:
-- Started with no knowledge, showed real progression and effort: 60–75
-- Started with partial knowledge, filled gaps through the session: 65–80
-- Arrived with solid base, deepened understanding meaningfully: 75–90
-- Exceptional progression, connected concepts unprompted, confident by end: 85–95
-- Little engagement, ignored hints, no visible improvement: 10–35
-- Moderate effort, some improvement but gaps remain: 35–60
+- Only 1-2 questions touched, not completed: 10–30
+- Covered ~25% of assignment with some understanding: 25–45
+- Covered ~50% with good engagement: 45–65
+- Covered most of the assignment with real progression: 65–85
+- Covered all/most with exceptional understanding: 80–95
+- Barely engaged, refused to attempt, gave up immediately: 5–20
 
-Do NOT penalise a student for starting with low knowledge. Do NOT give a high score just because they knew the answer upfront. Reward the journey, not the destination.
+Do NOT penalise a student for starting with low knowledge. Do NOT give a high score for partial coverage. The score should honestly reflect how much of the work was done and how well.
 
 The summary should mention where they started, how they progressed, and specifically what they should review next.
 The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitochondria & ATP synthesis", "Basic addition facts").`;

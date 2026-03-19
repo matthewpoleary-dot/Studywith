@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Send, ImagePlus, X, FileText } from "lucide-react";
+import { Send, ImagePlus, X, FileText, BookOpen, ChevronRight } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -102,6 +102,8 @@ type TutorChatProps = {
   initialSessionId?: string | null;
   initialImageUrl?: string;
   autoFetchOpener?: boolean;
+  assignmentFileUrl?: string;
+  assignmentFileName?: string;
 };
 
 export default function TutorChat({
@@ -110,6 +112,8 @@ export default function TutorChat({
   initialSessionId = null as string | null,
   initialImageUrl,
   autoFetchOpener = false,
+  assignmentFileUrl,
+  assignmentFileName,
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
   const [subject, setSubject] = useState<Subject>(() => detectSubject(initialAssignment));
@@ -130,6 +134,8 @@ export default function TutorChat({
   const [subjectPulsing, setSubjectPulsing] = useState(false);
   const prevSubjectRef = useRef<Subject>(detectSubject(initialAssignment));
   const [sageAvatar, setSageAvatar] = useState("🌿");
+  const [showPdf, setShowPdf] = useState(false);
+
   // Pending image URL from room assignment — attached automatically on first send
   const pendingImageUrlRef = useRef<string | null>(initialImageUrl ?? null);
 
@@ -240,7 +246,7 @@ export default function TutorChat({
         body: JSON.stringify({
           assignment: initialAssignment,
           subject: detectSubject(initialAssignment),
-          messages: [{ id: "opener", role: "student", content: "Ready to begin." }],
+          messages: [{ id: "opener", role: "student", content: "Start on question 1 now." }],
           ...(pendingUrl && { imageUrl: pendingUrl }),
         }),
       })
@@ -649,7 +655,7 @@ export default function TutorChat({
 
   // ── Session active ─────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 min-h-0 flex flex-col">
+    <div className="flex-1 min-h-0 flex flex-col relative">
       {/* Assignment strip */}
       <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
@@ -669,6 +675,16 @@ export default function TutorChat({
               {assignment}
             </p>
           </button>
+          {/* View questions toggle — only shown when a PDF is attached */}
+          {assignmentFileUrl && (
+            <button
+              onClick={() => setShowPdf((v) => !v)}
+              className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition whitespace-nowrap ${showPdf ? "border-[#D97706] bg-[#D97706]/10 text-[#D97706]" : "border-[#E7E5E4] text-[#57534E] hover:border-[#D97706]/50 hover:text-[#D97706]"}`}
+            >
+              <BookOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
+              Questions
+            </button>
+          )}
           <button
             onClick={() => void handleEndSession()}
             disabled={messages.length === 0 || isEnding || !sessionId}
@@ -678,6 +694,62 @@ export default function TutorChat({
           </button>
         </div>
       </div>
+
+      {/* PDF panel — slides in from the right over the chat */}
+      {showPdf && assignmentFileUrl && (
+        <div className="absolute inset-0 z-20 flex pointer-events-none">
+          {/* Dimmed backdrop — only on mobile */}
+          <div
+            className="flex-1 md:hidden pointer-events-auto bg-black/20"
+            onClick={() => setShowPdf(false)}
+          />
+          {/* Panel */}
+          <div className="pointer-events-auto w-full md:w-[52%] bg-white border-l border-[#E7E5E4] shadow-xl flex flex-col ml-auto">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#E7E5E4] shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-red-400" strokeWidth={1.5} />
+                <span className="text-xs font-medium text-[#1A1A1A] truncate max-w-[160px]">
+                  {assignmentFileName ?? "Assignment"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={assignmentFileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#A8A29E] hover:text-[#57534E] transition"
+                >
+                  Open in tab
+                </a>
+                <button
+                  onClick={() => setShowPdf(false)}
+                  className="text-[#A8A29E] hover:text-[#1A1A1A] transition"
+                >
+                  <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <object
+                data={`${assignmentFileUrl}#toolbar=0&view=FitH`}
+                type="application/pdf"
+                className="w-full h-full"
+                style={{ minHeight: "400px" }}
+              >
+                <div className="flex flex-col items-center justify-center h-40 gap-3 p-6">
+                  <FileText className="w-8 h-8 text-red-400" strokeWidth={1.5} />
+                  <p className="text-sm text-[#57534E] text-center">
+                    PDF can&apos;t be previewed here.{" "}
+                    <a href={assignmentFileUrl} target="_blank" rel="noopener noreferrer" className="text-[#D97706] underline">
+                      Open in new tab
+                    </a>
+                  </p>
+                </div>
+              </object>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div

@@ -356,6 +356,11 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
 
     params.set("prefill", parts.join("\n\n").slice(0, 8000));
     params.set("autoStart", "1");
+    // Pass original file URL + name so TutorChat can show the PDF toggle panel
+    if (assignment.file_url && isPdf) {
+      params.set("fileUrl", assignment.file_url);
+      if (assignment.file_name) params.set("fileName", assignment.file_name);
+    }
     router.push(`/app/new?${params.toString()}`);
     setStartingSessionId(null);
   };

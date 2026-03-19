@@ -83,11 +83,11 @@ export default async function SessionSummaryPage({
         )}
 
         <div className="space-y-4">
-          {/* 2. The answer */}
+          {/* 2. Session overview */}
           {receipt.directAnswer && (
-            <section className="rounded-2xl border border-amber-200 bg-amber-50 pl-5 pr-5 py-5 border-l-4 border-l-amber-400">
-              <p className="text-xs font-semibold uppercase tracking-widest text-amber-700 mb-2">
-                The answer
+            <section className="rounded-2xl bg-[#F5F4F0] border border-[#E7E5E4] pl-5 pr-5 py-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">
+                Session overview
               </p>
               <p className="text-sm leading-relaxed text-[#1A1A1A]">{receipt.directAnswer}</p>
             </section>
