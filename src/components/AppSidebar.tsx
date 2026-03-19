@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -30,6 +30,8 @@ function SidebarContent({
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [localTitles, setLocalTitles] = useState<Record<string, string>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   const handleSignOut = async () => {
@@ -59,6 +61,20 @@ function SidebarContent({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, title: trimmed }),
     });
+  };
+
+  const confirmDelete = async (sessionId: string) => {
+    setDeletedIds((prev) => new Set(prev).add(sessionId));
+    setDeletingId(null);
+    await fetch("/api/delete-session", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    });
+    // If we deleted the currently viewed session, go to dashboard
+    if (pathname === `/app/session/${sessionId}`) {
+      router.push("/app");
+    }
   };
 
   const getTitle = (session: Session) => {
@@ -128,12 +144,13 @@ function SidebarContent({
               History
             </p>
             <div className="space-y-0.5">
-              {sessions.map((session) => {
+              {sessions.filter((s) => !deletedIds.has(s.id)).map((session) => {
                 const href = `/app/session/${session.id}`;
                 const isActive =
                   pathname === `/receipt/${session.id}` ||
                   pathname === `/app/session/${session.id}`;
                 const isRenaming = renamingId === session.id;
+                const isConfirmingDelete = deletingId === session.id;
 
                 return (
                   <div
@@ -177,14 +194,39 @@ function SidebarContent({
                       </a>
                     )}
 
-                    {!isRenaming && (
-                      <button
-                        onClick={(e) => startRename(session, e)}
-                        className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 text-[#A8A29E] hover:text-[#57534E] transition"
-                        title="Rename"
-                      >
-                        <Pencil className="w-3 h-3" strokeWidth={1.5} />
-                      </button>
+                    {!isRenaming && !isConfirmingDelete && (
+                      <div className="shrink-0 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
+                        <button
+                          onClick={(e) => startRename(session, e)}
+                          className="p-0.5 text-[#A8A29E] hover:text-[#57534E] transition"
+                          title="Rename"
+                        >
+                          <Pencil className="w-3 h-3" strokeWidth={1.5} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(session.id); }}
+                          className="p-0.5 text-[#A8A29E] hover:text-red-400 transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    )}
+                    {isConfirmingDelete && (
+                      <div className="shrink-0 flex items-center gap-1">
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); void confirmDelete(session.id); }}
+                          className="text-[10px] font-medium text-red-500 hover:text-red-600 px-1 py-0.5 rounded transition"
+                        >
+                          Delete
+                        </button>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(null); }}
+                          className="text-[10px] text-[#A8A29E] hover:text-[#57534E] px-1 py-0.5 rounded transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
@@ -194,9 +236,21 @@ function SidebarContent({
         )}
       </div>
 
-      {/* Footer: email + settings + sign out */}
+      {/* Footer: email + stats + settings + sign out */}
       <div className="px-3 py-4 border-t border-[#E7E5E4] space-y-1">
         <p className="text-xs text-[#A8A29E] px-4 truncate mb-1">{userEmail}</p>
+        <a
+          href="/app/stats"
+          onClick={onNav}
+          className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
+            pathname === "/app/stats"
+              ? "bg-[#E7E5E4] text-[#1A1A1A]"
+              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Statistics
+        </a>
         <a
           href="/app/settings"
           onClick={onNav}
@@ -272,8 +326,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
           className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4]"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          {/* 4 equal zones: Home | Sessions | (spacer) | Settings */}
-          {/* + button is absolutely centered over the middle boundary */}
+          {/* 5 zones: Home | Sessions | [spacer/+] | Stats | Settings */}
           <div className="flex h-14 relative">
             <a
               href="/app"
@@ -295,8 +348,18 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
               Sessions
             </button>
 
-            {/* invisible spacer — keeps Settings on far right */}
+            {/* centre spacer — + button floats here */}
             <div className="flex-1" />
+
+            <a
+              href="/app/stats"
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                pathname === "/app/stats" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+              }`}
+            >
+              <BarChart2 className="w-5 h-5" strokeWidth={pathname === "/app/stats" ? 2 : 1.5} />
+              Stats
+            </a>
 
             <a
               href="/app/settings"
@@ -308,7 +371,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
               Settings
             </a>
 
-            {/* + button: absolutely centered */}
+            {/* + button: absolutely centred */}
             <a
               href="/app/new"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -331,7 +394,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail }: App
           >
             <PanelLeftOpen className="w-4 h-4" strokeWidth={1.5} />
           </button>
-          <span className="font-serif text-base font-semibold text-[#1A1A1A]">StudyWith</span>
+          <a href="/" className="font-serif text-base font-semibold text-[#1A1A1A] hover:opacity-70 transition-opacity">StudyWith</a>
         </div>
       )}
 

@@ -65,7 +65,25 @@ Return ONLY valid JSON — no markdown fences, no explanation — with exactly t
   "summary": "One paragraph summarising learning progress and what to review."
 }
 
-Score 0–100 based on how confidently the student handled the core ideas. Be honest and specific.
+SCORING RULES — this is a LEARNING score (0–100), not a knowledge test score. You are rewarding growth and effort, not prior knowledge.
+
+Score based on these factors (in order of importance):
+1. PROGRESSION: Did the student's understanding visibly improve from the start of the session to the end? A student who started clueless but ended with real grasp should score well.
+2. RESPONSIVENESS: Did they pick up on hints and build from them? Did they try to reason through prompts rather than guess or give up?
+3. EFFORT & ENGAGEMENT: Did they keep trying even when stuck? Did they ask good follow-up questions? Did they attempt answers rather than saying "I don't know"?
+4. CONSOLIDATION: By the end, could they explain ideas in their own words or apply them to a step they hadn't seen yet?
+
+Scoring benchmarks:
+- Started with no knowledge, showed real progression and effort: 60–75
+- Started with partial knowledge, filled gaps through the session: 65–80
+- Arrived with solid base, deepened understanding meaningfully: 75–90
+- Exceptional progression, connected concepts unprompted, confident by end: 85–95
+- Little engagement, ignored hints, no visible improvement: 10–35
+- Moderate effort, some improvement but gaps remain: 35–60
+
+Do NOT penalise a student for starting with low knowledge. Do NOT give a high score just because they knew the answer upfront — reward the journey, not the destination.
+
+The summary should mention where they started, how they progressed, and specifically what they should review next.
 The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitochondria & ATP synthesis", "Basic addition facts").`;
 
   let receiptText = "{}";
