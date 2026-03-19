@@ -13,6 +13,13 @@
   --font-mono: monospace;
 }
 
+/* Remove tap highlight flash on all touchable elements */
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
 html,
 body {
   height: 100%;
@@ -30,4 +37,34 @@ body {
   font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px) */
+@media screen and (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* App shell bottom padding — accounts for bottom nav + iPhone safe area */
+.app-main {
+  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .app-main {
+    padding-bottom: 0;
+  }
+}
+
+/* Session pages: no bottom nav shown, input bar handles its own safe area */
+.app-main-session {
+  padding-bottom: 0;
+}
+
+/* Bottom nav safe area — expands height to include iPhone home indicator zone */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
 }

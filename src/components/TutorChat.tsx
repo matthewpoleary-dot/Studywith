@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Send, ImagePlus, X, FileText, ChevronDown } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -130,6 +130,8 @@ export default function TutorChat({
   const subjectDropdownRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
   const router = useRouter();
+  const pathname = usePathname();
+  const isSessionRoute = !!pathname?.startsWith("/app/session/");
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "instant" });
@@ -426,7 +428,7 @@ export default function TutorChat({
   if (!isSessionStarted) {
     const canStart = !!assignment.trim() || !!imageBase64;
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center px-6 py-12">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-10 md:py-16">
         {/* File input must be mounted here too since active session JSX isn't rendered yet */}
         <input
           ref={fileInputRef}
@@ -435,7 +437,7 @@ export default function TutorChat({
           className="hidden"
           onChange={handleImageSelect}
         />
-        <div className="w-full max-w-xl">
+        <div className="w-full max-w-xl mx-auto">
           <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
             New tutoring session
           </h1>
@@ -560,7 +562,7 @@ export default function TutorChat({
             </button>
           </div>
 
-          <p className="text-xs text-[#A8A29E] mt-3">
+          <p className="hidden md:block text-xs text-[#A8A29E] mt-3">
             Cmd+Enter to start
           </p>
         </div>
@@ -661,7 +663,10 @@ export default function TutorChat({
       />
 
       {/* Input bar */}
-      <div className="sticky bottom-0 bg-[#FDFCF8]/95 backdrop-blur-sm border-t border-[#E7E5E4] px-6 py-4">
+      <div
+        className="sticky bottom-0 bg-[#FDFCF8]/95 backdrop-blur-sm border-t border-[#E7E5E4] px-6 pt-4 pb-4"
+        style={isSessionRoute ? { paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" } : undefined}
+      >
         <form
           className="max-w-2xl mx-auto"
           onSubmit={(e) => {
@@ -725,7 +730,7 @@ export default function TutorChat({
               <Send className="w-3.5 h-3.5" strokeWidth={2} />
             </button>
           </div>
-          <p className="text-center text-[11px] text-[#A8A29E] mt-2">
+          <p className="text-center text-[11px] text-[#A8A29E] mt-2 hidden md:block">
             Enter to send · Shift+Enter for new line
           </p>
         </form>
