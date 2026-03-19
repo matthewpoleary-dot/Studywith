@@ -49,50 +49,53 @@ export async function POST(request: Request) {
     .map((m) => `${m.role === "student" ? "Student" : "Tutor"}: ${m.content}`)
     .join("\n");
 
-  const receiptPrompt = `You are Sage, a study tutor. A student just completed a session. Return ONLY a valid JSON object with no markdown or preamble:
+  const receiptPrompt = `You are Sage, a study tutor generating a learning receipt. Return ONLY a valid JSON object with no markdown, preamble, or commentary.
+
+=== STEP 1: ANALYSE THE ASSIGNMENT SCOPE ===
+Read the assignment carefully. Count every distinct question, sub-question, and lettered/numbered part. For example, if there are 3 sections with (a)-(k), (a)-(f), and (a)-(e), the total is 22 sub-questions. Be precise — this number drives the score.
+
+=== STEP 2: ANALYSE THE TRANSCRIPT ===
+Read the transcript carefully. For each question/sub-question in the assignment, determine:
+- COMPLETED: student gave a substantively correct or reasoned answer
+- ATTEMPTED: student tried but did not reach a correct answer
+- NOT REACHED: never discussed
+
+Count completed and attempted separately. A student who only asked "what does that mean?" and never gave an answer to any question has 0 completed and 0 attempted.
+
+=== STEP 3: SCORE HONESTLY ===
+Score = (completed * 1.0 + attempted * 0.4) / total_questions * 100, then apply engagement modifier:
+- If the student showed genuine reasoning and progression, add up to 10 points
+- If the student was passive, guessing, or gave up, subtract up to 10 points
+- Minimum score: 5. Maximum: 98.
+
+Examples:
+- 0 questions answered, only asked for definitions → 5–15
+- 1 of 14 sub-questions completed with effort → 10–20
+- 7 of 14 completed with good reasoning → 45–60
+- 14 of 14 completed with strong understanding → 80–95
+
+=== OUTPUT ===
 {
-  "title": "3-5 word topic title",
+  "title": "3-5 word topic title (sentence-case)",
   "subject": "detected subject area",
-  "closingMessage": "A warm 1-2 sentence message. If the student clearly worked it out themselves, say so genuinely. If they struggled, be encouraging. Never be generic.",
-  "directAnswer": "A 2-4 sentence session overview: which questions or parts of the assignment were actually worked through this session (be specific), and where the student's understanding currently stands. Do NOT reveal answers — describe progress only. If the student only covered a small fraction of the questions, say so honestly.",
-  "conceptsCovered": ["concept 1", "concept 2"],
-  "understoodWell": ["thing student showed clear grasp of 1", "thing 2"],
-  "toRevisit": ["topic worth revisiting 1", "topic 2"],
-  "followUpQuestion": "One thought-provoking question for the student to think about next.",
-  "gaps": ["gap 1"],
-  "score": 75,
-  "summary": "One paragraph summarising learning progress and what to review."
+  "questionsTotal": <exact count of all questions and sub-questions in the assignment>,
+  "questionsAttempted": <count of questions the student actually tried to answer, even partially>,
+  "closingMessage": "Warm 1-2 sentence message. Honest about coverage — if they barely started, say so warmly. Never pretend more was done than actually happened.",
+  "directAnswer": "2-3 sentences: exactly which questions were covered (cite the numbers/letters), what the student understood, and what remains. Be specific and honest. If 0 questions were completed, say that plainly.",
+  "conceptsCovered": ["only concepts the student actually engaged with — not the full topic list"],
+  "understoodWell": ["things the student demonstrably grasped — empty array if nothing was shown"],
+  "toRevisit": ["specific topics or question types still to work on"],
+  "followUpQuestion": "One thought-provoking question tied to where they left off.",
+  "gaps": ["specific knowledge gaps revealed in the session"],
+  "score": <calculated score>,
+  "summary": "One honest paragraph: how many questions were covered out of how many total, what the student understood, what they struggled with, and exactly what to focus on next."
 }
 
 Assignment:
 ${body.assignment}
 
 Transcript:
-${transcript}
-
-SCORING RULES: this is a LEARNING score (0-100), not a knowledge test score. You are rewarding growth and effort, not prior knowledge.
-
-CRITICAL: First, assess coverage. If the assignment has many questions and the student only touched one or two without completing them, the score MUST reflect that — do not award a generous score for an incomplete session regardless of attitude.
-
-Score based on these factors (in order of importance):
-1. COVERAGE: How much of the assignment was actually worked through? If 15 questions exist and only 1 was partially attempted, the score ceiling is around 25-35 regardless of other factors.
-2. PROGRESSION: Did the student's understanding visibly improve within what they did cover?
-3. RESPONSIVENESS: Did they pick up on hints and build from them?
-4. EFFORT & ENGAGEMENT: Did they keep trying even when stuck?
-5. CONSOLIDATION: By the end of what they covered, could they explain ideas in their own words?
-
-Scoring benchmarks:
-- Only 1-2 questions touched, not completed: 10–30
-- Covered ~25% of assignment with some understanding: 25–45
-- Covered ~50% with good engagement: 45–65
-- Covered most of the assignment with real progression: 65–85
-- Covered all/most with exceptional understanding: 80–95
-- Barely engaged, refused to attempt, gave up immediately: 5–20
-
-Do NOT penalise a student for starting with low knowledge. Do NOT give a high score for partial coverage. The score should honestly reflect how much of the work was done and how well.
-
-The summary should mention where they started, how they progressed, and specifically what they should review next.
-The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitochondria & ATP synthesis", "Basic addition facts").`;
+${transcript}`;
 
   let receiptText = "{}";
   try {
@@ -126,6 +129,8 @@ The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitoch
       ...(receiptFields.closingMessage ? { closingMessage: receiptFields.closingMessage } : {}),
       ...(receiptFields.directAnswer ? { directAnswer: receiptFields.directAnswer } : {}),
       ...(receiptFields.subject ? { subject: receiptFields.subject } : {}),
+      ...(receiptFields.questionsTotal !== undefined ? { questionsTotal: receiptFields.questionsTotal } : {}),
+      ...(receiptFields.questionsAttempted !== undefined ? { questionsAttempted: receiptFields.questionsAttempted } : {}),
     };
   } catch {
     receipt = {

@@ -18,6 +18,9 @@ export type LearningReceipt = {
   closingMessage?: string;
   directAnswer?: string;
   subject?: string;
+  // Assignment coverage
+  questionsTotal?: number;
+  questionsAttempted?: number;
   // Grit
   gritEarned?: number;
 };

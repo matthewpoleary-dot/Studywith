@@ -83,7 +83,40 @@ export default async function SessionSummaryPage({
         )}
 
         <div className="space-y-4">
-          {/* 2. Session overview */}
+          {/* 2. Assignment coverage bar */}
+          {receipt.questionsTotal !== undefined && receipt.questionsTotal > 0 && (
+            <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E]">
+                  Assignment coverage
+                </p>
+                <p className="text-xs font-semibold text-[#1A1A1A]">
+                  {receipt.questionsAttempted ?? 0} of {receipt.questionsTotal} questions attempted
+                </p>
+              </div>
+              <div className="h-2.5 w-full bg-[#F5F4F0] rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    (receipt.questionsAttempted ?? 0) / receipt.questionsTotal >= 0.75
+                      ? "bg-emerald-500"
+                      : (receipt.questionsAttempted ?? 0) / receipt.questionsTotal >= 0.4
+                        ? "bg-[#D97706]"
+                        : "bg-red-400"
+                  }`}
+                  style={{ width: `${Math.max(2, Math.round(((receipt.questionsAttempted ?? 0) / receipt.questionsTotal) * 100))}%` }}
+                />
+              </div>
+              <p className="text-xs text-[#A8A29E] mt-2">
+                {receipt.questionsAttempted === 0
+                  ? "No questions were attempted this session."
+                  : receipt.questionsAttempted === receipt.questionsTotal
+                    ? "All questions were attempted — great coverage."
+                    : `${receipt.questionsTotal - (receipt.questionsAttempted ?? 0)} question${receipt.questionsTotal - (receipt.questionsAttempted ?? 0) === 1 ? "" : "s"} still to go.`}
+              </p>
+            </section>
+          )}
+
+          {/* 3. Session overview */}
           {receipt.directAnswer && (
             <section className="rounded-2xl bg-[#F5F4F0] border border-[#E7E5E4] pl-5 pr-5 py-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">
