@@ -81,6 +81,7 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null);
+  const [deletingAssignment, setDeletingAssignment] = useState<string | null>(null);
 
   const void_unused = userId + userEmail;
   void void_unused;
@@ -187,6 +188,26 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
     } finally {
       setUploading(false);
       setUploadProgress(null);
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    setDeletingAssignment(assignmentId);
+    try {
+      await fetch("/api/rooms/assignment/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignmentId }),
+      });
+      setData((prev) => prev ? {
+        ...prev,
+        assignments: prev.assignments.filter((a) => a.id !== assignmentId),
+      } : prev);
+      setExpandedAssignment(null);
+    } catch {
+      // silently handle
+    } finally {
+      setDeletingAssignment(null);
     }
   };
 
@@ -455,7 +476,7 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                           )
                         )}
 
-                        <div className="flex items-center gap-3 pt-1">
+                        <div className="flex items-center gap-3 pt-1 flex-wrap">
                           {!isTeacher && (
                             <button
                               onClick={() => startSession(a)}
@@ -465,11 +486,31 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                             </button>
                           )}
-                          {isTeacher && (
-                            <button className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-500 transition">
+                          {isTeacher && deletingAssignment !== a.id && (
+                            <button
+                              onClick={() => setDeletingAssignment(a.id)}
+                              className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-500 transition"
+                            >
                               <Trash2 className="w-3 h-3" strokeWidth={1.5} />
-                              Remove
+                              Remove assignment
                             </button>
+                          )}
+                          {isTeacher && deletingAssignment === a.id && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#57534E]">Remove this assignment?</span>
+                              <button
+                                onClick={() => void handleDeleteAssignment(a.id)}
+                                className="text-xs font-medium text-red-500 hover:text-red-600 transition px-2 py-1 rounded-lg border border-red-200 hover:bg-red-50"
+                              >
+                                Yes, remove
+                              </button>
+                              <button
+                                onClick={() => setDeletingAssignment(null)}
+                                className="text-xs text-[#A8A29E] hover:text-[#57534E] transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
