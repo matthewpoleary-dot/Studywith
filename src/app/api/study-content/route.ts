@@ -50,8 +50,12 @@ export async function POST(request: Request) {
       messages: [{ role: "user", content: prompt }],
     });
     const raw = completion.choices[0]?.message?.content ?? "{}";
-    const cleaned = raw.replace(/```(?:json)?\n?|\n?```/g, "").trim();
-    const content = JSON.parse(cleaned);
+    // Strip markdown code fences, then extract the outermost JSON object
+    const stripped = raw.replace(/```(?:json)?\n?|\n?```/g, "").trim();
+    const start = stripped.indexOf("{");
+    const end = stripped.lastIndexOf("}");
+    if (start === -1 || end === -1) throw new Error("No JSON object in response");
+    const content = JSON.parse(stripped.slice(start, end + 1));
     return Response.json({ content });
   } catch (err) {
     console.error("[study-content]", err);

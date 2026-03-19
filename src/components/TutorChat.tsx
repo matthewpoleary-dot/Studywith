@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Send, ImagePlus, X, FileText, BookOpen, ChevronRight } from "lucide-react";
+import { Send, ImagePlus, X, FileText, BookOpen } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MessageRole = "student" | "tutor" | "system";
@@ -695,37 +695,38 @@ export default function TutorChat({
         </div>
       </div>
 
-      {/* PDF panel — slides in from the right over the chat */}
+      {/* PDF panel — fixed overlay so it sits above sticky header */}
       {showPdf && assignmentFileUrl && (
-        <div className="absolute inset-0 z-20 flex pointer-events-none">
-          {/* Dimmed backdrop — only on mobile */}
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop — click anywhere on the left to close */}
           <div
-            className="flex-1 md:hidden pointer-events-auto bg-black/20"
+            className="flex-1 bg-black/20 cursor-pointer"
             onClick={() => setShowPdf(false)}
           />
           {/* Panel */}
-          <div className="pointer-events-auto w-full md:w-[52%] bg-white border-l border-[#E7E5E4] shadow-xl flex flex-col ml-auto">
+          <div className="w-full md:w-[52%] bg-white border-l border-[#E7E5E4] shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E7E5E4] shrink-0">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-red-400" strokeWidth={1.5} />
-                <span className="text-xs font-medium text-[#1A1A1A] truncate max-w-[160px]">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="w-4 h-4 text-red-400 shrink-0" strokeWidth={1.5} />
+                <span className="text-xs font-medium text-[#1A1A1A] truncate">
                   {assignmentFileName ?? "Assignment"}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0 ml-3">
                 <a
                   href={assignmentFileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#A8A29E] hover:text-[#57534E] transition"
+                  className="text-xs text-[#A8A29E] hover:text-[#57534E] transition whitespace-nowrap"
                 >
                   Open in tab
                 </a>
                 <button
                   onClick={() => setShowPdf(false)}
-                  className="text-[#A8A29E] hover:text-[#1A1A1A] transition"
+                  className="p-1 rounded-lg text-[#A8A29E] hover:text-[#1A1A1A] hover:bg-[#F5F4F0] transition"
+                  title="Close"
                 >
-                  <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+                  <X className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
             </div>
