@@ -100,8 +100,11 @@ export default function CompletedSessionView({ sessionId, assignment, messages, 
                   className={`flex ${m.role === "student" ? "justify-end" : "justify-start"}`}
                 >
                   {m.role === "tutor" && (
-                    <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center shrink-0 mt-0.5 mr-2.5">
-                      <span className="text-[9px] font-bold text-[#D97706]">T</span>
+                    <div className="flex flex-col items-center mr-2.5 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center mt-0.5">
+                        <span className="text-[9px] font-bold text-[#D97706]">S</span>
+                      </div>
+                      <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
                     </div>
                   )}
                   <div

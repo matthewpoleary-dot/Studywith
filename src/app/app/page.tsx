@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import Link from "next/link";
 import type { Database } from "@/lib/database.types";
-import ReferralLink from "@/components/ReferralLink";
+import OnboardingModal from "@/components/OnboardingModal";
 
 type SessionRow = {
   id: string;
@@ -65,13 +65,13 @@ export default async function AppDashboard() {
 
   const inProgressSessions = allSessions.filter((s) => s.receipt === null);
 
-  const referralCode = user!.id.replace(/-/g, "").slice(0, 8).toUpperCase();
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://studywith-phi.vercel.app";
-  const referralUrl = `${siteUrl}/?ref=${referralCode}`;
+  // Show onboarding modal for brand-new users who haven't seen it
+  const hasOnboarded = user?.user_metadata?.has_onboarded === true;
+  const showOnboarding = allSessions.length === 0 && !hasOnboarded;
 
   return (
     <div className="w-full max-w-2xl mx-auto px-6 md:px-10 py-10 md:py-16">
+      {showOnboarding && <OnboardingModal />}
       {/* Greeting */}
       <div className="mb-8">
         <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-2">
@@ -120,20 +120,23 @@ export default async function AppDashboard() {
 
       {/* Empty state */}
       {allSessions.length === 0 && (
-        <div className="border border-dashed border-[#E7E5E4] rounded-2xl px-6 py-16 text-center mb-8">
-          <p className="font-serif text-lg text-[#1A1A1A] mb-2">Your sessions will appear here</p>
-          <p className="text-sm text-[#57534E]">Start a new session above to begin.</p>
+        <div className="rounded-2xl border border-[#E7E5E4] bg-white px-6 py-14 text-center mb-8">
+          <div className="text-4xl mb-4">📚</div>
+          <h2 className="font-serif text-xl font-medium text-[#1A1A1A] mb-2">
+            Ready when you are
+          </h2>
+          <p className="text-sm text-[#57534E] mb-6 max-w-sm mx-auto leading-relaxed">
+            Start a session with any question, assignment, or topic — Sage will guide you through it.
+          </p>
+          <Link
+            href="/app/new"
+            className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-lg px-6 py-2.5 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.02]"
+          >
+            <span className="text-lg leading-none">+</span>
+            Start your first session
+          </Link>
         </div>
       )}
-
-      {/* Refer a friend */}
-      <div className="bg-[#F5F4F0] border border-[#E7E5E4] rounded-2xl p-6">
-        <p className="text-sm font-medium text-[#1A1A1A] mb-1">Refer a friend</p>
-        <p className="text-xs text-[#57534E] mb-4">
-          Share your link. Friends get 14 days free instead of the usual 7.
-        </p>
-        <ReferralLink url={referralUrl} />
-      </div>
     </div>
   );
 }

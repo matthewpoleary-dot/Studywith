@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import ReferralLink from "@/components/ReferralLink";
 
-type Tab = "account" | "profile";
+type Tab = "account" | "profile" | "billing";
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("account");
@@ -182,6 +183,7 @@ export default function SettingsPage() {
           [
             ["account", "Account"],
             ["profile", "Personal information"],
+            ["billing", "Plan & Billing"],
           ] as [Tab, string][]
         ).map(([id, label]) => (
           <button
@@ -349,6 +351,59 @@ export default function SettingsPage() {
           </section>
         </div>
       )}
+
+      {/* ── Billing tab ── */}
+      {tab === "billing" && (() => {
+        const referralCode = user?.id.replace(/-/g, "").slice(0, 8).toUpperCase() ?? "";
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studywith-phi.vercel.app";
+        const referralUrl = `${siteUrl}/?ref=${referralCode}`;
+        return (
+          <div className="space-y-6">
+            {/* Current plan */}
+            <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+              <h2 className="font-medium text-[#1A1A1A] mb-4">Your plan</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Monthly Plan — Active
+                </span>
+              </div>
+              <ul className="space-y-2 mb-5">
+                {[
+                  "Unlimited tutoring sessions",
+                  "Post-session summaries",
+                  "Progress tracking & statistics",
+                  "Image & PDF assignment upload",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-sm text-[#57534E]">
+                    <span className="text-[#D97706]">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="https://billing.stripe.com/p/login/test_00000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${primaryBtn} inline-flex`}
+              >
+                Manage subscription
+              </a>
+            </section>
+
+            {/* Refer a friend */}
+            {referralCode && (
+              <section className="bg-[#F5F4F0] border border-[#E7E5E4] rounded-2xl p-6">
+                <h2 className="font-medium text-[#1A1A1A] mb-1">Refer a friend</h2>
+                <p className="text-sm text-[#57534E] mb-4">
+                  Share your link. Friends get 14 days free instead of the usual 7.
+                </p>
+                <ReferralLink url={referralUrl} />
+              </section>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── Profile tab ── */}
       {tab === "profile" && (

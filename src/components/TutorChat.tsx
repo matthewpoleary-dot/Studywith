@@ -123,6 +123,8 @@ export default function TutorChat({
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [subjectOpen, setSubjectOpen] = useState(false);
+  const [subjectPulsing, setSubjectPulsing] = useState(false);
+  const prevSubjectRef = useRef<Subject>(detectSubject(initialAssignment));
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -186,9 +188,17 @@ export default function TutorChat({
     if (isSessionStarted) textareaRef.current?.focus();
   }, [isSessionStarted]);
 
-  // Auto-detect subject as user types
+  // Auto-detect subject as user types, animate on change
   useEffect(() => {
-    if (!isSessionStarted) setSubject(detectSubject(assignment));
+    if (!isSessionStarted) {
+      const detected = detectSubject(assignment);
+      if (detected !== prevSubjectRef.current) {
+        prevSubjectRef.current = detected;
+        setSubject(detected);
+        setSubjectPulsing(true);
+        setTimeout(() => setSubjectPulsing(false), 600);
+      }
+    }
   }, [assignment, isSessionStarted]);
 
   // Close subject dropdown on outside click
@@ -437,7 +447,7 @@ export default function TutorChat({
       });
       if (!res.ok) throw new Error("Failed");
       const data = (await res.json()) as { receiptId: string };
-      window.location.href = `/app/session/${data.receiptId}`;
+      window.location.href = `/app/session/${data.receiptId}/summary`;
     } catch {
       setIsEnding(false);
       alert("Could not end session. Please try again.");
@@ -468,10 +478,10 @@ export default function TutorChat({
         />
         <div className="w-full max-w-xl mx-auto">
           <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
-            New tutoring session
+            What are we working on?
           </h1>
           <p className="text-sm text-[#57534E] mb-6 leading-relaxed">
-            Paste your assignment below, or upload a photo and we&apos;ll read it for you.
+            Paste a question, topic, or assignment — or upload a photo of your notes.
           </p>
 
           {/* File preview */}
@@ -511,11 +521,18 @@ export default function TutorChat({
             placeholder={
               imageBase64
                 ? "Add notes or extra context (optional)..."
-                : "Paste your assignment, problem, or question here..."
+                : "e.g. 'Explain the causes of WW1' or paste your assignment directly..."
             }
             rows={6}
             className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-3 shadow-sm"
           />
+
+          {/* Helper text — shown when textarea is empty */}
+          {!assignment.trim() && !imageBase64 && (
+            <p className="text-xs text-[#A8A29E] mb-3 -mt-1">
+              Sage will ask what you already know, then guide you from there.
+            </p>
+          )}
 
           {/* Example prompts — shown when textarea is empty */}
           {!assignment.trim() && !imageBase64 && (
@@ -544,15 +561,24 @@ export default function TutorChat({
           {/* Subject — auto-detected, click to override */}
           <div className="flex items-center gap-2 mb-5">
             <span className="text-xs text-[#A8A29E]">Subject</span>
-            <div ref={subjectDropdownRef} className="relative">
+            <div ref={subjectDropdownRef} className="relative group">
               <button
                 type="button"
                 onClick={() => setSubjectOpen((v) => !v)}
-                className="flex items-center gap-1 text-xs font-medium text-[#57534E] hover:text-[#1A1A1A] transition"
+                className={`flex items-center gap-1 text-xs font-medium text-[#57534E] hover:text-[#1A1A1A] transition rounded-md px-1.5 py-0.5 border border-transparent hover:border-[#D97706]/30 hover:bg-[#D97706]/5 ${
+                  subjectPulsing ? "scale-105 text-[#D97706] border-[#D97706]/30 bg-[#D97706]/5" : ""
+                } transition-all duration-200`}
+                title="Auto-detected from your topic — click to change"
               >
                 {subject}
                 <ChevronDown className="w-3 h-3 text-[#A8A29E]" strokeWidth={2} />
               </button>
+              {/* Tooltip */}
+              <div className="pointer-events-none absolute left-0 top-full mt-1.5 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <div className="bg-[#1A1A1A] text-white text-[10px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg">
+                  Auto-detected — click to change
+                </div>
+              </div>
               {subjectOpen && (
                 <div className="absolute top-full left-0 mt-1.5 w-44 bg-white border border-[#E7E5E4] rounded-xl shadow-lg z-20 py-1.5 overflow-hidden">
                   {SUBJECT_OPTIONS.map((s) => (
@@ -647,8 +673,11 @@ export default function TutorChat({
               }`}
             >
               {m.role === "tutor" && (
-                <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center shrink-0 mt-0.5 mr-2.5">
-                  <span className="text-[9px] font-bold text-[#D97706]">T</span>
+                <div className="flex flex-col items-center mr-2.5 shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center mt-0.5">
+                    <span className="text-[9px] font-bold text-[#D97706]">S</span>
+                  </div>
+                  <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
                 </div>
               )}
               <div
@@ -666,8 +695,11 @@ export default function TutorChat({
           {/* Typing indicator */}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center shrink-0 mt-0.5 mr-2.5">
-                <span className="text-[9px] font-bold text-[#D97706]">T</span>
+              <div className="flex flex-col items-center mr-2.5 shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[#D97706]/15 border border-[#D97706]/30 flex items-center justify-center mt-0.5">
+                  <span className="text-[9px] font-bold text-[#D97706]">S</span>
+                </div>
+                <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
               </div>
               <div className="bg-white border border-[#E7E5E4] rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                 <div className="flex gap-1.5 items-center h-4">

@@ -11,6 +11,10 @@ export type LearningReceipt = {
   gaps: string[];
   score: number;
   summary: string;
+  // Extended summary fields (populated from v2 end-session prompt onwards)
+  understoodWell?: string[];
+  toRevisit?: string[];
+  followUpQuestion?: string;
 };
 
 export type Database = {

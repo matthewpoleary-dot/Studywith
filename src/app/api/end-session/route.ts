@@ -62,7 +62,10 @@ Return ONLY valid JSON — no markdown fences, no explanation — with exactly t
   "conceptsCovered": ["concept 1", "concept 2"],
   "gaps": ["gap 1", "gap 2"],
   "score": 75,
-  "summary": "One paragraph summarising learning progress and what to review."
+  "summary": "One paragraph summarising learning progress and what to review.",
+  "understoodWell": ["thing student showed clear grasp of 1", "thing 2"],
+  "toRevisit": ["topic worth revisiting 1", "topic 2"],
+  "followUpQuestion": "One thought-provoking question for the student to think about next."
 }
 
 SCORING RULES — this is a LEARNING score (0–100), not a knowledge test score. You are rewarding growth and effort, not prior knowledge.
@@ -107,7 +110,15 @@ The title must be 3–5 words, sentence-case, describing the topic (e.g. "Mitoch
     // Strip title from receipt JSON before storing (it lives on the session row)
     const { title: _t, ...receiptFields } = parsed;
     void _t;
-    receipt = receiptFields as LearningReceipt;
+    receipt = {
+      conceptsCovered: receiptFields.conceptsCovered ?? [],
+      gaps: receiptFields.gaps ?? [],
+      score: receiptFields.score ?? 0,
+      summary: receiptFields.summary ?? "",
+      ...(receiptFields.understoodWell ? { understoodWell: receiptFields.understoodWell } : {}),
+      ...(receiptFields.toRevisit ? { toRevisit: receiptFields.toRevisit } : {}),
+      ...(receiptFields.followUpQuestion ? { followUpQuestion: receiptFields.followUpQuestion } : {}),
+    };
   } catch {
     receipt = {
       conceptsCovered: [],
