@@ -6,7 +6,7 @@ import type { User } from "@supabase/supabase-js";
 
 type Tab = "account" | "profile" | "tutor";
 
-const SAGE_AVATARS = ["🌿", "🦉", "✨", "🧠", "🔥", "🎯", "📚", "🌟"] as const;
+const SAGE_AVATARS = ["🦊", "🐻", "🦁", "🐺", "🦋", "🐸", "🦜", "🐼"] as const;
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("account");

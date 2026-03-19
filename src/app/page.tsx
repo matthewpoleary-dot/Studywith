@@ -141,8 +141,8 @@ const Navigation = () => {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[#FDFCF8]/90 backdrop-blur-md border-b border-[#E7E5E4]/50"
-          : "bg-transparent"
+          ? "bg-[#FDFCF8]/95 backdrop-blur-md shadow-sm border-b border-[#E7E5E4]/50"
+          : "bg-[#FDFCF8] border-b border-[#E7E5E4]/30"
       }`}
     >
       {/* Subscribe banner lives inside the fixed nav so it never overlaps */}
@@ -160,7 +160,7 @@ const Navigation = () => {
           </a>
 
           <div className="hidden md:flex items-center gap-10">
-            {["how-it-works", "features", "pricing", "faq"].map((id) => (
+            {["how-it-works", "features", "faq"].map((id) => (
               <button
                 key={id}
                 onClick={() => scrollToSection(id)}
@@ -747,7 +747,7 @@ const UseCases = () => {
   );
 };
 
-// ─── Pricing ──────────────────────────────────────────────────────────────────
+// ─── Pricing (removed — free early access) ───────────────────────────────────
 
 const Pricing = () => {
   const features = [
@@ -950,7 +950,7 @@ const Footer = () => {
           <div>
             <h4 className="font-medium text-[#1A1A1A] mb-4">Product</h4>
             <ul className="space-y-3">
-              {["how-it-works", "features", "pricing", "faq"].map((id) => (
+              {["how-it-works", "features", "faq"].map((id) => (
                 <li key={id}>
                   <button
                     onClick={() => scrollToSection(id)}
@@ -1047,7 +1047,6 @@ export default function StudyWithLanding() {
         <Features />
         <Comparison />
         <UseCases />
-        <Pricing />
         <FAQ />
         {/* Closing CTA */}
         <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
@@ -1058,10 +1057,12 @@ export default function StudyWithLanding() {
             <p className="text-lg text-[#57534E] mb-10">
               Join students who learn by thinking, not copying.
             </p>
-            <CheckoutButton
-              label="Get started"
-              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
-            />
+            <a
+              href="/auth/signup"
+              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+            >
+              Get started
+            </a>
           </div>
         </section>
       </main>
