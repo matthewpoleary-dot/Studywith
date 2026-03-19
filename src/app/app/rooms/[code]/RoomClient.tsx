@@ -313,25 +313,40 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
     const parts = [assignment.title, assignment.content].filter(Boolean);
     const params = new URLSearchParams();
 
-    if (assignment.file_url && assignment.file_type?.startsWith("image/")) {
+    const isImage = assignment.file_type?.startsWith("image/")
+      || (!assignment.file_type && /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(assignment.file_name ?? ""));
+    const isPdf = assignment.file_type?.includes("pdf")
+      || (!assignment.file_type && assignment.file_name?.toLowerCase().endsWith(".pdf"));
+
+    if (assignment.file_url && isImage) {
       // Pass image URL so Sage can see it via vision model
       params.set("imageUrl", assignment.file_url);
-    } else if (assignment.file_url && assignment.file_type?.includes("pdf")) {
-      // Extract PDF text server-side so Sage knows the actual questions
+    } else if (assignment.file_url && isPdf) {
+      // Fetch PDF in the browser (public URL, CORS-safe) and extract text via pdf-parse
       try {
+        const fileRes = await fetch(assignment.file_url);
+        const arrayBuffer = await fileRes.arrayBuffer();
+        // Convert ArrayBuffer → base64 in chunks (browser-safe)
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = "";
+        const CHUNK = 8192;
+        for (let i = 0; i < bytes.length; i += CHUNK) {
+          binary += String.fromCharCode(...Array.from(bytes.subarray(i, i + CHUNK)));
+        }
+        const base64 = btoa(binary);
+
         const res = await fetch("/api/extract-assignment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileUrl: assignment.file_url }),
+          body: JSON.stringify({ imageBase64: base64, mimeType: "application/pdf" }),
         });
         const data = (await res.json()) as { text?: string; error?: string };
-        if (data.text) {
-          parts.push(data.text);
-        } else {
-          parts.push(`[PDF: ${assignment.file_name ?? "assignment.pdf"} — student should open it in the tab to read along]`);
+        if (data.text?.trim()) {
+          parts.push(data.text.trim());
         }
+        // If extraction fails/empty, parts already has title+content — Sage still has context
       } catch {
-        parts.push(`[PDF: ${assignment.file_name ?? "assignment.pdf"}]`);
+        // silently continue — Sage has at least the title/description
       }
     } else if (assignment.file_url) {
       parts.push(`[Attached file: ${assignment.file_name ?? assignment.file_url}]`);

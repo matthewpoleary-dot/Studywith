@@ -21,27 +21,10 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await request.json()) as {
-    imageBase64?: string;
-    mimeType?: string;
-    fileUrl?: string;
+  const { imageBase64, mimeType } = (await request.json()) as {
+    imageBase64: string;
+    mimeType: string;
   };
-
-  // Support both base64 upload and direct URL (for room assignment files)
-  let imageBase64 = body.imageBase64;
-  let mimeType = body.mimeType;
-
-  if (body.fileUrl && !imageBase64) {
-    try {
-      const fileRes = await fetch(body.fileUrl);
-      if (!fileRes.ok) return Response.json({ error: "Could not fetch file" }, { status: 400 });
-      mimeType = fileRes.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
-      const arrayBuffer = await fileRes.arrayBuffer();
-      imageBase64 = Buffer.from(arrayBuffer).toString("base64");
-    } catch {
-      return Response.json({ error: "Failed to fetch file from URL" }, { status: 400 });
-    }
-  }
 
   if (!imageBase64 || !mimeType) {
     return Response.json({ error: "Missing file data" }, { status: 400 });
