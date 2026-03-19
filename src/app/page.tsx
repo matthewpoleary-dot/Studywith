@@ -1024,9 +1024,7 @@ export default function StudyWithLanding() {
     if (new URLSearchParams(window.location.search).get("checkout") === "required") return;
     const supabase = createSupabaseBrowserClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        router.replace("/app");
-      } else {
+      if (!user) {
         localStorage.removeItem("sw_remember");
       }
     });
