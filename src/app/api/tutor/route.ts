@@ -47,6 +47,7 @@ type RequestBody = {
   sessionId?: string;
   imageBase64?: string;
   imageMime?: string;
+  imageUrl?: string;
 };
 
 export async function POST(request: Request) {
@@ -123,16 +124,19 @@ export async function POST(request: Request) {
   let groqMessages: GroqMessage[];
   let model: string;
 
-  if (body.imageBase64 && chatMessages.length > 0) {
+  if ((body.imageBase64 || body.imageUrl) && chatMessages.length > 0) {
     const lastMsg = chatMessages[chatMessages.length - 1];
     model = "meta-llama/llama-4-scout-17b-16e-instruct";
+    const imageUrlEntry = body.imageBase64
+      ? { type: "image_url" as const, image_url: { url: `data:${body.imageMime ?? "image/jpeg"};base64,${body.imageBase64}` } }
+      : { type: "image_url" as const, image_url: { url: body.imageUrl! } };
     groqMessages = [
       systemMessage,
       ...chatMessages.slice(0, -1),
       {
         role: "user" as const,
         content: [
-          { type: "image_url" as const, image_url: { url: `data:${body.imageMime ?? "image/jpeg"};base64,${body.imageBase64}` } },
+          imageUrlEntry,
           { type: "text" as const, text: typeof lastMsg.content === "string" ? lastMsg.content : "" },
         ],
       },

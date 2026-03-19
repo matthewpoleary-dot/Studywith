@@ -307,9 +307,21 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
 
   const startSession = (assignment: Assignment) => {
     const parts = [assignment.title, assignment.content].filter(Boolean);
-    if (assignment.file_url) parts.push(`[Attached file: ${assignment.file_name ?? assignment.file_url}]`);
-    const encoded = encodeURIComponent(parts.join("\n\n").slice(0, 4000));
-    router.push(`/app/new?prefill=${encoded}`);
+    const params = new URLSearchParams();
+
+    if (assignment.file_url && assignment.file_type?.startsWith("image/")) {
+      // Pass image URL so Sage can see it via vision model
+      params.set("imageUrl", assignment.file_url);
+    } else if (assignment.file_url) {
+      // Non-image file — note it in the assignment text
+      parts.push(`[Attached file: ${assignment.file_name ?? assignment.file_url}]`);
+    } else if (assignment.image_base64 && assignment.image_mime?.startsWith("image/")) {
+      // Legacy base64 image — too large for URL params; note it so student knows to describe it
+      parts.push("[Your teacher has attached an image to this assignment. Describe what you see in it or paste the questions here.]");
+    }
+
+    params.set("prefill", parts.join("\n\n").slice(0, 4000));
+    router.push(`/app/new?${params.toString()}`);
   };
 
   if (loading) {

@@ -100,12 +100,14 @@ type TutorChatProps = {
   initialAssignment?: string;
   initialMessages?: TutorMessage[];
   initialSessionId?: string | null;
+  initialImageUrl?: string;
 };
 
 export default function TutorChat({
   initialAssignment = "",
   initialMessages = [],
   initialSessionId = null as string | null,
+  initialImageUrl,
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
   const [subject, setSubject] = useState<Subject>(() => detectSubject(initialAssignment));
@@ -126,6 +128,9 @@ export default function TutorChat({
   const [subjectPulsing, setSubjectPulsing] = useState(false);
   const prevSubjectRef = useRef<Subject>(detectSubject(initialAssignment));
   const [sageAvatar, setSageAvatar] = useState("🌿");
+  // Pending image URL from room assignment — attached automatically on first send
+  const pendingImageUrlRef = useRef<string | null>(initialImageUrl ?? null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -394,6 +399,10 @@ export default function TutorChat({
     clearFile();
     setIsLoading(true);
 
+    // Consume pending image URL from room assignment (first send only)
+    const pendingUrl = pendingImageUrlRef.current;
+    if (pendingUrl) pendingImageUrlRef.current = null;
+
     try {
       const response = await fetch("/api/tutor", {
         method: "POST",
@@ -403,8 +412,10 @@ export default function TutorChat({
           subject,
           messages: [...messages, userMessage],
           sessionId,
-          // Only send images to vision model; PDFs are already embedded as text above
+          // User-attached image (base64); PDFs are already embedded as text
           ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
+          // Room assignment image URL — only used if no user-attached image this turn
+          ...(!pendingImage && pendingUrl && { imageUrl: pendingUrl }),
         }),
       });
 
