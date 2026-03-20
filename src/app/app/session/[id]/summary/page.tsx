@@ -110,7 +110,7 @@ export default async function SessionSummaryPage({
                 {receipt.questionsAttempted === 0
                   ? "No questions were attempted this session."
                   : receipt.questionsAttempted === receipt.questionsTotal
-                    ? "All questions were attempted — great coverage."
+                    ? "All questions were attempted. Great coverage."
                     : `${receipt.questionsTotal - (receipt.questionsAttempted ?? 0)} question${receipt.questionsTotal - (receipt.questionsAttempted ?? 0) === 1 ? "" : "s"} still to go.`}
               </p>
             </section>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { posthog } from "@/lib/posthog";
 import {
   MessageCircle,
   TrendingUp,
@@ -20,9 +21,11 @@ import {
   Menu,
   X,
   Link,
-  Star,
   XCircle,
   ArrowRight,
+  Users,
+  FileText,
+  BarChart2,
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 
@@ -55,6 +58,11 @@ const FAQAccordion = ({
   items: { question: string; answer: string }[];
 }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const handleOpen = (index: number, question: string) => {
+    const isOpening = openIndex !== index;
+    setOpenIndex(isOpening ? index : null);
+    if (isOpening) posthog.capture('faq_expanded', { question });
+  };
   return (
     <div className="space-y-4">
       {items.map((item, index) => (
@@ -63,7 +71,7 @@ const FAQAccordion = ({
           className="bg-white border border-[#E7E5E4] rounded-xl overflow-hidden"
         >
           <button
-            onClick={() => setOpenIndex(openIndex === index ? null : index)}
+            onClick={() => handleOpen(index, item.question)}
             className="w-full flex items-center justify-between p-5 text-left font-serif text-lg font-medium text-[#1A1A1A] hover:bg-[#F5F4F0]/50 transition-colors"
           >
             {item.question}
@@ -160,13 +168,18 @@ const Navigation = () => {
           </a>
 
           <div className="hidden md:flex items-center gap-10">
-            {["how-it-works", "features", "faq"].map((id) => (
+            {[
+              { id: "how-it-works", label: "How it works" },
+              { id: "features", label: "Features" },
+              { id: "for-teachers", label: "For Teachers" },
+              { id: "faq", label: "FAQ" },
+            ].map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => scrollToSection(id)}
-                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium capitalize"
+                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium"
               >
-                {id.replace("-", " ")}
+                {label}
               </button>
             ))}
           </div>
@@ -244,13 +257,18 @@ const Navigation = () => {
         {mobileMenuOpen && (
           <div className="md:hidden bg-[#FDFCF8] border-t border-[#E7E5E4] py-4">
             <div className="flex flex-col gap-4">
-              {["how-it-works", "features", "pricing", "faq"].map((id) => (
+              {[
+                { id: "how-it-works", label: "How it works" },
+                { id: "features", label: "Features" },
+                { id: "for-teachers", label: "For Teachers" },
+                { id: "faq", label: "FAQ" },
+              ].map(({ id, label }) => (
                 <button
                   key={id}
                   onClick={() => scrollToSection(id)}
-                  className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium py-2 capitalize"
+                  className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium py-2"
                 >
-                  {id.replace("-", " ")}
+                  {label}
                 </button>
               ))}
               {user ? (
@@ -306,17 +324,10 @@ const Hero = () => {
     <section className="pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-4xl">
-          {/* Star rating social proof */}
-          <div className="flex items-center gap-2 mb-6">
-            <div className="flex items-center gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-[#D97706] text-[#D97706]" />
-              ))}
-            </div>
-            <span className="text-sm text-[#57534E] font-medium">
-              Loved by students across A-Levels, Leaving Cert &amp; university
-            </span>
-          </div>
+          {/* Attribution */}
+          <p className="text-sm text-[#57534E] font-medium mb-6">
+            Built by a Trinity College Dublin student, for students who actually want to understand their work.
+          </p>
 
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
             Learn to <em className="italic text-[#D97706]">think</em>, not just
@@ -334,7 +345,7 @@ const Hero = () => {
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
             />
             <button
-              onClick={() => scrollToSection("how-it-works")}
+              onClick={() => { scrollToSection("how-it-works"); posthog.capture('see_how_it_works_clicked'); }}
               className="inline-flex items-center gap-2 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-5 py-2 text-sm font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
             >
               See how it works
@@ -599,6 +610,95 @@ const Features = () => {
 };
 
 
+// ─── For Teachers ─────────────────────────────────────────────────────────────
+
+const ForTeachers = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) posthog.capture('for_teachers_section_viewed'); },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const cards = [
+    {
+      icon: Users,
+      title: "Rooms",
+      body: "Create a class room, add assignments, and invite students with a single code. Works for grinds, school classes, or study groups.",
+    },
+    {
+      icon: FileText,
+      title: "Learning Receipts",
+      body: "Every session generates a scored receipt showing what each student covered, what they understood, and what needs work. Shareable and private.",
+    },
+    {
+      icon: BarChart2,
+      title: "Completion Tracking",
+      body: "See which students have completed each assignment and which haven't. No chasing. No guessing.",
+    },
+  ];
+
+  return (
+    <section
+      id="for-teachers"
+      ref={sectionRef}
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            For Teachers
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-6">
+            Assign work. See how your students think.
+          </h2>
+          <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
+            Create a room, share a 6-digit code, and your students are in. They work through assignments with Sage, and you see exactly where they struggled and what they understood. No marking. No guessing.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-12">
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              className="group bg-white border border-[#E7E5E4] p-8 rounded-xl hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex items-start gap-5">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center group-hover:bg-[#D97706]/10 transition-colors">
+                  <card.icon className="w-6 h-6 text-[#D97706]" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
+                    {card.title}
+                  </h3>
+                  <p className="text-[#57534E] leading-relaxed">{card.body}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href="/app/rooms"
+            onClick={() => posthog.capture('cta_clicked', { cta_location: 'teacher_section' })}
+            className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+          >
+            Create a free room
+          </a>
+          <p className="text-sm text-[#A8A29E] mt-3">Free for teachers and students during early access.</p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 // ─── Comparison ───────────────────────────────────────────────────────────────
 
 const Comparison = () => {
@@ -608,7 +708,7 @@ const Comparison = () => {
     { feature: "Available 24/7", chatgpt: true, humanTutor: false, studywith: true },
     { feature: "Scored learning breakdown", chatgpt: false, humanTutor: false, studywith: true },
     { feature: "Shareable session receipts", chatgpt: false, humanTutor: false, studywith: true },
-    { feature: "Affordable flat price", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Free to use", chatgpt: false, humanTutor: false, studywith: true },
   ];
 
   const Cell = ({ value, highlight }: { value: boolean; highlight?: boolean }) =>
@@ -647,7 +747,7 @@ const Comparison = () => {
             </div>
             <div className="p-5 text-center border-l border-[#E7E5E4] bg-[#FDFAF5]">
               <p className="text-sm font-semibold text-[#D97706]">StudyWith</p>
-              <p className="text-xs text-[#A8A29E]">from €12.99/mo</p>
+              <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 mt-0.5">Free</span>
             </div>
           </div>
 
@@ -897,9 +997,9 @@ const FAQ = () => {
         "At the end of each session, StudyWith generates a Learning Receipt, a scored breakdown of the session. It shows your score out of 100, the concepts you demonstrated understanding of, gaps to review, and a written summary. Each receipt has a unique shareable link.",
     },
     {
-      question: "Can I cancel my subscription anytime?",
+      question: "Is StudyWith free?",
       answer:
-        "Absolutely. You can cancel your subscription at any time from your dashboard with no questions asked. You'll keep access until the end of your billing period.",
+        "StudyWith is currently free while we are in early access.",
     },
   ];
 
@@ -1022,6 +1122,10 @@ export default function StudyWithLanding() {
   const router = useRouter();
 
   useEffect(() => {
+    posthog.capture('landing_page_viewed')
+  }, [])
+
+  useEffect(() => {
     const remember = localStorage.getItem("sw_remember");
     if (remember !== "1") return;
     if (new URLSearchParams(window.location.search).get("checkout") === "required") return;
@@ -1048,6 +1152,7 @@ export default function StudyWithLanding() {
         <Hero />
         <HowItWorks />
         <Features />
+        <ForTeachers />
         <Comparison />
         <UseCases />
         <FAQ />
@@ -1062,6 +1167,7 @@ export default function StudyWithLanding() {
             </p>
             <a
               href="/auth/signup"
+              onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
             >
               Get started

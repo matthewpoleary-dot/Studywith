@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import PostHogProvider from "@/components/PostHogProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,7 +44,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/api/pwa-icon?size=180" />
       </head>
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+        <PostHogProvider>
         {children}
+        </PostHogProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,

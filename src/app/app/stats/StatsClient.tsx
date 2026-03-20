@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookOpen, CheckCircle, Star, Pencil, Trash2, Check, X } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { LearningReceipt } from "@/lib/database.types";
+import { posthog } from "@/lib/posthog";
 
 type SessionRow = {
   id: string;
@@ -78,6 +79,13 @@ export default function StatsClient({
 }: Props) {
   const [sessions, setSessions] = useState<SessionRow[]>(initialSessions);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("all");
+
+  useEffect(() => { posthog.capture('stats_page_viewed') }, [])
+
+  const handleTimePeriod = (p: TimePeriod) => {
+    setTimePeriod(p);
+    posthog.capture('stats_time_filter_changed', { filter: TIME_PERIOD_LABELS[p] });
+  };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -195,7 +203,7 @@ export default function StatsClient({
           {(Object.keys(TIME_PERIOD_LABELS) as TimePeriod[]).map((p) => (
             <button
               key={p}
-              onClick={() => setTimePeriod(p)}
+              onClick={() => handleTimePeriod(p)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 timePeriod === p
                   ? "bg-[#1A1A1A] text-white"

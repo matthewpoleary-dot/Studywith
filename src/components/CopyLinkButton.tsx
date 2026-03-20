@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Link2, Check } from "lucide-react";
+import { posthog } from "@/lib/posthog";
 
-export default function CopyLinkButton() {
+export default function CopyLinkButton({ source = 'app' }: { source?: 'app' | 'public_page' }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
+      posthog.capture('receipt_shared', { source });
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // fallback for older browsers

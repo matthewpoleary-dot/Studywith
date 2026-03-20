@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import CheckoutButton from "@/components/CheckoutButton";
+import { posthog } from "@/lib/posthog";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -27,6 +28,14 @@ function LoginForm() {
       setError(error.message);
       setLoading(false);
       return;
+    }
+
+    // Identify user in PostHog
+    const supabaseForUser = createSupabaseBrowserClient();
+    const { data: { user } } = await supabaseForUser.auth.getUser();
+    if (user) {
+      posthog.identify(user.id, { email: user.email, created_at: user.created_at });
+      posthog.capture('login_completed');
     }
 
     // Persist the user's "keep me signed in" preference

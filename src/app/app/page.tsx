@@ -78,7 +78,7 @@ export default async function AppDashboard() {
           What would you like to work on?
         </h1>
         <p className="text-[#57534E]">
-          Start a new session or pick up where you left off.
+          Start a new session, or continue from your history below.
         </p>
       </div>
 

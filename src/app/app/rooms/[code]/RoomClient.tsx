@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Plus, Upload, Loader2, Users, BookOpen, ArrowRight, Trash2, ChevronDown, FileText, File, Presentation, X } from "lucide-react";
+import { Plus, Upload, Loader2, Users, BookOpen, ArrowRight, Trash2, ChevronDown, FileText, File, Presentation, X, Copy, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { posthog } from "@/lib/posthog";
 
 type Assignment = {
   id: string;
@@ -35,6 +36,27 @@ type RoomData = {
 };
 
 type Props = { code: string; userId: string; userEmail: string };
+
+const INVITE_BASE = "https://studywith-phi.vercel.app/join";
+
+function CopyButton({ text, label, small }: { text: string; label: string; small?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    void navigator.clipboard.writeText(text);
+    setCopied(true);
+    posthog.capture('room_invite_copied', { type: label });
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={copy}
+      className={`inline-flex items-center gap-1.5 border border-[#1A1A1A] text-[#1A1A1A] rounded-full font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200 ${small ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-xs"}`}
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} /> : <Copy className="w-3.5 h-3.5" strokeWidth={1.5} />}
+      {copied ? "Copied!" : label}
+    </button>
+  );
+}
 
 const ACCEPTED_TYPES = [
   "image/*",
@@ -310,6 +332,7 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
 
   const startSession = async (assignment: Assignment) => {
     setStartingSessionId(assignment.id);
+    posthog.capture('room_assignment_started', { assignment_title: assignment.title });
     const parts = [assignment.title, assignment.content].filter(Boolean);
     const params = new URLSearchParams();
 
@@ -407,6 +430,12 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                 <span>{isTeacher ? "Teacher view" : "Student view"}</span>
               </p>
             </div>
+            {isTeacher && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <CopyButton text={room.code} label="Copy code" small />
+                <CopyButton text={`${INVITE_BASE}/${room.code}`} label="Copy invite link" small />
+              </div>
+            )}
           </div>
         </div>
 

@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const receiptPrompt = `You are Sage, a study tutor generating a learning receipt. Return ONLY a valid JSON object with no markdown, preamble, or commentary.
 
 === STEP 1: ANALYSE THE ASSIGNMENT SCOPE ===
-Read the assignment carefully. Count every distinct question, sub-question, and lettered/numbered part. For example, if there are 3 sections with (a)-(k), (a)-(f), and (a)-(e), the total is 22 sub-questions. Be precise — this number drives the score.
+Read the assignment carefully. Count every distinct question, sub-question, and lettered/numbered part. For example, if there are 3 sections with (a)-(k), (a)-(f), and (a)-(e), the total is 22 sub-questions. Be precise: this number drives the score.
 
 === STEP 2: ANALYSE THE TRANSCRIPT ===
 Read the transcript carefully. For each question/sub-question in the assignment, determine:
@@ -80,10 +80,10 @@ Examples:
   "subject": "detected subject area",
   "questionsTotal": <exact count of all questions and sub-questions in the assignment>,
   "questionsAttempted": <count of questions the student actually tried to answer, even partially>,
-  "closingMessage": "Warm 1-2 sentence message. Honest about coverage — if they barely started, say so warmly. Never pretend more was done than actually happened.",
+  "closingMessage": "Warm 1-2 sentence message. Honest about coverage. If they barely started, say so warmly. Never pretend more was done than actually happened.",
   "directAnswer": "2-3 sentences: exactly which questions were covered (cite the numbers/letters), what the student understood, and what remains. Be specific and honest. If 0 questions were completed, say that plainly.",
-  "conceptsCovered": ["only concepts the student actually engaged with — not the full topic list"],
-  "understoodWell": ["things the student demonstrably grasped — empty array if nothing was shown"],
+  "conceptsCovered": ["only concepts the student actually engaged with, not the full topic list"],
+  "understoodWell": ["things the student demonstrably grasped, empty array if nothing was shown"],
   "toRevisit": ["specific topics or question types still to work on"],
   "followUpQuestion": "One thought-provoking question tied to where they left off.",
   "gaps": ["specific knowledge gaps revealed in the session"],

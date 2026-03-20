@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { posthog } from "@/lib/posthog";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -38,6 +39,7 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     setStatus("creating");
+    posthog.capture('signup_started');
 
     const supabase = createSupabaseBrowserClient();
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -57,13 +59,18 @@ export default function SignupPage() {
 
     // No session = email confirmation is required. Show the "check your email" screen.
     if (!signUpData.session) {
+      posthog.capture('signup_completed');
       setConfirmEmail(email);
       setLoading(false);
       return;
     }
 
     // Session exists = email confirmation is off, or existing confirmed account.
-    // Check subscription then go to Stripe if needed.
+    // Identify and track signup, then check subscription.
+    if (signUpData.user) {
+      posthog.identify(signUpData.user.id, { email: signUpData.user.email, created_at: signUpData.user.created_at });
+      posthog.capture('signup_completed');
+    }
     setStatus("redirecting");
     try {
       const subRes = await fetch("/api/check-subscription");

@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, School } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Users } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { posthog } from "@/lib/posthog";
 
 interface Session {
   id: string;
@@ -39,6 +40,7 @@ function SidebarContent({
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
+    posthog.reset();
     router.push("/");
   };
 
@@ -279,7 +281,7 @@ function SidebarContent({
               : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
           }`}
         >
-          <School className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <Users className="w-3.5 h-3.5" strokeWidth={1.5} />
           Rooms
         </a>
         <a
