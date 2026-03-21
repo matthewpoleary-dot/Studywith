@@ -30,10 +30,11 @@ const SUBJECT_TO_POOL: Record<Subject, keyof typeof OPENING_MESSAGES> = {
 function detectSubject(text: string): Subject {
   const t = text.toLowerCase();
   if (/\b(algorithm|programming|code|python|javascript|java|c\+\+|database|software|html|css|function|loop|array|recursion|compiler|network|api|git)\b/.test(t)) return "Computer Science";
-  if (/\b(circuit|thermodynamics|mechanical|structural|stress|strain|fluid|engineering|cad|electronics|statics|dynamics|beam|torque|voltage|current)\b/.test(t)) return "Engineering";
+  if (/\b(circuit|thermodynamics|mechanical|structural|stress|strain|fluid|engineering|cad|electronics|statics|dynamics|beam|torque|voltage)\b/.test(t)) return "Engineering";
   if (/\b(economics|supply|demand|gdp|inflation|macroeconom|microeconom|fiscal|monetary|elasticity|equilibrium|market|trade)\b/.test(t)) return "Economics";
   if (/\b(psychology|behaviour|cognitive|memory|attachment|personality|experiment|mental|stimulus|response|piaget|freud|brain)\b/.test(t)) return "Psychology";
-  if (/\b(business|marketing|management|strategy|finance|accounting|revenue|profit|entrepreneur|stakeholder|swot|cash flow)\b/.test(t)) return "Business";
+  if (/\b(accounting|ledger|debit|credit|trial balance|balance sheet|income statement|profit.{0,5}loss|depreciation|amortis|accrual|prepaid|receivable|payable|non-current|nca|financial statement|double entry)\b/.test(t)) return "Business";
+  if (/\b(business|marketing|management|strategy|finance|revenue|profit|entrepreneur|stakeholder|swot|cash flow)\b/.test(t)) return "Business";
   if (/\b(art|design|colour|composition|painting|sculpture|photography|typography|texture|perspective|visual|aesthetic)\b/.test(t)) return "Art & Design";
   if (/\b(math|algebra|calculus|equation|differentiat|integrat|trigonometry|geometry|probability|statistics|vector|matrix|polynomial|logarithm|quadratic|times|multiply|divide|fraction|percentage|decimal|squared|cubed|factorial|prime|arithmetic|calculate)\b/.test(t) || /\d\s*[×÷+\-*/^]\s*\d/.test(t) || /\bwhat(?:'?s| is)\s+\d+/.test(t)) return "Maths";
   if (/\b(biology|chemistry|physics|photosynthesis|atom|molecule|cell|dna|evolution|force|energy|wave|element|compound|reaction|enzyme)\b/.test(t)) return "Science";
@@ -400,14 +401,28 @@ export default function TutorChat({
     }
 
     if (!finalAssignment) return;
+    const openerMessage = {
+      id: crypto.randomUUID(),
+      role: "tutor" as const,
+      content: mode === "corrector" ? getCorrectorOpeningMessage() : getOpeningMessage(subject),
+    };
     setIsSessionStarted(true);
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        role: "tutor",
-        content: mode === "corrector" ? getCorrectorOpeningMessage() : getOpeningMessage(subject),
-      },
-    ]);
+    setMessages([openerMessage]);
+
+    // Create the session in DB immediately so navigating away and back works
+    void fetch("/api/create-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignment: finalAssignment, messages: [openerMessage] }),
+    })
+      .then((r) => r.json())
+      .then((data: { sessionId?: string | null }) => {
+        if (data.sessionId) {
+          setSessionId(data.sessionId);
+          router.replace(`/app/session/${data.sessionId}`);
+        }
+      })
+      .catch(() => { /* non-critical — session will be created on first send as fallback */ });
   };
 
   const handleSend = async () => {
@@ -510,9 +525,9 @@ export default function TutorChat({
         sessionId: string | null;
       };
 
+      // Fallback: if session wasn't created in handleStart (e.g. autoFetchOpener), set it now
       if (!sessionId && data.sessionId) {
         setSessionId(data.sessionId);
-        router.replace(`/app/session/${data.sessionId}`);
       }
 
       setMessages((prev) => [
