@@ -245,8 +245,9 @@ export default function TutorChat({
   }, []);
 
   // Auto-start when arriving from a room assignment (?prefill=..&autoStart=1) or review link (?topic=...)
+  // Skip if we already have messages loaded from DB (reopened session)
   useEffect(() => {
-    if (!initialAssignment) return;
+    if (!initialAssignment || initialMessages.length > 0) return;
 
     if (autoFetchOpener) {
       // Room assignment: start session and fetch Sage's real opener (knows actual questions)
