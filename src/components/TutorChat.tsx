@@ -96,6 +96,18 @@ function getReviewOpeningMessage(topic: string): string {
   return opener(topic);
 }
 
+type SessionMode = "tutor" | "corrector";
+
+const CORRECTOR_OPENING_MESSAGES = [
+  "Share your answers and I'll mark them for you — correct, incorrect, or partially correct, with an explanation for each.",
+  "Ready to review your work. Paste your answers (all at once or one by one) and I'll give you direct feedback on each.",
+  "Let's go through your answers. Share what you've got and I'll tell you what's right, what needs fixing, and why.",
+];
+
+function getCorrectorOpeningMessage(): string {
+  return CORRECTOR_OPENING_MESSAGES[Math.floor(Math.random() * CORRECTOR_OPENING_MESSAGES.length)];
+}
+
 type TutorChatProps = {
   initialAssignment?: string;
   initialMessages?: TutorMessage[];
@@ -104,6 +116,7 @@ type TutorChatProps = {
   autoFetchOpener?: boolean;
   assignmentFileUrl?: string;
   assignmentFileName?: string;
+  initialMode?: SessionMode;
 };
 
 export default function TutorChat({
@@ -114,9 +127,11 @@ export default function TutorChat({
   autoFetchOpener = false,
   assignmentFileUrl,
   assignmentFileName,
+  initialMode = "tutor",
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
   const [subject, setSubject] = useState<Subject>(() => detectSubject(initialAssignment));
+  const [mode, setMode] = useState<SessionMode>(initialMode);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<TutorMessage[]>(initialMessages);
   const [isSessionStarted, setIsSessionStarted] = useState(initialMessages.length > 0);
@@ -390,7 +405,7 @@ export default function TutorChat({
       {
         id: crypto.randomUUID(),
         role: "tutor",
-        content: getOpeningMessage(subject),
+        content: mode === "corrector" ? getCorrectorOpeningMessage() : getOpeningMessage(subject),
       },
     ]);
   };
@@ -463,6 +478,7 @@ export default function TutorChat({
           subject,
           messages: [...messages, userMessage],
           sessionId,
+          mode,
           // User-attached image (base64); PDFs are already embedded as text
           ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
           // Room assignment image URL — only used if no user-attached image this turn
@@ -625,13 +641,47 @@ export default function TutorChat({
 
           {/* Subject auto-detected silently in background — no dropdown shown */}
 
+          {/* Mode selector */}
+          <div className="mb-5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-[#A8A29E] mb-2">Mode</p>
+            <div className="inline-flex rounded-xl border border-[#E7E5E4] bg-white p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setMode("tutor")}
+                className={`rounded-lg px-4 py-2 text-xs font-medium transition-all ${
+                  mode === "tutor"
+                    ? "bg-[#1A1A1A] text-white shadow-sm"
+                    : "text-[#57534E] hover:text-[#1A1A1A]"
+                }`}
+              >
+                Study with Sage
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("corrector")}
+                className={`rounded-lg px-4 py-2 text-xs font-medium transition-all ${
+                  mode === "corrector"
+                    ? "bg-[#1A1A1A] text-white shadow-sm"
+                    : "text-[#57534E] hover:text-[#1A1A1A]"
+                }`}
+              >
+                Check my answers
+              </button>
+            </div>
+            <p className="mt-1.5 text-[11px] text-[#A8A29E]">
+              {mode === "tutor"
+                ? "Sage guides you through the work with questions."
+                : "Share your completed answers and Sage will mark them."}
+            </p>
+          </div>
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => void handleStart()}
               disabled={!canStart || isExtracting}
               className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isExtracting ? "Reading file..." : "Start session"}
+              {isExtracting ? "Reading file..." : mode === "corrector" ? "Start marking" : "Start session"}
             </button>
 
             {/* Image upload button */}
@@ -659,6 +709,12 @@ export default function TutorChat({
       {/* Assignment strip */}
       <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
+          {/* Mode chip */}
+          {mode === "corrector" && (
+            <span className="shrink-0 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700 uppercase tracking-wide">
+              Corrector
+            </span>
+          )}
           {/* Subject chip */}
           {subject !== "General" && (
             <span className="shrink-0 rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-medium text-[#D97706] uppercase tracking-wide">
@@ -866,7 +922,7 @@ export default function TutorChat({
                   void handleSend();
                 }
               }}
-              placeholder="Write your response..."
+              placeholder={mode === "corrector" ? "Paste your answers here..." : "Write your response..."}
               rows={1}
               className="flex-1 resize-none bg-transparent text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] max-h-32"
               style={{ lineHeight: "1.5rem" }}
