@@ -83,6 +83,38 @@ export default async function SessionSummaryPage({
         )}
 
         <div className="space-y-4">
+          {/* Score card */}
+          {receipt.score > 0 && (
+            <section className={`rounded-2xl border p-5 flex items-center justify-between gap-4 ${
+              receipt.score >= 75 ? "bg-emerald-50 border-emerald-100" :
+              receipt.score >= 50 ? "bg-amber-50 border-amber-100" : "bg-red-50 border-red-100"
+            }`}>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E] mb-1">Learning score</p>
+                <div className={`font-serif text-4xl font-medium ${
+                  receipt.score >= 75 ? "text-emerald-600" :
+                  receipt.score >= 50 ? "text-[#D97706]" : "text-red-500"
+                }`}>
+                  {receipt.score}<span className="text-lg text-[#A8A29E] font-sans font-normal">/100</span>
+                </div>
+              </div>
+              {receipt.gritEarned !== undefined && receipt.gritEarned > 0 && (
+                <div className="flex items-center gap-2 bg-white/70 rounded-xl px-4 py-2.5">
+                  <span className="text-base leading-none">🔥</span>
+                  <div>
+                    <p className="text-xs font-semibold text-amber-700">+{receipt.gritEarned} Grit earned</p>
+                    <div className="mt-1 h-1.5 w-24 bg-amber-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#D97706] rounded-full"
+                        style={{ width: `${Math.min(100, (receipt.gritEarned / 50) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {/* 2. Assignment coverage bar */}
           {receipt.questionsTotal !== undefined && receipt.questionsTotal > 0 && (
             <section className="bg-white border border-[#E7E5E4] rounded-2xl p-5">
@@ -195,52 +227,36 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* Score + grit earned */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between py-1">
-            {receipt.score > 0 && (
-              <span className={`text-sm font-medium ${
-                receipt.score >= 75 ? "text-emerald-600" :
-                receipt.score >= 50 ? "text-[#D97706]" : "text-red-500"
-              }`}>
-                Learning score: {receipt.score}/100
-              </span>
+          {/* Action buttons */}
+          <div className="flex flex-col gap-3 pt-2">
+            {(receipt.toRevisit ?? receipt.gaps).length > 0 && (
+              <Link
+                href={`/app/new?prefill=${encodeURIComponent(`Let's work through the topics I need to review: ${(receipt.toRevisit ?? receipt.gaps).join(", ")}`)}&autoStart=1`}
+                className="inline-flex items-center justify-center gap-2 bg-[#D97706] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#D97706]/90 transition-all hover:scale-[1.01]"
+              >
+                Retake weak spots
+              </Link>
             )}
-            {receipt.gritEarned !== undefined && receipt.gritEarned > 0 && (
-              <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5 sm:ml-auto">
-                <span className="text-base leading-none">🔥</span>
-                <div>
-                  <p className="text-xs font-semibold text-amber-700">+{receipt.gritEarned} Grit earned</p>
-                  <div className="mt-1 h-1.5 w-28 bg-amber-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#D97706] rounded-full transition-all"
-                      style={{ width: `${Math.min(100, (receipt.gritEarned / 50) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/app/new"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.01]"
+              >
+                <span className="text-base leading-none">+</span>
+                New session
+              </Link>
+              <Link
+                href="/app"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-[#E7E5E4] text-[#57534E] rounded-xl px-6 py-3 text-sm font-medium hover:border-[#D97706]/40 hover:text-[#1A1A1A] transition-all"
+              >
+                Back to dashboard
+              </Link>
+            </div>
             <Link
               href={`/app/session/${id}`}
-              className="text-xs text-[#A8A29E] hover:text-[#57534E] transition underline underline-offset-2 sm:ml-3"
+              className="text-center text-xs text-[#A8A29E] hover:text-[#57534E] transition underline underline-offset-2"
             >
               View full chat
-            </Link>
-          </div>
-
-          {/* 7. Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Link
-              href="/app/new"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#1A1A1A]/80 transition-all hover:scale-[1.01]"
-            >
-              <span className="text-base leading-none">+</span>
-              Start a new session
-            </Link>
-            <Link
-              href="/app"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-[#E7E5E4] text-[#57534E] rounded-xl px-6 py-3 text-sm font-medium hover:border-[#D97706]/40 hover:text-[#1A1A1A] transition-all"
-            >
-              Back to dashboard
             </Link>
           </div>
         </div>

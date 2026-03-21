@@ -184,6 +184,9 @@ export async function POST(request: Request) {
     completion = await groq.chat.completions.create({ model, max_tokens: 512, messages: groqMessages as any });
   } catch (err) {
     console.error("[tutor] Groq error:", err);
+    if (err && typeof err === "object" && "status" in err && err.status === 429) {
+      return Response.json({ error: "Rate limited" }, { status: 429 });
+    }
     return Response.json({ error: "AI unavailable" }, { status: 502 });
   }
 

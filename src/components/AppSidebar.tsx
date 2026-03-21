@@ -264,13 +264,17 @@ function SidebarContent({
 
       {/* Footer: email + grit streak + nav + sign out */}
       <div className="px-3 py-4 border-t border-[#E7E5E4] space-y-1">
-        <div className="flex items-center justify-between px-4 mb-1">
-          <p className="text-xs text-[#A8A29E] truncate flex-1">{userEmail}</p>
-          {gritStreak > 0 && (
-            <span className="shrink-0 flex items-center gap-1 text-xs font-medium text-[#D97706]" title={`${gritStreak}-day streak`}>
-              🔥 {gritStreak}
-            </span>
-          )}
+        {gritStreak > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 mb-1 rounded-xl bg-amber-50 border border-amber-100">
+            <span className="text-base leading-none">🔥</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-amber-700">{gritStreak} day streak</p>
+              <p className="text-[10px] text-amber-600">Keep it going</p>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center px-4 mb-1">
+          <p className="text-xs text-[#A8A29E] truncate">{userEmail}</p>
         </div>
         <a
           href="/app/rooms"

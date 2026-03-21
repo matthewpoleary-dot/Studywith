@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Link,
+  CheckSquare,
   XCircle,
   ArrowRight,
   Users,
@@ -499,10 +500,10 @@ const Features = () => {
         "Every tutoring session is saved to your dashboard. See your progress across subjects over time.",
     },
     {
-      icon: Link,
-      title: "Shareable Receipts",
+      icon: CheckSquare,
+      title: "Answer Checker",
       description:
-        "Each learning receipt has a unique link. Share it with a teacher or parent to show exactly what you worked through.",
+        "Already done your work? Switch to marking mode and share your answers. Sage marks each one with direct feedback and explains what you got right and what needs work.",
     },
   ];
 
@@ -707,7 +708,7 @@ const Comparison = () => {
     { feature: "Builds genuine understanding", chatgpt: false, humanTutor: true, studywith: true },
     { feature: "Available 24/7", chatgpt: true, humanTutor: false, studywith: true },
     { feature: "Scored learning breakdown", chatgpt: false, humanTutor: false, studywith: true },
-    { feature: "Shareable session receipts", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Answer checker with direct marking", chatgpt: false, humanTutor: true, studywith: true },
     { feature: "Free to use", chatgpt: false, humanTutor: false, studywith: true },
   ];
 
@@ -854,7 +855,7 @@ const Pricing = () => {
     "Unlimited tutoring sessions",
     "Learning receipt after every session",
     "Full session history and dashboard",
-    "Shareable receipt links",
+    "Answer checker and marking mode",
     "Any subject or assignment type",
     "Cancel anytime, no contracts",
   ];

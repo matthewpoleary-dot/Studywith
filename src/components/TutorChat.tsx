@@ -469,22 +469,39 @@ export default function TutorChat({
     const pendingUrl = pendingImageUrlRef.current;
     if (pendingUrl) pendingImageUrlRef.current = null;
 
+    const apiBody = JSON.stringify({
+      assignment,
+      subject,
+      messages: [...messages, userMessage],
+      sessionId,
+      mode,
+      ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
+      ...(!pendingImage && pendingUrl && { imageUrl: pendingUrl }),
+    });
+
     try {
-      const response = await fetch("/api/tutor", {
+      let response = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assignment,
-          subject,
-          messages: [...messages, userMessage],
-          sessionId,
-          mode,
-          // User-attached image (base64); PDFs are already embedded as text
-          ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
-          // Room assignment image URL — only used if no user-attached image this turn
-          ...(!pendingImage && pendingUrl && { imageUrl: pendingUrl }),
-        }),
+        body: apiBody,
       });
+
+      // Auto-retry once on rate limit
+      if (response.status === 429) {
+        await new Promise((r) => setTimeout(r, 2500));
+        response = await fetch("/api/tutor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: apiBody,
+        });
+        if (response.status === 429) {
+          setMessages((prev) => [
+            ...prev,
+            { id: crypto.randomUUID(), role: "tutor" as const, content: "Sage is busy right now. Give it a few seconds and try again." },
+          ]);
+          return;
+        }
+      }
 
       if (!response.ok) throw new Error("Failed");
 
@@ -493,7 +510,10 @@ export default function TutorChat({
         sessionId: string | null;
       };
 
-      if (!sessionId && data.sessionId) setSessionId(data.sessionId);
+      if (!sessionId && data.sessionId) {
+        setSessionId(data.sessionId);
+        router.replace(`/app/session/${data.sessionId}`);
+      }
 
       setMessages((prev) => [
         ...prev,
@@ -774,7 +794,8 @@ export default function TutorChat({
               }}
               className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-white transition whitespace-nowrap"
             >
-              Back to tutoring
+              <span className="hidden sm:inline">Back to tutoring</span>
+              <span className="sm:hidden">Tutor</span>
             </button>
           )}
           <button
