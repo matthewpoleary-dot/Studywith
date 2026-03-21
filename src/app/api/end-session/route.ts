@@ -51,28 +51,33 @@ export async function POST(request: Request) {
 
   const receiptPrompt = `You are Sage, a study tutor generating a learning receipt. Return ONLY a valid JSON object with no markdown, preamble, or commentary.
 
-=== STEP 1: ANALYSE THE ASSIGNMENT SCOPE ===
-Read the assignment carefully. Count every distinct question, sub-question, and lettered/numbered part. For example, if there are 3 sections with (a)-(k), (a)-(f), and (a)-(e), the total is 22 sub-questions. Be precise: this number drives the score.
+=== STEP 1: IDENTIFY SESSION TYPE ===
+Is this a NUMBERED QUESTION SET (has numbered/lettered sub-questions like 1.1, (a), (b), Q2 etc.) or an OPEN-ENDED TOPIC SESSION (a topic, concept, or essay prompt with no discrete sub-questions)?
 
 === STEP 2: ANALYSE THE TRANSCRIPT ===
-Read the transcript carefully. For each question/sub-question in the assignment, determine:
-- COMPLETED: student gave a substantively correct or reasoned answer
-- ATTEMPTED: student tried but did not reach a correct answer
-- NOT REACHED: never discussed
+Read the transcript carefully. For each question or concept in the assignment, determine:
+- COMPLETED: student demonstrated correct understanding or gave a substantively correct/reasoned answer. A student who gives a correct real-world example, corrects their own misconception, or shows they grasp the concept counts as COMPLETED.
+- ATTEMPTED: student engaged genuinely but did not reach correct understanding
+- NOT REACHED: never discussed or student was entirely passive
 
-Count completed and attempted separately. A student who only asked "what does that mean?" and never gave an answer to any question has 0 completed and 0 attempted.
+IMPORTANT: If the tutor explicitly affirmed an answer ("Exactly right", "Great thinking", "You're on the right track", "Correct"), that question/concept is COMPLETED. Starting with a wrong answer but correcting to a right one = COMPLETED, not attempted.
 
-=== STEP 3: SCORE HONESTLY ===
-Score = (completed * 1.0 + attempted * 0.4) / total_questions * 100, then apply engagement modifier:
-- If the student showed genuine reasoning and progression, add up to 10 points
-- If the student was passive, guessing, or gave up, subtract up to 10 points
-- Minimum score: 5. Maximum: 98.
+=== STEP 3: SCORE ===
+For NUMBERED QUESTION SETS:
+Score = (completed * 1.0 + attempted * 0.6) / total_questions * 100
 
-Examples:
-- 0 questions answered, only asked for definitions → 5–15
-- 1 of 14 sub-questions completed with effort → 10–20
-- 7 of 14 completed with good reasoning → 45–60
-- 14 of 14 completed with strong understanding → 80–95
+For OPEN-ENDED TOPIC SESSIONS (topic explanations, essay prompts, concept exploration):
+Base the score on depth of understanding demonstrated:
+- Student was passive or showed no understanding → 15–30
+- Student engaged but showed only surface understanding → 35–50
+- Student engaged well, showed partial correct understanding, made progress → 55–70
+- Student showed solid understanding of the main concept with correct examples/reasoning → 65–80
+- Student demonstrated strong, nuanced understanding throughout → 80–93
+
+Then apply engagement modifier (both session types):
+- Student showed genuine reasoning, corrected misconceptions, or had breakthrough moments: +5 to +15
+- Student was passive, only guessed, or gave up easily: -5 to -15
+- Minimum score: 10. Maximum: 98.
 
 === OUTPUT ===
 {
