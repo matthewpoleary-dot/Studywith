@@ -661,47 +661,13 @@ export default function TutorChat({
 
           {/* Subject auto-detected silently in background — no dropdown shown */}
 
-          {/* Mode selector */}
-          <div className="mb-5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-[#A8A29E] mb-2">Mode</p>
-            <div className="inline-flex rounded-xl border border-[#E7E5E4] bg-white p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => setMode("tutor")}
-                className={`rounded-lg px-4 py-2 text-xs font-medium transition-all ${
-                  mode === "tutor"
-                    ? "bg-[#1A1A1A] text-white shadow-sm"
-                    : "text-[#57534E] hover:text-[#1A1A1A]"
-                }`}
-              >
-                Study with Sage
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("corrector")}
-                className={`rounded-lg px-4 py-2 text-xs font-medium transition-all ${
-                  mode === "corrector"
-                    ? "bg-[#1A1A1A] text-white shadow-sm"
-                    : "text-[#57534E] hover:text-[#1A1A1A]"
-                }`}
-              >
-                Check my answers
-              </button>
-            </div>
-            <p className="mt-1.5 text-[11px] text-[#A8A29E]">
-              {mode === "tutor"
-                ? "Sage guides you through the work with questions."
-                : "Share your completed answers and Sage will mark them."}
-            </p>
-          </div>
-
           <div className="flex items-center gap-3">
             <button
               onClick={() => void handleStart()}
               disabled={!canStart || isExtracting}
               className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isExtracting ? "Reading file..." : mode === "corrector" ? "Start marking" : "Start session"}
+              {isExtracting ? "Reading file..." : "Start session"}
             </button>
 
             {/* Image upload button */}
