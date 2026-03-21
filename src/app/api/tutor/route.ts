@@ -189,6 +189,18 @@ export async function POST(request: Request) {
 
   const content = completion.choices[0]?.message?.content ?? "";
 
+  // Persist the complete conversation including the AI response so nothing is lost on navigation
+  if (sessionId && content) {
+    const tutorMessage: TutorMessage = { id: crypto.randomUUID(), role: "tutor", content };
+    const fullMessages = JSON.parse(JSON.stringify([...body.messages, tutorMessage])) as Database["public"]["Tables"]["sessions"]["Insert"]["messages"];
+    await getSupabaseAdmin()
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ messages: fullMessages } as any)
+      .eq("id", sessionId)
+      .eq("user_id", user.id);
+  }
+
   return Response.json(
     { content, sessionId },
     { headers: { "X-Session-Id": sessionId ?? "" } },

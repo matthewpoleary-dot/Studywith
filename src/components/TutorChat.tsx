@@ -741,6 +741,25 @@ export default function TutorChat({
               Questions
             </button>
           )}
+          {/* Check answers toggle — only shown in tutor mode */}
+          {mode === "tutor" && (
+            <button
+              onClick={() => {
+                setMode("corrector");
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: crypto.randomUUID(),
+                    role: "tutor" as const,
+                    content: "Switching to marking mode. Share your completed answers — text or a photo of your work — and I'll go through them for you.",
+                  },
+                ]);
+              }}
+              className="shrink-0 rounded-lg border border-[#E7E5E4] px-3 py-1.5 text-xs font-medium text-[#57534E] hover:border-emerald-400 hover:text-emerald-700 transition whitespace-nowrap"
+            >
+              Check answers
+            </button>
+          )}
           <button
             onClick={() => void handleEndSession()}
             disabled={messages.length === 0 || isEnding || !sessionId}
