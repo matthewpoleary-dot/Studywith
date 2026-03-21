@@ -741,8 +741,8 @@ export default function TutorChat({
               Questions
             </button>
           )}
-          {/* Check answers toggle — only shown in tutor mode */}
-          {mode === "tutor" && (
+          {/* Mode toggle buttons */}
+          {mode === "tutor" ? (
             <button
               onClick={() => {
                 setMode("corrector");
@@ -758,6 +758,23 @@ export default function TutorChat({
               className="shrink-0 rounded-lg border border-[#E7E5E4] px-3 py-1.5 text-xs font-medium text-[#57534E] hover:border-emerald-400 hover:text-emerald-700 transition whitespace-nowrap"
             >
               Check answers
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setMode("tutor");
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: crypto.randomUUID(),
+                    role: "tutor" as const,
+                    content: "Back to tutor mode. What would you like to work through?",
+                  },
+                ]);
+              }}
+              className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-white transition whitespace-nowrap"
+            >
+              Back to tutoring
             </button>
           )}
           <button
