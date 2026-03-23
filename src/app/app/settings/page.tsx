@@ -3,13 +3,32 @@
 import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import CheckoutButton from "@/components/CheckoutButton";
 
-type Tab = "account" | "profile" | "tutor";
+type Tab = "account" | "profile" | "tutor" | "plan";
+
+type PlanInfo =
+  | { subscribed: false }
+  | {
+      subscribed: true;
+      trialing: boolean;
+      interval: "month" | "year";
+      amount: number;
+      currency: string;
+      currentPeriodEnd: number;
+      trialEnd: number | null;
+    };
 
 const SAGE_AVATARS = ["🦊", "🐻", "🦁", "🐺", "🦋", "🐸", "🦜", "🐼"] as const;
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>("account");
+  const [tab, setTab] = useState<Tab>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("tab");
+      if (p === "account" || p === "profile" || p === "tutor" || p === "plan") return p;
+    }
+    return "account";
+  });
   const [user, setUser] = useState<User | null>(null);
 
   // Account tab
@@ -47,6 +66,11 @@ export default function SettingsPage() {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarDone, setAvatarDone] = useState(false);
 
+  // Plan tab
+  const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -60,6 +84,27 @@ export default function SettingsPage() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (tab !== "plan" || planInfo !== null) return;
+    setPlanLoading(true);
+    fetch("/api/stripe/plan-info")
+      .then((r) => r.json())
+      .then((data: PlanInfo) => setPlanInfo(data))
+      .catch(() => setPlanInfo({ subscribed: false }))
+      .finally(() => setPlanLoading(false));
+  }, [tab, planInfo]);
+
+  const handleManageBilling = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/billing-portal", { method: "POST" });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,6 +245,7 @@ export default function SettingsPage() {
             ["account", "Account"],
             ["profile", "Personal information"],
             ["tutor", "Tutor"],
+            ["plan", "My plan"],
           ] as [Tab, string][]
         ).map(([id, label]) => (
           <button
@@ -451,6 +497,188 @@ export default function SettingsPage() {
               {avatarDone && <span className="text-xs text-green-600">Saved.</span>}
             </div>
           </section>
+        </div>
+      )}
+
+      {/* Plan tab */}
+      {tab === "plan" && (
+        <div className="space-y-6">
+          {planLoading ? (
+            <div className="flex items-center justify-center py-16 text-[#A8A29E] text-sm">
+              Loading plan details…
+            </div>
+          ) : planInfo?.subscribed ? (
+            <>
+              {/* Active / trialing plan card */}
+              <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div>
+                    <h2 className="font-medium text-[#1A1A1A] mb-1">
+                      StudyWith Pro
+                      {planInfo.interval === "year" ? " — Annual" : " — Monthly"}
+                    </h2>
+                    <p className="text-sm text-[#57534E]">
+                      {planInfo.trialing
+                        ? "You're currently on a free trial."
+                        : "Your subscription is active."}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-xs font-semibold px-3 py-1 rounded-full ${
+                      planInfo.trialing
+                        ? "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    }`}
+                  >
+                    {planInfo.trialing ? "Trial" : "Active"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-[#FAFAF8] rounded-xl px-4 py-3">
+                    <p className="text-xs text-[#A8A29E] mb-1 uppercase tracking-wide font-medium">
+                      Price
+                    </p>
+                    <p className="text-sm font-medium text-[#1A1A1A]">
+                      {new Intl.NumberFormat("en-IE", {
+                        style: "currency",
+                        currency: planInfo.currency.toUpperCase(),
+                      }).format(planInfo.amount / 100)}
+                      <span className="text-[#A8A29E] font-normal">
+                        {" "}/ {planInfo.interval === "year" ? "year" : "month"}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="bg-[#FAFAF8] rounded-xl px-4 py-3">
+                    <p className="text-xs text-[#A8A29E] mb-1 uppercase tracking-wide font-medium">
+                      {planInfo.trialing && planInfo.trialEnd
+                        ? "Trial ends"
+                        : "Next renewal"}
+                    </p>
+                    <p className="text-sm font-medium text-[#1A1A1A]">
+                      {new Date(
+                        ((planInfo.trialing && planInfo.trialEnd
+                          ? planInfo.trialEnd
+                          : planInfo.currentPeriodEnd) ?? 0) * 1000,
+                      ).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => void handleManageBilling()}
+                  disabled={portalLoading}
+                  className="rounded-full border border-[#E7E5E4] bg-white px-5 py-2.5 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F4F0] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {portalLoading ? "Opening…" : "Manage billing →"}
+                </button>
+              </section>
+
+              {/* Upgrade to annual if currently monthly */}
+              {!planInfo.trialing && planInfo.interval === "month" && (
+                <section className="bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-100 rounded-2xl p-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">💡</span>
+                    <h2 className="font-medium text-[#1A1A1A]">Save with annual billing</h2>
+                  </div>
+                  <p className="text-sm text-[#57534E] mb-4">
+                    Switch to an annual plan and save over 40% — just €7.42/month.
+                  </p>
+                  <CheckoutButton
+                    plan="annual"
+                    label="Switch to Annual — €89/yr"
+                    className="inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition disabled:opacity-60"
+                  />
+                </section>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Unsubscribed — upgrade options */}
+              <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-[#A8A29E] shrink-0" />
+                  <h2 className="font-medium text-[#1A1A1A]">Free tier</h2>
+                </div>
+                <p className="text-sm text-[#57534E]">
+                  You&apos;re currently on the free tier. Upgrade to unlock unlimited sessions.
+                </p>
+              </section>
+
+              <h3 className="font-medium text-[#1A1A1A] text-sm">Choose a plan</h3>
+
+              {/* Trial card */}
+              <section className="bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-100 rounded-2xl p-6">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-medium text-[#1A1A1A] mb-0.5">Free 7-day trial</p>
+                    <p className="text-sm text-[#57534E]">
+                      Try everything free for 7 days. No charge until the trial ends.
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                    Free
+                  </span>
+                </div>
+                <p className="text-xs text-[#A8A29E] mb-4">Then €12.99/month — cancel anytime.</p>
+                <CheckoutButton
+                  plan="trial"
+                  label="Start free trial"
+                  className="inline-flex items-center justify-center rounded-full bg-[#D97706] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#B45309] transition disabled:opacity-60"
+                />
+              </section>
+
+              {/* Monthly card */}
+              <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-medium text-[#1A1A1A] mb-0.5">Monthly</p>
+                    <p className="text-sm text-[#57534E]">
+                      Unlimited sessions, month by month. Cancel anytime.
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-[#1A1A1A]">
+                    €12.99<span className="text-xs font-normal text-[#A8A29E]">/mo</span>
+                  </span>
+                </div>
+                <CheckoutButton
+                  plan="monthly"
+                  label="Subscribe monthly"
+                  className="inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition disabled:opacity-60"
+                />
+              </section>
+
+              {/* Annual card */}
+              <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="font-medium text-[#1A1A1A]">Annual</p>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Save 43%
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#57534E]">
+                      Best value — just €7.42 per month, billed annually.
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-[#1A1A1A]">
+                    €89<span className="text-xs font-normal text-[#A8A29E]">/yr</span>
+                  </span>
+                </div>
+                <CheckoutButton
+                  plan="annual"
+                  label="Subscribe annually"
+                  className="inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition disabled:opacity-60"
+                />
+              </section>
+            </>
+          )}
         </div>
       )}
     </div>
