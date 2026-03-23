@@ -610,7 +610,7 @@ export default function TutorChat({
           onChange={handleImageSelect}
         />
         <div className="w-full max-w-xl mx-auto">
-          <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
+          <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-2 leading-tight">
             What are we working on?
           </h1>
           <p className="text-sm text-[#57534E] mb-6 leading-relaxed">
@@ -657,7 +657,7 @@ export default function TutorChat({
                 : "e.g. 'Explain the causes of WW1' or paste your assignment directly..."
             }
             rows={6}
-            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition mb-3 shadow-sm"
+            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706]/70 focus:ring-2 focus:ring-[#D97706]/20 transition-all mb-3 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]"
           />
 
           {/* Helper text — shown when textarea is empty */}
@@ -697,7 +697,7 @@ export default function TutorChat({
             <button
               onClick={() => void handleStart()}
               disabled={!canStart || isExtracting}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition-all shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {isExtracting ? "Reading file..." : "Start session"}
             </button>
@@ -705,7 +705,7 @@ export default function TutorChat({
             {/* Image upload button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-full border border-[#E7E5E4] px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706] hover:text-[#D97706] transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#E7E5E4] bg-white px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706]/60 hover:text-[#D97706] transition-all shadow-sm"
               title="Upload image or PDF of assignment"
             >
               <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
@@ -889,7 +889,7 @@ export default function TutorChat({
                 className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                   m.role === "student"
                     ? "bg-[#1A1A1A] text-white rounded-br-sm"
-                    : "bg-white border border-[#E7E5E4] text-[#1A1A1A] rounded-bl-sm shadow-sm"
+                    : "bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A] rounded-bl-sm shadow-[0_1px_4px_-2px_rgba(0,0,0,0.07)]"
                 }`}
               >
                 {getDisplayContent(m.content)}
@@ -906,7 +906,7 @@ export default function TutorChat({
                 </div>
                 <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
               </div>
-              <div className="bg-white border border-[#E7E5E4] rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+              <div className="bg-[#FAFAF8] border border-[#EDECEA] rounded-2xl rounded-bl-sm px-4 py-3 shadow-[0_1px_4px_-2px_rgba(0,0,0,0.07)]">
                 <div className="flex gap-1.5 items-center h-4">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:0ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:150ms]" />
@@ -965,7 +965,7 @@ export default function TutorChat({
             </div>
           )}
 
-          <div className="flex items-end gap-3 bg-white border border-[#E7E5E4] rounded-2xl px-4 py-3 shadow-sm focus-within:border-[#D97706] focus-within:ring-1 focus-within:ring-[#D97706]/30 transition">
+          <div className="flex items-end gap-3 bg-white border border-[#E7E5E4] rounded-2xl px-4 py-3 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] focus-within:border-[#D97706]/70 focus-within:ring-2 focus-within:ring-[#D97706]/20 transition-all">
             <textarea
               ref={textareaRef}
               value={input}
@@ -993,7 +993,7 @@ export default function TutorChat({
             <button
               type="submit"
               disabled={(!input.trim() && !imageBase64) || isLoading}
-              className="h-8 w-8 shrink-0 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#1A1A1A]/80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 shrink-0 rounded-xl bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#1A1A1A]/80 transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100"
             >
               <Send className="w-3.5 h-3.5" strokeWidth={2} />
             </button>

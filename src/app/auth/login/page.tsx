@@ -182,18 +182,18 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex items-center justify-center px-6 py-12">
+    <div className="flex items-center justify-center px-6 py-10 md:py-16">
       <div className="w-full max-w-sm">
-        <div className="mb-8">
+        <div className="mb-7">
           <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
             Welcome back
           </h1>
-          <p className="text-sm text-[#57534E]">
+          <p className="text-sm text-[#57534E] leading-relaxed">
             Sign in to continue your tutoring sessions.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-7 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08),0_1px_4px_-2px_rgba(0,0,0,0.04)]">
           <Suspense>
             <LoginForm />
           </Suspense>

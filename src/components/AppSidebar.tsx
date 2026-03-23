@@ -129,7 +129,7 @@ function SidebarContent({
         <a
           href="/app/new"
           onClick={onNav}
-          className="flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/80 transition"
+          className="flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 transition-all shadow-sm hover:shadow-md"
         >
           <Plus className="w-4 h-4 shrink-0" strokeWidth={2} />
           New session
@@ -237,9 +237,12 @@ function SidebarContent({
               {/* In-progress sessions */}
               {inProgress.length > 0 && (
                 <>
-                  <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-2 uppercase tracking-widest">
-                    Continue
-                  </p>
+                  <div className="flex items-center gap-2 px-4 pt-3 pb-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
+                    <p className="text-[10px] font-semibold text-[#A8A29E] uppercase tracking-widest">
+                      Continue
+                    </p>
+                  </div>
                   <div className="space-y-0.5">
                     {inProgress.map((s) => renderItem(s, true))}
                   </div>
@@ -249,7 +252,7 @@ function SidebarContent({
               {/* Completed sessions */}
               {completed.length > 0 && (
                 <>
-                  <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-2 uppercase tracking-widest">
+                  <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-1.5 uppercase tracking-widest">
                     History
                   </p>
                   <div className="space-y-0.5">
@@ -265,11 +268,11 @@ function SidebarContent({
       {/* Footer: email + grit streak + nav + sign out */}
       <div className="px-3 py-4 border-t border-[#E7E5E4] space-y-1">
         {gritStreak > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 mb-1 rounded-xl bg-amber-50 border border-amber-100">
+          <div className="flex items-center gap-2.5 px-4 py-2.5 mb-1 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-100/80 shadow-sm">
             <span className="text-base leading-none">🔥</span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-amber-700">{gritStreak} day streak</p>
-              <p className="text-[10px] text-amber-600">Keep it going</p>
+              <p className="text-[10px] text-amber-500">Keep it going</p>
             </div>
           </div>
         )}
@@ -426,7 +429,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
               href="/app/new"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             >
-              <div className="w-11 h-11 rounded-full bg-[#1A1A1A] flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 rounded-2xl bg-[#1A1A1A] flex items-center justify-center shadow-lg">
                 <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
               </div>
             </a>

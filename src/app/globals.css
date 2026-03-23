@@ -20,6 +20,28 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D6D3D1;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A8A29E;
+}
+
+/* Text selection */
+::selection {
+  background-color: rgba(217, 119, 6, 0.15);
+  color: inherit;
+}
+
 html,
 body {
   height: 100%;

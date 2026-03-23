@@ -322,13 +322,17 @@ const Hero = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <section className="pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24">
-      <div className="max-w-7xl mx-auto">
+    <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24 overflow-hidden">
+      {/* Warm radial glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_-5%_0%,rgba(217,119,6,0.07),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_30%_at_100%_80%,rgba(217,119,6,0.04),transparent_70%)]" />
+      <div className="max-w-7xl mx-auto relative">
         <div className="max-w-4xl">
-          {/* Attribution */}
-          <p className="text-sm text-[#57534E] font-medium mb-6">
-            Built by a Trinity College Dublin student, for students who actually want to understand their work.
-          </p>
+          {/* Trust badge */}
+          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-full px-4 py-1.5 mb-7">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
+            <span className="text-xs font-medium text-[#57534E]">Built by a Trinity College Dublin student</span>
+          </div>
 
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
             Learn to <em className="italic text-[#D97706]">think</em>, not just
@@ -340,14 +344,16 @@ const Hero = () => {
             assignment and work through it until you genuinely understand it.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
-            <CheckoutButton
-              label="Get started"
-              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
+            <div className="sm:flex-none sm:w-auto">
+              <CheckoutButton
+                label="Get started free"
+                className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
+              />
+            </div>
             <button
               onClick={() => { scrollToSection("how-it-works"); posthog.capture('see_how_it_works_clicked'); }}
-              className="inline-flex items-center gap-2 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-5 py-2 text-sm font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
+              className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
             >
               See how it works
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
@@ -364,7 +370,6 @@ const Hero = () => {
             </a>
           </p>
         </div>
-
       </div>
     </section>
   );
