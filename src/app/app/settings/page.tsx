@@ -421,19 +421,6 @@ export default function SettingsPage() {
       {/* Tutor tab */}
       {tab === "tutor" && (
         <div className="space-y-6">
-          {/* Free early access card */}
-          <section className="bg-[#FDFCF8] border border-[#E7E5E4] rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Early access
-              </span>
-            </div>
-            <p className="text-sm text-[#57534E] mt-3">
-              StudyWith is free while we&apos;re in early access. Thanks for being here.
-            </p>
-          </section>
-
           {/* Sage avatar picker */}
           <section className="bg-white border border-[#E7E5E4] rounded-2xl p-6">
             <h2 className="font-medium text-[#1A1A1A] mb-1">Sage&apos;s avatar</h2>

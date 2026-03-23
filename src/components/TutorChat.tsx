@@ -118,6 +118,7 @@ type TutorChatProps = {
   assignmentFileUrl?: string;
   assignmentFileName?: string;
   initialMode?: SessionMode;
+  roomId?: string;
 };
 
 export default function TutorChat({
@@ -129,6 +130,7 @@ export default function TutorChat({
   assignmentFileUrl,
   assignmentFileName,
   initialMode = "tutor",
+  roomId,
 }: TutorChatProps = {}) {
   const [assignment, setAssignment] = useState(initialAssignment);
   const [subject, setSubject] = useState<Subject>(() => detectSubject(initialAssignment));
@@ -402,6 +404,19 @@ export default function TutorChat({
     }
 
     if (!finalAssignment) return;
+
+    // Freemium gate: check if user has remaining free sessions
+    try {
+      const gateRes = await fetch("/api/freemium-check");
+      const gate = (await gateRes.json()) as { allowed: boolean; reason?: string };
+      if (!gate.allowed) {
+        router.push("/upgrade");
+        return;
+      }
+    } catch {
+      // Non-critical — if check fails, allow the session to start
+    }
+
     const openerMessage = {
       id: crypto.randomUUID(),
       role: "tutor" as const,
@@ -414,7 +429,7 @@ export default function TutorChat({
     void fetch("/api/create-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assignment: finalAssignment, messages: [openerMessage] }),
+      body: JSON.stringify({ assignment: finalAssignment, messages: [openerMessage], roomId }),
     })
       .then((r) => r.json())
       .then((data: { sessionId?: string | null }) => {
@@ -491,6 +506,7 @@ export default function TutorChat({
       messages: [...messages, userMessage],
       sessionId,
       mode,
+      ...(roomId ? { roomId } : {}),
       ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
       ...(!pendingImage && pendingUrl && { imageUrl: pendingUrl }),
     });

@@ -58,6 +58,7 @@ export type Database = {
           title: string | null;
           messages: Json;
           receipt: Json | null;
+          room_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -67,12 +68,14 @@ export type Database = {
           title?: string | null;
           messages?: Json;
           receipt?: Json | null;
+          room_id?: string | null;
           created_at?: string;
         };
         Update: {
           title?: string | null;
           messages?: Json;
           receipt?: Json | null;
+          room_id?: string | null;
         };
         Relationships: [];
       };
@@ -118,8 +121,7 @@ export type Database = {
           room_id: string;
           title: string;
           content: string;
-          image_base64: string | null;
-          image_mime: string | null;
+          image_url: string | null;
           file_url: string | null;
           file_name: string | null;
           file_type: string | null;
@@ -130,8 +132,7 @@ export type Database = {
           room_id: string;
           title: string;
           content: string;
-          image_base64?: string | null;
-          image_mime?: string | null;
+          image_url?: string | null;
           file_url?: string | null;
           file_name?: string | null;
           file_type?: string | null;
@@ -140,6 +141,7 @@ export type Database = {
         Update: {
           title?: string;
           content?: string;
+          image_url?: string | null;
           file_url?: string | null;
           file_name?: string | null;
           file_type?: string | null;

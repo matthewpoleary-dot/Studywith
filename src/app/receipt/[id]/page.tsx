@@ -27,7 +27,7 @@ export default async function ReceiptPage({ params }: Props) {
             href="/app"
             className="rounded-full border border-[#E7E5E4] px-4 py-2 text-sm font-medium text-[#57534E] transition-all hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
           >
-            ← Dashboard
+            Open StudyWith
           </a>
         </div>
       </header>

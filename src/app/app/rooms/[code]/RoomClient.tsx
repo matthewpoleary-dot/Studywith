@@ -11,8 +11,7 @@ type Assignment = {
   id: string;
   title: string;
   content: string;
-  image_base64?: string | null;
-  image_mime?: string | null;
+  image_url?: string | null;
   file_url?: string | null;
   file_name?: string | null;
   file_type?: string | null;
@@ -373,12 +372,15 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
       }
     } else if (assignment.file_url) {
       parts.push(`[Attached file: ${assignment.file_name ?? assignment.file_url}]`);
-    } else if (assignment.image_base64 && assignment.image_mime?.startsWith("image/")) {
-      parts.push("[Your teacher has attached an image to this assignment. Describe what you see in it or paste the questions here.]");
+    } else if (assignment.image_url) {
+      // Pass image URL so Sage can see it via vision model
+      params.set("imageUrl", assignment.image_url);
     }
 
     params.set("prefill", parts.join("\n\n").slice(0, 8000));
     params.set("autoStart", "1");
+    // Pass room ID so the session is linked to this room
+    if (data?.room?.id) params.set("roomId", data.room.id);
     // Pass original file URL + name so TutorChat can show the PDF toggle panel
     if (assignment.file_url && isPdf) {
       params.set("fileUrl", assignment.file_url);
@@ -434,6 +436,12 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
               <div className="flex items-center gap-2 flex-wrap">
                 <CopyButton text={room.code} label="Copy code" small />
                 <CopyButton text={`${INVITE_BASE}/${room.code}`} label="Copy invite link" small />
+                <Link
+                  href={`/app/rooms/${room.code}/analytics`}
+                  className="inline-flex items-center gap-1.5 border border-[#1A1A1A] text-[#1A1A1A] rounded-full px-3 py-1 text-xs font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-200"
+                >
+                  Analytics
+                </Link>
               </div>
             )}
           </div>
@@ -555,14 +563,14 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-[#F5F4F0] flex items-center justify-center shrink-0">
-                          {fileIcon(a.file_type ?? a.image_mime)}
+                          {fileIcon(a.file_type)}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-[#1A1A1A]">{a.title}</p>
                           <p className="text-xs text-[#A8A29E] mt-0.5">
                             {new Date(a.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                            {(a.file_name ?? a.image_mime) && (
-                              <span> &middot; {fileLabel(a.file_type ?? a.image_mime, a.file_name)}</span>
+                            {(a.file_name ?? a.image_url) && (
+                              <span> &middot; {fileLabel(a.file_type, a.file_name) || "Image"}</span>
                             )}
                           </p>
                         </div>
@@ -627,29 +635,13 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                           </div>
                         )}
 
-                        {/* Legacy base64 support (images and PDFs stored before Storage migration) */}
-                        {!a.file_url && a.image_base64 && (
-                          a.image_mime?.includes("pdf") ? (
-                            <div className="space-y-3">
-                              <object
-                                data={`data:application/pdf;base64,${a.image_base64}`}
-                                type="application/pdf"
-                                className="w-full rounded-xl border border-[#E7E5E4]"
-                                style={{ height: "520px" }}
-                              >
-                                <div className="flex flex-col items-center justify-center h-40 bg-[#F5F4F0] rounded-xl gap-3">
-                                  <FileText className="w-8 h-8 text-red-400" strokeWidth={1.5} />
-                                  <p className="text-sm text-[#57534E]">PDF cannot be previewed in this browser.</p>
-                                </div>
-                              </object>
-                            </div>
-                          ) : (
-                            <img
-                              src={`data:${a.image_mime ?? "image/jpeg"};base64,${a.image_base64}`}
-                              alt="Assignment"
-                              className="rounded-xl border border-[#E7E5E4] max-w-full"
-                            />
-                          )
+                        {/* Inline image_url (Storage-backed) */}
+                        {!a.file_url && a.image_url && (
+                          <img
+                            src={a.image_url}
+                            alt="Assignment image"
+                            className="rounded-xl border border-[#E7E5E4] max-w-full"
+                          />
                         )}
 
                         <div className="flex items-center gap-3 pt-1 flex-wrap">
@@ -796,7 +788,7 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
             {/* Replace file */}
             <div>
               <p className="text-xs text-[#A8A29E] mb-2">
-                {editingAssignment.file_url || editingAssignment.image_base64
+                {editingAssignment.file_url || editingAssignment.image_url
                   ? "Replace file (optional)"
                   : "Attach file (optional)"}
               </p>
@@ -806,7 +798,7 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
                   className="w-full flex items-center justify-center gap-2 border border-dashed border-[#E7E5E4] rounded-xl py-3 text-xs text-[#A8A29E] hover:border-[#D97706]/40 hover:text-[#57534E] transition"
                 >
                   <Upload className="w-4 h-4" strokeWidth={1.5} />
-                  {editingAssignment.file_name ?? (editingAssignment.image_base64 ? "Current file attached" : "Click to attach")}
+                  {editingAssignment.file_name ?? (editingAssignment.image_url ? "Current image attached" : "Click to attach")}
                 </button>
               ) : (
                 <div className="flex items-center gap-3 bg-[#F5F4F0] border border-[#E7E5E4] rounded-xl px-4 py-2.5">

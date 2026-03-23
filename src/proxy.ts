@@ -58,7 +58,7 @@ export async function proxy(request: NextRequest) {
     await adminClient
       .from("users")
       .upsert(
-        { id: user.id, email: user.email ?? "", subscribed: true },
+        { id: user.id, email: user.email ?? "", subscribed: false },
         { onConflict: "id" },
       );
   }

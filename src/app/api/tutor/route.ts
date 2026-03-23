@@ -74,6 +74,7 @@ type RequestBody = {
   imageMime?: string;
   imageUrl?: string;
   mode?: "tutor" | "corrector";
+  roomId?: string;
 };
 
 export async function POST(request: Request) {
@@ -103,6 +104,43 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ── Per-user rate limit: 30 requests per minute ───────────────────────────
+  // Uses the rate_limits table (see supabase/migrations/001_professionalization.sql)
+  const RATE_LIMIT = 30;
+  const bucket = new Date().toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  try {
+    const admin = getSupabaseAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rlTable = admin.from("rate_limits") as any;
+
+    // Fetch existing count for this minute bucket
+    const { data: existing } = await rlTable
+      .select("count")
+      .eq("user_id", user.id)
+      .eq("bucket", bucket)
+      .single();
+
+    if (existing) {
+      const currentCount = (existing as { count: number }).count;
+      if (currentCount >= RATE_LIMIT) {
+        return Response.json({ error: "Rate limited" }, { status: 429 });
+      }
+      // Increment
+      await rlTable
+        .update({ count: currentCount + 1 })
+        .eq("user_id", user.id)
+        .eq("bucket", bucket);
+    } else {
+      // Insert new bucket row
+      await rlTable.insert({ user_id: user.id, bucket, count: 1 });
+    }
+    // Clean up buckets older than 10 minutes (best-effort, non-blocking)
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString().slice(0, 16);
+    void rlTable.delete().lt("bucket", tenMinAgo);
+  } catch {
+    // Rate limit check failed — allow through to avoid blocking legitimate users
+  }
+
   // Map messages — drop leading assistant messages (OpenAI requires user-first)
   const allMapped = body.messages
     .filter((m) => m.role === "student" || m.role === "tutor")
@@ -124,6 +162,7 @@ export async function POST(request: Request) {
         user_id: user.id,
         assignment_text: body.assignment,
         messages: messagesJson,
+        ...(body.roomId ? { room_id: body.roomId } : {}),
       })
       .select("id")
       .single();

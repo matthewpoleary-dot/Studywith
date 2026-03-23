@@ -55,7 +55,7 @@ export async function PATCH(request: Request) {
       ...(body.fileUrl !== undefined ? { file_url: body.fileUrl, file_name: body.fileName ?? null, file_type: body.fileType ?? null } : {}),
     })
     .eq("id", body.assignmentId)
-    .select("id, title, content, file_url, file_name, file_type, image_base64, image_mime, created_at")
+    .select("id, title, content, image_url, file_url, file_name, file_type, created_at")
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });

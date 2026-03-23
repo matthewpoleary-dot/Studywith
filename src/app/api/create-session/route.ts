@@ -21,9 +21,10 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { assignment, messages } = (await request.json()) as {
+  const { assignment, messages, roomId } = (await request.json()) as {
     assignment: string;
     messages: Database["public"]["Tables"]["sessions"]["Insert"]["messages"];
+    roomId?: string;
   };
 
   const { data: session } = await getSupabaseAdmin()
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       user_id: user.id,
       assignment_text: assignment,
       messages,
+      ...(roomId ? { room_id: roomId } : {}),
     })
     .select("id")
     .single();

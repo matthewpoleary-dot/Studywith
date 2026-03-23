@@ -19,8 +19,7 @@ export async function POST(request: Request) {
     roomId: string;
     title: string;
     content: string;
-    imageBase64?: string;
-    imageMime?: string;
+    imageUrl?: string;
     fileUrl?: string;
     fileName?: string;
     fileType?: string;
@@ -49,10 +48,10 @@ export async function POST(request: Request) {
       room_id: body.roomId,
       title: body.title.trim(),
       content: body.content ?? "",
-      ...(body.imageBase64 ? { image_base64: body.imageBase64, image_mime: body.imageMime ?? "image/jpeg" } : {}),
+      ...(body.imageUrl ? { image_url: body.imageUrl } : {}),
       ...(body.fileUrl ? { file_url: body.fileUrl, file_name: body.fileName ?? "", file_type: body.fileType ?? "" } : {}),
     })
-    .select("id, title, content, file_url, file_name, file_type, created_at")
+    .select("id, title, content, image_url, file_url, file_name, file_type, created_at")
     .single();
 
   if (error) {
