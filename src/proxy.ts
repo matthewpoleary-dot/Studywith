@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
 
   const { data: userData } = await adminClient
     .from("users")
-    .select("id")
+    .select("id, subscribed")
     .eq("id", user.id)
     .single();
 
@@ -61,6 +61,16 @@ export async function proxy(request: NextRequest) {
         { id: user.id, email: user.email ?? "", subscribed: false },
         { onConflict: "id" },
       );
+  }
+
+  // Subscription gate — unsubscribed users are sent to the pricing/checkout page.
+  // Allow /app/settings so they can still sign out or manage their account.
+  const subscribed = userData?.subscribed ?? false;
+  const pathname = request.nextUrl.pathname;
+  const isAllowedWithoutSub = pathname === "/app/settings";
+
+  if (!subscribed && !isAllowedWithoutSub) {
+    return NextResponse.redirect(new URL("/?checkout=required", request.url));
   }
 
   return response;

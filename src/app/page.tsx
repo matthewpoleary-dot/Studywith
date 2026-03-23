@@ -27,6 +27,7 @@ import {
   Users,
   FileText,
   BarChart2,
+  Send,
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 
@@ -173,6 +174,7 @@ const Navigation = () => {
               { id: "how-it-works", label: "How it works" },
               { id: "features", label: "Features" },
               { id: "for-teachers", label: "For Teachers" },
+              { id: "pricing", label: "Pricing" },
               { id: "faq", label: "FAQ" },
             ].map(({ id, label }) => (
               <button
@@ -262,6 +264,7 @@ const Navigation = () => {
                 { id: "how-it-works", label: "How it works" },
                 { id: "features", label: "Features" },
                 { id: "for-teachers", label: "For Teachers" },
+                { id: "pricing", label: "Pricing" },
                 { id: "faq", label: "FAQ" },
               ].map(({ id, label }) => (
                 <button
@@ -327,48 +330,104 @@ const Hero = () => {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_-5%_0%,rgba(217,119,6,0.07),transparent_70%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_30%_at_100%_80%,rgba(217,119,6,0.04),transparent_70%)]" />
       <div className="max-w-7xl mx-auto relative">
-        <div className="max-w-4xl">
-          {/* Trust badge */}
-          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-full px-4 py-1.5 mb-7">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
-            <span className="text-xs font-medium text-[#57534E]">Built by a Trinity College Dublin student</span>
-          </div>
-
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
-            Learn to <em className="italic text-[#D97706]">think</em>, not just
-            copy
-          </h1>
-
-          <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-2xl mb-10">
-            Your AI tutor asks questions instead of giving answers. Paste any
-            assignment and work through it until you genuinely understand it.
-          </p>
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
-            <div className="sm:flex-none sm:w-auto">
-              <CheckoutButton
-                label="Get started free"
-                className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
-              />
+        <div className="flex flex-col lg:flex-row lg:items-center gap-16 lg:gap-24">
+          {/* Left: copy */}
+          <div className="flex-1 min-w-0">
+            {/* Trust badge */}
+            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-full px-4 py-1.5 mb-7">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
+              <span className="text-xs font-medium text-[#57534E]">Built by a Trinity College Dublin student</span>
             </div>
-            <button
-              onClick={() => { scrollToSection("how-it-works"); posthog.capture('see_how_it_works_clicked'); }}
-              className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
-            >
-              See how it works
-              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-            </button>
+
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
+              Learn to <em className="italic text-[#D97706]">think</em>, not just
+              copy
+            </h1>
+
+            <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
+              Your AI tutor asks questions instead of giving answers. Paste any
+              assignment and work through it until you genuinely understand it.
+            </p>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
+              <div className="sm:flex-none sm:w-auto">
+                <CheckoutButton
+                  label="Get started free"
+                  className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
+                />
+              </div>
+              <button
+                onClick={() => { scrollToSection("how-it-works"); posthog.capture('see_how_it_works_clicked'); }}
+                className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
+              >
+                See how it works
+                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <p className="text-sm text-[#A8A29E]">
+              Already a member?{" "}
+              <a
+                href="/auth/login"
+                className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
+              >
+                Sign in
+              </a>
+            </p>
           </div>
 
-          <p className="text-sm text-[#A8A29E]">
-            Already a member?{" "}
-            <a
-              href="/auth/login"
-              className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
-            >
-              Sign in
-            </a>
-          </p>
+          {/* Right: floating chat preview */}
+          <div className="hidden lg:block flex-shrink-0 w-[420px]">
+            <div className="relative">
+              {/* Soft glow behind card */}
+              <div className="absolute inset-0 scale-110 rounded-3xl bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(217,119,6,0.08),transparent)]" />
+              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden">
+                {/* Card header */}
+                <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
+                  <div className="h-2 w-2 rounded-full bg-[#D97706]" />
+                  <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">Maths</span>
+                  <p className="text-xs text-[#57534E] truncate">Solve: 3x² + 5x − 2 = 0</p>
+                </div>
+                {/* Messages */}
+                <div className="space-y-3 p-5 text-sm">
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                      What type of equation is this, and what methods do you know for solving it?
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
+                      It&apos;s a quadratic. I think I can use the formula?
+                    </div>
+                  </div>
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                      Good. What are a, b, and c in this equation?
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
+                      a=3, b=5, c=−2
+                    </div>
+                  </div>
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                      Exactly right. Now plug those into the formula and tell me what you get under the square root.
+                    </div>
+                  </div>
+                </div>
+                {/* Input bar mock */}
+                <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
+                    Write your response...
+                  </div>
+                  <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
+                    <Send className="w-3 h-3 text-white" strokeWidth={2} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -753,7 +812,7 @@ const Comparison = () => {
             </div>
             <div className="p-5 text-center border-l border-[#E7E5E4] bg-[#FDFAF5]">
               <p className="text-sm font-semibold text-[#D97706]">StudyWith</p>
-              <span className="inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 mt-0.5">Free</span>
+              <span className="inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5 mt-0.5">Free trial</span>
             </div>
           </div>
 
