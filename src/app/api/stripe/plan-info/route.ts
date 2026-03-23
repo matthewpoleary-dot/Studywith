@@ -58,7 +58,8 @@ export async function GET() {
   const interval = price?.recurring?.interval ?? "month";
   const trialing = active.status === "trialing";
   const trialEnd = active.trial_end;
-  const periodEnd = active.current_period_end;
+  // In Stripe SDK v17+, current_period_end moved from Subscription to SubscriptionItem
+  const periodEnd = item?.current_period_end ?? 0;
 
   return Response.json({
     subscribed: true,
