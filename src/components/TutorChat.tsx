@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Send, ImagePlus, X, FileText, BookOpen } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 export type MessageRole = "student" | "tutor" | "system";
 
@@ -121,6 +124,71 @@ type TutorChatProps = {
   roomId?: string;
 };
 
+// ── SSE stream reader ─────────────────────────────────────────────────────────
+// Reads a text/event-stream response and calls back on each token and on done.
+async function readSSEStream(
+  response: Response,
+  onToken: (id: string, token: string, isFirst: boolean) => void,
+  onDone: (sessionId: string | null) => void,
+): Promise<void> {
+  if (!response.body) return;
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  const msgId = crypto.randomUUID();
+  let first = true;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() ?? "";
+    for (const part of parts) {
+      if (!part.startsWith("data: ")) continue;
+      try {
+        const data = JSON.parse(part.slice(6)) as {
+          token?: string;
+          done?: boolean;
+          sessionId?: string | null;
+          error?: string;
+        };
+        if (data.token) {
+          onToken(msgId, data.token, first);
+          first = false;
+        }
+        if (data.done) onDone(data.sessionId ?? null);
+      } catch { /* skip malformed SSE line */ }
+    }
+  }
+}
+
+// ── Markdown message renderer ─────────────────────────────────────────────────
+function TutorBubble({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={{
+        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
+        li: ({ children }) => <li>{children}</li>,
+        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+        em: ({ children }) => <em>{children}</em>,
+        code: ({ children, className }) => {
+          const isBlock = !!className;
+          return isBlock
+            ? <code className="block bg-black/5 rounded-lg px-3 py-2 text-xs font-mono whitespace-pre-wrap my-1">{children}</code>
+            : <code className="bg-black/5 rounded px-1 py-0.5 text-xs font-mono">{children}</code>;
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
 export default function TutorChat({
   initialAssignment = "",
   initialMessages = [],
@@ -139,6 +207,8 @@ export default function TutorChat({
   const [messages, setMessages] = useState<TutorMessage[]>(initialMessages);
   const [isSessionStarted, setIsSessionStarted] = useState(initialMessages.length > 0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const [isAssignmentExpanded, setIsAssignmentExpanded] = useState(false);
@@ -204,9 +274,8 @@ export default function TutorChat({
   useEffect(() => {
     const prev = prevMessageCountRef.current;
     prevMessageCountRef.current = messages.length;
-    if (messages.length <= prev) return; // no new messages
+    if (messages.length <= prev) return;
     const last = messages[messages.length - 1];
-    // Always scroll for tutor messages. For user messages, only scroll if near bottom.
     if (last?.role === "tutor" || isNearBottomRef.current) {
       scrollToBottom();
       isNearBottomRef.current = true;
@@ -216,6 +285,11 @@ export default function TutorChat({
   useEffect(() => {
     if (isLoading && isNearBottomRef.current) scrollToBottom();
   }, [isLoading, scrollToBottom]);
+
+  // Scroll during streaming so new tokens stay in view
+  useEffect(() => {
+    if (streamingMsgId && isNearBottomRef.current) scrollToBottom(false);
+  }, [streamingMsgId, scrollToBottom]);
 
   // Focus input when session starts
   useEffect(() => {
@@ -252,54 +326,51 @@ export default function TutorChat({
     if (!initialAssignment || initialMessages.length > 0) return;
 
     if (autoFetchOpener) {
-      // Room assignment: start session and fetch Sage's real opener (knows actual questions)
       setIsSessionStarted(true);
       setIsLoading(true);
 
       const pendingUrl = pendingImageUrlRef.current;
       if (pendingUrl) pendingImageUrlRef.current = null;
 
-      void fetch("/api/tutor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assignment: initialAssignment,
-          subject: detectSubject(initialAssignment),
-          messages: [{ id: "opener", role: "student", content: "Start on question 1 now." }],
-          ...(pendingUrl && { imageUrl: pendingUrl }),
-        }),
-      })
-        .then((r) => r.json())
-        .then((data: { content?: string; sessionId?: string | null }) => {
-          if (data.sessionId) setSessionId(data.sessionId);
-          setMessages([
-            {
-              id: crypto.randomUUID(),
-              role: "tutor",
-              content: data.content ?? getReviewOpeningMessage(initialAssignment),
+      void (async () => {
+        try {
+          const res = await fetch("/api/tutor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              assignment: initialAssignment,
+              subject: detectSubject(initialAssignment),
+              messages: [{ id: "opener", role: "student", content: "Start on question 1 now." }],
+              ...(pendingUrl && { imageUrl: pendingUrl }),
+              ...(roomId && { roomId }),
+            }),
+          });
+
+          if (!res.ok || !res.body) throw new Error("Failed");
+
+          await readSSEStream(
+            res,
+            (id, token, isFirst) => {
+              setStreamingMsgId(id);
+              if (isFirst) {
+                setMessages([{ id, role: "tutor", content: token }]);
+              } else {
+                setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content: m.content + token } : m));
+              }
             },
-          ]);
-        })
-        .catch(() => {
-          setMessages([
-            {
-              id: crypto.randomUUID(),
-              role: "tutor",
-              content: getReviewOpeningMessage(initialAssignment),
-            },
-          ]);
-        })
-        .finally(() => setIsLoading(false));
+            (sid) => { if (sid) setSessionId(sid); },
+          );
+        } catch {
+          setMessages([{ id: crypto.randomUUID(), role: "tutor", content: getReviewOpeningMessage(initialAssignment) }]);
+        } finally {
+          setStreamingMsgId(null);
+          setIsLoading(false);
+        }
+      })();
     } else {
       // Study-page review link: instant hardcoded opener
       setIsSessionStarted(true);
-      setMessages([
-        {
-          id: crypto.randomUUID(),
-          role: "tutor",
-          content: getReviewOpeningMessage(initialAssignment),
-        },
-      ]);
+      setMessages([{ id: crypto.randomUUID(), role: "tutor", content: getReviewOpeningMessage(initialAssignment) }]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -312,7 +383,6 @@ export default function TutorChat({
   };
 
   const processFile = (file: File) => {
-    // PDF: read as base64 directly (no compression)
     if (file.type === "application/pdf") {
       const reader = new FileReader();
       reader.onload = () => {
@@ -326,7 +396,6 @@ export default function TutorChat({
       return;
     }
 
-    // Image: compress to max 1024px
     if (!file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -405,70 +474,87 @@ export default function TutorChat({
 
     if (!finalAssignment) return;
 
-    // Freemium gate: check if user has remaining free sessions
+    // Freemium gate
     try {
       const gateRes = await fetch("/api/freemium-check");
       const gate = (await gateRes.json()) as { allowed: boolean; reason?: string };
-      if (!gate.allowed) {
-        router.push("/upgrade");
-        return;
-      }
-    } catch {
-      // Non-critical — if check fails, allow the session to start
+      if (!gate.allowed) { router.push("/upgrade"); return; }
+    } catch { /* Non-critical — allow through */ }
+
+    setIsStarting(true);
+
+    // ── Eager session creation ──────────────────────────────────────────────
+    // Create the DB record immediately so we have an ID before the AI responds.
+    let eagerSessionId: string | null = null;
+    try {
+      const createRes = await fetch("/api/create-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignment: finalAssignment, messages: [], ...(roomId ? { roomId } : {}) }),
+      });
+      const createData = (await createRes.json()) as { sessionId?: string | null };
+      eagerSessionId = createData.sessionId ?? null;
+    } catch { /* fall through — tutor route will create session */ }
+
+    if (eagerSessionId) {
+      setSessionId(eagerSessionId);
+      window.history.replaceState(null, "", `/app/session/${eagerSessionId}`);
     }
 
+    setIsStarting(false);
     setIsSessionStarted(true);
 
     if (mode === "corrector") {
-      const openerMessage = {
+      const openerMessage: TutorMessage = {
         id: crypto.randomUUID(),
-        role: "tutor" as const,
+        role: "tutor",
         content: getCorrectorOpeningMessage(),
       };
       setMessages([openerMessage]);
-      void fetch("/api/create-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignment: finalAssignment, messages: [openerMessage], roomId }),
-      })
-        .then((r) => r.json())
-        .then((data: { sessionId?: string | null }) => {
-          if (data.sessionId) { setSessionId(data.sessionId); router.replace(`/app/session/${data.sessionId}`); }
-        })
-        .catch(() => {});
-    } else {
-      // Fetch a context-aware opener from Sage so it references the actual question/topic
-      setIsLoading(true);
-      const detectedSubject = subject;
-      void fetch("/api/tutor", {
+      return;
+    }
+
+    // ── Tutor mode: stream opener from Sage ────────────────────────────────
+    const detectedSubject = subject;
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assignment: finalAssignment,
           subject: detectedSubject,
           messages: [{ id: "opener", role: "student", content: "Start on question 1 now." }],
-          roomId,
+          sessionId: eagerSessionId,
+          ...(roomId && { roomId }),
         }),
-      })
-        .then((r) => r.json())
-        .then((data: { content?: string; sessionId?: string | null }) => {
-          const openerMessage = {
-            id: crypto.randomUUID(),
-            role: "tutor" as const,
-            content: data.content ?? getOpeningMessage(subject),
-          };
-          setMessages([openerMessage]);
-          if (data.sessionId) { setSessionId(data.sessionId); router.replace(`/app/session/${data.sessionId}`); }
-        })
-        .catch(() => {
-          const openerMessage = {
-            id: crypto.randomUUID(),
-            role: "tutor" as const,
-            content: getOpeningMessage(subject),
-          };
-          setMessages([openerMessage]);
-        })
-        .finally(() => setIsLoading(false));
+      });
+
+      if (!res.ok || !res.body) throw new Error("Failed");
+
+      await readSSEStream(
+        res,
+        (id, token, isFirst) => {
+          setStreamingMsgId(id);
+          if (isFirst) {
+            setMessages([{ id, role: "tutor", content: token }]);
+          } else {
+            setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content: m.content + token } : m));
+          }
+        },
+        (sid) => {
+          if (sid && !eagerSessionId) {
+            setSessionId(sid);
+            window.history.replaceState(null, "", `/app/session/${sid}`);
+          }
+        },
+      );
+    } catch {
+      setMessages([{ id: crypto.randomUUID(), role: "tutor", content: getOpeningMessage(detectedSubject) }]);
+    } finally {
+      setStreamingMsgId(null);
+      setIsLoading(false);
     }
   };
 
@@ -498,16 +584,11 @@ export default function TutorChat({
       }
     }
 
-    // If PDF extraction failed, surface the error and abort the send
     if (pdfError) {
       setIsLoading(false);
       setMessages((prev) => [
         ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "tutor" as const,
-          content: `I couldn't read that PDF (${pdfError}). Try uploading a photo of the page instead, or paste the text directly.`,
-        },
+        { id: crypto.randomUUID(), role: "tutor" as const, content: `I couldn't read that PDF (${pdfError}). Try uploading a photo of the page instead, or paste the text directly.` },
       ]);
       return;
     }
@@ -516,22 +597,17 @@ export default function TutorChat({
       ? `${inputText ? inputText + "\n\n" : ""}[Uploaded file contents:\n${pdfText}]`
       : inputText || "📷 [image attached]";
 
-    const userMessage: TutorMessage = {
-      id: crypto.randomUUID(),
-      role: "student",
-      content: messageContent,
-    };
+    const userMessage: TutorMessage = { id: crypto.randomUUID(), role: "student", content: messageContent };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     clearFile();
     setIsLoading(true);
 
-    // Consume pending image URL from room assignment (first send only)
     const pendingUrl = pendingImageUrlRef.current;
     if (pendingUrl) pendingImageUrlRef.current = null;
 
-    const apiBody = JSON.stringify({
+    const apiPayload = {
       assignment,
       subject,
       messages: [...messages, userMessage],
@@ -540,62 +616,51 @@ export default function TutorChat({
       ...(roomId ? { roomId } : {}),
       ...(pendingImage && pendingMime !== "application/pdf" && { imageBase64: pendingImage, imageMime: pendingMime }),
       ...(!pendingImage && pendingUrl && { imageUrl: pendingUrl }),
-    });
+    };
 
     try {
-      let response = await fetch("/api/tutor", {
+      let res = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: apiBody,
+        body: JSON.stringify(apiPayload),
       });
 
       // Auto-retry once on rate limit
-      if (response.status === 429) {
+      if (res.status === 429) {
         await new Promise((r) => setTimeout(r, 2500));
-        response = await fetch("/api/tutor", {
+        res = await fetch("/api/tutor", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: apiBody,
+          body: JSON.stringify(apiPayload),
         });
-        if (response.status === 429) {
-          setMessages((prev) => [
-            ...prev,
-            { id: crypto.randomUUID(), role: "tutor" as const, content: "Sage is busy right now. Give it a few seconds and try again." },
-          ]);
+        if (res.status === 429) {
+          setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "tutor" as const, content: "Sage is busy right now. Give it a few seconds and try again." }]);
           return;
         }
       }
 
-      if (!response.ok) throw new Error("Failed");
+      if (!res.ok || !res.body) throw new Error("Failed");
 
-      const data = (await response.json()) as {
-        content: string;
-        sessionId: string | null;
-      };
-
-      // Fallback: if session wasn't created in handleStart (e.g. autoFetchOpener), set it now
-      if (!sessionId && data.sessionId) {
-        setSessionId(data.sessionId);
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "tutor",
-          content: data.content,
+      await readSSEStream(
+        res,
+        (id, token, isFirst) => {
+          setStreamingMsgId(id);
+          if (isFirst) {
+            setMessages((prev) => [...prev, { id, role: "tutor", content: token }]);
+          } else {
+            setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content: m.content + token } : m));
+          }
         },
-      ]);
+        (sid) => {
+          if (sid && !sessionId) {
+            setSessionId(sid);
+          }
+        },
+      );
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "tutor",
-          content: "Something went wrong. Try sending that again in a moment.",
-        },
-      ]);
+      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "tutor" as const, content: "Something went wrong. Try sending that again in a moment." }]);
     } finally {
+      setStreamingMsgId(null);
       setIsLoading(false);
     }
   };
@@ -698,7 +763,7 @@ export default function TutorChat({
             </p>
           )}
 
-          {/* Example prompts — shown when textarea is empty */}
+          {/* Example prompts */}
           {!assignment.trim() && !imageBase64 && (
             <div className="mb-4">
               <p className="text-[10px] font-medium uppercase tracking-wider text-[#A8A29E] mb-2">Try an example</p>
@@ -722,18 +787,24 @@ export default function TutorChat({
             </div>
           )}
 
-          {/* Subject auto-detected silently in background — no dropdown shown */}
-
           <div className="flex items-center gap-3">
             <button
               onClick={() => void handleStart()}
-              disabled={!canStart || isExtracting}
+              disabled={!canStart || isExtracting || isStarting}
               className="inline-flex items-center gap-2 rounded-xl bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition-all shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
             >
-              {isExtracting ? "Reading file..." : "Start session"}
+              {isExtracting ? (
+                "Reading file..."
+              ) : isStarting ? (
+                <>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Starting…
+                </>
+              ) : (
+                "Start session"
+              )}
             </button>
 
-            {/* Image upload button */}
             <button
               onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center gap-2 rounded-xl border border-[#E7E5E4] bg-white px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706]/60 hover:text-[#D97706] transition-all shadow-sm"
@@ -758,19 +829,16 @@ export default function TutorChat({
       {/* Assignment strip */}
       <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          {/* Mode chip */}
           {mode === "corrector" && (
             <span className="shrink-0 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700 uppercase tracking-wide">
               Corrector
             </span>
           )}
-          {/* Subject chip */}
           {subject !== "General" && (
             <span className="shrink-0 rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-medium text-[#D97706] uppercase tracking-wide">
               {subject}
             </span>
           )}
-          {/* Truncated assignment — click to expand */}
           <button
             onClick={() => setIsAssignmentExpanded((v) => !v)}
             className="flex-1 min-w-0 text-left"
@@ -780,7 +848,6 @@ export default function TutorChat({
               {assignment}
             </p>
           </button>
-          {/* View questions toggle — only shown when a PDF is attached */}
           {assignmentFileUrl && (
             <button
               onClick={() => setShowPdf((v) => !v)}
@@ -790,18 +857,13 @@ export default function TutorChat({
               Questions
             </button>
           )}
-          {/* Mode toggle buttons */}
           {mode === "tutor" ? (
             <button
               onClick={() => {
                 setMode("corrector");
                 setMessages((prev) => [
                   ...prev,
-                  {
-                    id: crypto.randomUUID(),
-                    role: "tutor" as const,
-                    content: "Switching to marking mode. Share your completed answers — text or a photo of your work — and I'll go through them for you.",
-                  },
+                  { id: crypto.randomUUID(), role: "tutor" as const, content: "Switching to marking mode. Share your completed answers — text or a photo of your work — and I'll go through them for you." },
                 ]);
               }}
               className="shrink-0 rounded-lg border border-[#E7E5E4] px-3 py-1.5 text-xs font-medium text-[#57534E] hover:border-emerald-400 hover:text-emerald-700 transition whitespace-nowrap"
@@ -814,11 +876,7 @@ export default function TutorChat({
                 setMode("tutor");
                 setMessages((prev) => [
                   ...prev,
-                  {
-                    id: crypto.randomUUID(),
-                    role: "tutor" as const,
-                    content: "Back to tutor mode. What would you like to work through?",
-                  },
+                  { id: crypto.randomUUID(), role: "tutor" as const, content: "Back to tutor mode. What would you like to work through?" },
                 ]);
               }}
               className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-white transition whitespace-nowrap"
@@ -837,15 +895,10 @@ export default function TutorChat({
         </div>
       </div>
 
-      {/* PDF panel — fixed overlay so it sits above sticky header */}
+      {/* PDF panel */}
       {showPdf && assignmentFileUrl && (
         <div className="fixed inset-0 z-50 flex">
-          {/* Backdrop — click anywhere on the left to close */}
-          <div
-            className="flex-1 bg-black/20 cursor-pointer"
-            onClick={() => setShowPdf(false)}
-          />
-          {/* Panel */}
+          <div className="flex-1 bg-black/20 cursor-pointer" onClick={() => setShowPdf(false)} />
           <div className="w-full md:w-[52%] bg-white border-l border-[#E7E5E4] shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E7E5E4] shrink-0">
               <div className="flex items-center gap-2 min-w-0">
@@ -855,37 +908,21 @@ export default function TutorChat({
                 </span>
               </div>
               <div className="flex items-center gap-3 shrink-0 ml-3">
-                <a
-                  href={assignmentFileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-[#A8A29E] hover:text-[#57534E] transition whitespace-nowrap"
-                >
+                <a href={assignmentFileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#A8A29E] hover:text-[#57534E] transition whitespace-nowrap">
                   Open in tab
                 </a>
-                <button
-                  onClick={() => setShowPdf(false)}
-                  className="p-1 rounded-lg text-[#A8A29E] hover:text-[#1A1A1A] hover:bg-[#F5F4F0] transition"
-                  title="Close"
-                >
+                <button onClick={() => setShowPdf(false)} className="p-1 rounded-lg text-[#A8A29E] hover:text-[#1A1A1A] hover:bg-[#F5F4F0] transition" title="Close">
                   <X className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <object
-                data={`${assignmentFileUrl}#toolbar=0&view=FitH`}
-                type="application/pdf"
-                className="w-full h-full"
-                style={{ minHeight: "400px" }}
-              >
+              <object data={`${assignmentFileUrl}#toolbar=0&view=FitH`} type="application/pdf" className="w-full h-full" style={{ minHeight: "400px" }}>
                 <div className="flex flex-col items-center justify-center h-40 gap-3 p-6">
                   <FileText className="w-8 h-8 text-red-400" strokeWidth={1.5} />
                   <p className="text-sm text-[#57534E] text-center">
                     PDF can&apos;t be previewed here.{" "}
-                    <a href={assignmentFileUrl} target="_blank" rel="noopener noreferrer" className="text-[#D97706] underline">
-                      Open in new tab
-                    </a>
+                    <a href={assignmentFileUrl} target="_blank" rel="noopener noreferrer" className="text-[#D97706] underline">Open in new tab</a>
                   </p>
                 </div>
               </object>
@@ -902,12 +939,7 @@ export default function TutorChat({
       >
         <div className="max-w-2xl mx-auto space-y-4">
           {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex ${
-                m.role === "student" ? "justify-end" : "justify-start"
-              }`}
-            >
+            <div key={m.id} className={`flex ${m.role === "student" ? "justify-end" : "justify-start"}`}>
               {m.role === "tutor" && (
                 <div className="flex flex-col items-center mr-2.5 shrink-0">
                   <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
@@ -917,19 +949,23 @@ export default function TutorChat({
                 </div>
               )}
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   m.role === "student"
-                    ? "bg-[#1A1A1A] text-white rounded-br-sm"
+                    ? "bg-[#1A1A1A] text-white rounded-br-sm whitespace-pre-wrap"
                     : "bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A] rounded-bl-sm shadow-[0_1px_4px_-2px_rgba(0,0,0,0.07)]"
                 }`}
               >
-                {getDisplayContent(m.content)}
+                {m.role === "tutor" ? (
+                  <TutorBubble content={getDisplayContent(m.content)} />
+                ) : (
+                  getDisplayContent(m.content)
+                )}
               </div>
             </div>
           ))}
 
-          {/* Typing indicator */}
-          {isLoading && (
+          {/* Typing indicator — shown only while waiting for first streaming token */}
+          {isLoading && !streamingMsgId && (
             <div className="flex justify-start">
               <div className="flex flex-col items-center mr-2.5 shrink-0">
                 <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
@@ -952,13 +988,7 @@ export default function TutorChat({
       </div>
 
       {/* Hidden file input — always mounted */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*,.pdf"
-        className="hidden"
-        onChange={handleImageSelect}
-      />
+      <input ref={fileInputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleImageSelect} />
 
       {/* Input bar */}
       <div
@@ -967,10 +997,7 @@ export default function TutorChat({
       >
         <form
           className="max-w-2xl mx-auto"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void handleSend();
-          }}
+          onSubmit={(e) => { e.preventDefault(); void handleSend(); }}
         >
           {/* File attachment preview */}
           {(imagePreview ?? (imageMime === "application/pdf" ? true : null)) && (
@@ -985,11 +1012,7 @@ export default function TutorChat({
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={imagePreview!} alt="attached" className="h-12 rounded-lg object-cover" />
                 )}
-                <button
-                  type="button"
-                  onClick={clearFile}
-                  className="ml-1 p-0.5 rounded-full bg-[#1A1A1A] text-white shrink-0"
-                >
+                <button type="button" onClick={clearFile} className="ml-1 p-0.5 rounded-full bg-[#1A1A1A] text-white shrink-0">
                   <X className="w-3 h-3" />
                 </button>
               </div>
@@ -1003,10 +1026,7 @@ export default function TutorChat({
               onChange={(e) => setInput(e.target.value)}
               onPaste={handlePaste}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void handleSend();
-                }
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSend(); }
               }}
               placeholder={mode === "corrector" ? "Paste your answers here..." : "Write your response..."}
               rows={1}

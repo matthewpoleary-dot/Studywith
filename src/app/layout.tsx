@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import PostHogProvider from "@/components/PostHogProvider";
 
 const inter = Inter({
