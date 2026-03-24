@@ -182,9 +182,17 @@ function SidebarContent({
                   <a
                     href={href}
                     onClick={onNav}
-                    className="flex-1 min-w-0 flex flex-col"
+                    className="flex-1 min-w-0 flex flex-col overflow-hidden"
                   >
-                    <span className="text-sm truncate leading-snug">{getTitle(session)}</span>
+                    <span
+                      className="text-sm leading-snug whitespace-nowrap overflow-hidden block"
+                      style={{
+                        maskImage: "linear-gradient(to right, black 60%, transparent 100%)",
+                        WebkitMaskImage: "linear-gradient(to right, black 60%, transparent 100%)",
+                      }}
+                    >
+                      {getTitle(session)}
+                    </span>
                     <span className="text-[10px] text-[#A8A29E] mt-0.5">{getDate(session)}</span>
                   </a>
                 )}
@@ -256,7 +264,7 @@ function SidebarContent({
                     History
                   </p>
                   <div className="space-y-0.5">
-                    {completed.map((s) => renderItem(s, false))}
+                    {completed.map((s) => renderItem(s, true))}
                   </div>
                 </>
               )}
