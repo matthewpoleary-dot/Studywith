@@ -417,28 +417,59 @@ export default function TutorChat({
       // Non-critical — if check fails, allow the session to start
     }
 
-    const openerMessage = {
-      id: crypto.randomUUID(),
-      role: "tutor" as const,
-      content: mode === "corrector" ? getCorrectorOpeningMessage() : getOpeningMessage(subject),
-    };
     setIsSessionStarted(true);
-    setMessages([openerMessage]);
 
-    // Create the session in DB immediately so navigating away and back works
-    void fetch("/api/create-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assignment: finalAssignment, messages: [openerMessage], roomId }),
-    })
-      .then((r) => r.json())
-      .then((data: { sessionId?: string | null }) => {
-        if (data.sessionId) {
-          setSessionId(data.sessionId);
-          router.replace(`/app/session/${data.sessionId}`);
-        }
+    if (mode === "corrector") {
+      const openerMessage = {
+        id: crypto.randomUUID(),
+        role: "tutor" as const,
+        content: getCorrectorOpeningMessage(),
+      };
+      setMessages([openerMessage]);
+      void fetch("/api/create-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignment: finalAssignment, messages: [openerMessage], roomId }),
       })
-      .catch(() => { /* non-critical — session will be created on first send as fallback */ });
+        .then((r) => r.json())
+        .then((data: { sessionId?: string | null }) => {
+          if (data.sessionId) { setSessionId(data.sessionId); router.replace(`/app/session/${data.sessionId}`); }
+        })
+        .catch(() => {});
+    } else {
+      // Fetch a context-aware opener from Sage so it references the actual question/topic
+      setIsLoading(true);
+      const detectedSubject = subject;
+      void fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignment: finalAssignment,
+          subject: detectedSubject,
+          messages: [{ id: "opener", role: "student", content: "Start on question 1 now." }],
+          roomId,
+        }),
+      })
+        .then((r) => r.json())
+        .then((data: { content?: string; sessionId?: string | null }) => {
+          const openerMessage = {
+            id: crypto.randomUUID(),
+            role: "tutor" as const,
+            content: data.content ?? getOpeningMessage(subject),
+          };
+          setMessages([openerMessage]);
+          if (data.sessionId) { setSessionId(data.sessionId); router.replace(`/app/session/${data.sessionId}`); }
+        })
+        .catch(() => {
+          const openerMessage = {
+            id: crypto.randomUUID(),
+            role: "tutor" as const,
+            content: getOpeningMessage(subject),
+          };
+          setMessages([openerMessage]);
+        })
+        .finally(() => setIsLoading(false));
+    }
   };
 
   const handleSend = async () => {
