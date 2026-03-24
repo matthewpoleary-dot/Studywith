@@ -169,7 +169,7 @@ const Navigation = () => {
             StudyWith
           </a>
 
-          <div className="hidden md:flex items-center gap-10">
+          <div className="hidden md:flex items-center gap-6">
             {[
               { id: "how-it-works", label: "How it works" },
               { id: "features", label: "Features" },
@@ -180,7 +180,7 @@ const Navigation = () => {
               <button
                 key={id}
                 onClick={() => scrollToSection(id)}
-                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium"
+                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium whitespace-nowrap"
               >
                 {label}
               </button>
@@ -333,11 +333,6 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row lg:items-center gap-16 lg:gap-24">
           {/* Left: copy */}
           <div className="flex-1 min-w-0">
-            {/* Trust badge */}
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-full px-4 py-1.5 mb-7">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
-              <span className="text-xs font-medium text-[#57534E]">Built by a Trinity College Dublin student</span>
-            </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
               Learn to <em className="italic text-[#D97706]">think</em>, not just
@@ -757,7 +752,7 @@ const ForTeachers = () => {
           >
             Create a free room
           </a>
-          <p className="text-sm text-[#A8A29E] mt-3">Free for teachers and students during early access.</p>
+          <p className="text-sm text-[#A8A29E] mt-3">Free during beta — limited spots.</p>
         </div>
       </div>
     </section>
@@ -794,7 +789,7 @@ const Comparison = () => {
             Not all AI tutors are equal
           </h2>
           <p className="text-lg text-[#57534E]">
-            ChatGPT answers for you. Human tutors cost £40/hr. StudyWith does something different.
+            ChatGPT answers for you. Human tutors cost €40/hr. StudyWith does something different.
           </p>
         </div>
 
@@ -1064,7 +1059,7 @@ const FAQ = () => {
     {
       question: "Is StudyWith free?",
       answer:
-        "StudyWith is currently free while we are in early access.",
+        "StudyWith is currently free for beta users.",
     },
   ];
 
