@@ -334,7 +334,7 @@ const Hero = () => {
           {/* Left: copy */}
           <div className="flex-1 min-w-0">
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-5xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
               Learn to <em className="italic text-[#D97706]">think</em>, not just
               copy
             </h1>
@@ -1110,13 +1110,17 @@ const Footer = () => {
           <div>
             <h4 className="font-medium text-[#1A1A1A] mb-4">Product</h4>
             <ul className="space-y-3">
-              {["how-it-works", "features", "faq"].map((id) => (
+              {[
+                { id: "how-it-works", label: "How it works" },
+                { id: "features", label: "Features" },
+                { id: "faq", label: "FAQ" },
+              ].map(({ id, label }) => (
                 <li key={id}>
                   <button
                     onClick={() => scrollToSection(id)}
-                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm capitalize"
+                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm"
                   >
-                    {id.replace("-", " ")}
+                    {label}
                   </button>
                 </li>
               ))}
@@ -1223,14 +1227,14 @@ export default function StudyWithLanding() {
               Ready to actually understand your work?
             </h2>
             <p className="text-lg text-[#57534E] mb-10">
-              Join students who learn by thinking, not copying.
+              Join students studying smarter with Sage.
             </p>
             <a
               href="/auth/signup"
               onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
             >
-              Get started
+              Get started free
             </a>
           </div>
         </section>
