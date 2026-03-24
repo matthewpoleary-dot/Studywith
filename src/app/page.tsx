@@ -334,7 +334,7 @@ const Hero = () => {
           {/* Left: copy */}
           <div className="flex-1 min-w-0">
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-5xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-4xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
               Learn to <em className="italic text-[#D97706]">think</em>, not just
               copy
             </h1>
