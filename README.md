@@ -1,4 +1,4 @@
-# StudyWith-Phi | Socratic AI Tutoring Engine
+# StudyWith | Socratic AI Tutoring Engine
 **High-performance, low-latency educational orchestration for the Irish curriculum.**
 
 StudyWith is an AI-powered learning platform architected to solve the "passive learning" problem in EdTech. By utilizing a specialized Socratic prompting layer and Groq’s LPU inference engine, StudyWith provides a sub-second, interactive tutoring experience that guides students toward H1 solutions rather than simply providing answers.
