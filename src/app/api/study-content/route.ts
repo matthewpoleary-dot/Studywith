@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
   const { topic } = (await request.json()) as { topic: string };
 
-  const prompt = `You are Sage, a friendly study tutor. A student needs to deeply understand: "${topic}". Return ONLY a valid JSON object with no markdown or preamble:
+  const prompt = `You are an academic study tutor. A student needs to deeply understand: "${topic}". Return ONLY a valid JSON object with no markdown or preamble:
 {
   "title": "Clear topic title",
   "subject": "subject area (e.g. Maths, Biology, History)",

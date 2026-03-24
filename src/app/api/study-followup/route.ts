@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
   const { topic, question } = (await request.json()) as { topic: string; question: string };
 
-  const systemPrompt = `You are Sage, a helpful study tutor. The student is reading a study guide about "${topic}" and has a follow-up question. Answer clearly and concisely in 2-4 sentences. Do not give a full essay. Do not use em-dashes. Be direct and student-friendly.`;
+  const systemPrompt = `You are an academic study tutor. The student is reading a study guide about "${topic}" and has a follow-up question. Only answer questions that have a clear academic or educational purpose — if the question is non-academic or involves dangerous or inappropriate content, decline and redirect the student to their study material. For valid academic questions, answer clearly and concisely in 2-4 sentences. Do not write a full essay. Do not use em-dashes. Calibrate your language to the evident level of the question.`;
 
   try {
     const completion = await groq.chat.completions.create({
