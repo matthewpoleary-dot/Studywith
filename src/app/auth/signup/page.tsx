@@ -189,10 +189,10 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8">
           <h1 className="font-serif text-3xl font-medium text-[#1A1A1A] mb-2">
-            Start learning smarter
+            Start studying smarter
           </h1>
           <p className="text-sm text-[#57534E]">
-            Create your account to start your 7-day free trial. No card required.
+            Create your account to start your 7-day free trial. Upload your Grinds 360 notes and get to work. No card required.
           </p>
         </div>
 

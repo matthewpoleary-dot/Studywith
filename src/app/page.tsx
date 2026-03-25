@@ -16,18 +16,17 @@ import {
   PenLine,
   Calculator,
   Check,
-  ChevronRight,
   ChevronDown,
   Menu,
   X,
-  Link,
   CheckSquare,
   XCircle,
   ArrowRight,
-  Users,
-  FileText,
-  BarChart2,
   Send,
+  FileUp,
+  FlaskConical,
+  Dna,
+  FunctionSquare,
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 
@@ -173,7 +172,6 @@ const Navigation = () => {
             {[
               { id: "how-it-works", label: "How it works" },
               { id: "features", label: "Features" },
-              { id: "for-teachers", label: "For Teachers" },
               { id: "pricing", label: "Pricing" },
               { id: "faq", label: "FAQ" },
             ].map(({ id, label }) => (
@@ -263,7 +261,6 @@ const Navigation = () => {
               {[
                 { id: "how-it-works", label: "How it works" },
                 { id: "features", label: "Features" },
-                { id: "for-teachers", label: "For Teachers" },
                 { id: "pricing", label: "Pricing" },
                 { id: "faq", label: "FAQ" },
               ].map(({ id, label }) => (
@@ -320,9 +317,73 @@ const Navigation = () => {
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
+const HERO_DEMOS = [
+  {
+    subject: "LC Chemistry",
+    color: "#D97706",
+    bgColor: "bg-[#D97706]/10",
+    textColor: "text-[#D97706]",
+    file: "LC_Chemistry_Notes.pdf",
+    pages: "63 pages",
+    topic: "Organic Chemistry — Alcohols & Esters",
+    messages: [
+      { role: "tutor", text: "Before we dive into esters — what functional group defines an alcohol, and how would you identify one from a structural formula?" },
+      { role: "student", text: "It has an OH group attached to a carbon chain?" },
+      { role: "tutor", text: "Exactly. Now, what two reactants combine to form an ester in a condensation reaction, and what small molecule is released in the process?" },
+    ],
+  },
+  {
+    subject: "LC Biology",
+    color: "#16a34a",
+    bgColor: "bg-green-100",
+    textColor: "text-green-700",
+    file: "LC_Biology_Notes.pdf",
+    pages: "81 pages",
+    topic: "Genetics — Meiosis & Inheritance",
+    messages: [
+      { role: "tutor", text: "Let's start with the key distinction — what is the difference between mitosis and meiosis in terms of the cells they produce?" },
+      { role: "student", text: "Meiosis produces 4 haploid cells, mitosis produces 2 diploid cells?" },
+      { role: "tutor", text: "Good. Why is it essential that gametes are haploid rather than diploid — what would happen at fertilisation if they weren't?" },
+    ],
+  },
+  {
+    subject: "LC Maths P1",
+    color: "#7c3aed",
+    bgColor: "bg-violet-100",
+    textColor: "text-violet-700",
+    file: "LC_Maths_Notes.pdf",
+    pages: "55 pages",
+    topic: "Calculus — Differentiation from First Principles",
+    messages: [
+      { role: "tutor", text: "Before applying the rule — can you tell me what the derivative of a function actually represents, in your own words?" },
+      { role: "student", text: "It's the rate of change, or the slope of the tangent at a point?" },
+      { role: "tutor", text: "Exactly right. Now, using first principles, write the limit definition of f′(x) and identify what each part of that expression represents." },
+    ],
+  },
+];
+
 const Hero = () => {
+  const [demoIndex, setDemoIndex] = useState(0);
+  const [phase, setPhase] = useState<"upload" | "chat">("upload");
   const scrollToSection = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+  useEffect(() => {
+    // Show upload phase for 2.2s, chat for 5s, then cycle
+    const uploadTimer = setTimeout(() => setPhase("chat"), 2200);
+    return () => clearTimeout(uploadTimer);
+  }, [demoIndex]);
+
+  useEffect(() => {
+    if (phase !== "chat") return;
+    const chatTimer = setTimeout(() => {
+      setPhase("upload");
+      setDemoIndex((i) => (i + 1) % HERO_DEMOS.length);
+    }, 5000);
+    return () => clearTimeout(chatTimer);
+  }, [phase]);
+
+  const demo = HERO_DEMOS[demoIndex];
 
   return (
     <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24 overflow-hidden">
@@ -333,29 +394,32 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row lg:items-center gap-16 lg:gap-24">
           {/* Left: copy */}
           <div className="flex-1 min-w-0">
+            {/* LC badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#D97706]/30 bg-[#D97706]/8 px-4 py-1.5 mb-6">
+              <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
+              <span className="text-xs font-semibold text-[#D97706] uppercase tracking-wide">Built for Leaving Cert &amp; Junior Cycle</span>
+            </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-4xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
-              Learn to <em className="italic text-[#D97706]">think</em>, not just
-              copy
+              Get the <em className="italic text-[#D97706]">H1</em>. Actually understand it.
             </h1>
 
             <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
-              Your AI tutor asks questions instead of giving answers. Paste any
-              assignment and work through it until you genuinely understand it.
+              Upload your Grinds 360 notes or any LC material. Your AI tutor guides you through it with Socratic questions — so you understand it, not just memorise it.
             </p>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
               <div className="sm:flex-none sm:w-auto">
                 <CheckoutButton
-                  label="Get started free"
+                  label="Start free — upload your notes"
                   className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                 />
               </div>
               <button
-                onClick={() => { scrollToSection("how-it-works"); posthog.capture('see_how_it_works_clicked'); }}
+                onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
                 className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
               >
-                See how it works
+                Try it without signing up
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
@@ -371,55 +435,89 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right: floating chat preview */}
+          {/* Right: animated PDF → chat demo */}
           <div className="hidden lg:block flex-shrink-0 w-[420px]">
             <div className="relative">
-              {/* Soft glow behind card */}
               <div className="absolute inset-0 scale-110 rounded-3xl bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(217,119,6,0.08),transparent)]" />
-              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden">
-                {/* Card header */}
-                <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
-                  <div className="h-2 w-2 rounded-full bg-[#D97706]" />
-                  <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">Maths</span>
-                  <p className="text-xs text-[#57534E] truncate">Solve: 3x² + 5x − 2 = 0</p>
+              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden min-h-[340px]">
+
+                {/* Subject tab strip */}
+                <div className="flex border-b border-[#E7E5E4] bg-[#F5F4F0]">
+                  {HERO_DEMOS.map((d, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setDemoIndex(i); setPhase("upload"); }}
+                      className={`flex-1 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+                        i === demoIndex
+                          ? "bg-white border-b-2 border-[#D97706] text-[#D97706]"
+                          : "text-[#A8A29E] hover:text-[#57534E]"
+                      }`}
+                    >
+                      {d.subject}
+                    </button>
+                  ))}
                 </div>
-                {/* Messages */}
-                <div className="space-y-3 p-5 text-sm">
-                  <div className="flex justify-start">
-                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                      What type of equation is this, and what methods do you know for solving it?
+
+                {/* Upload phase */}
+                {phase === "upload" && (
+                  <div className="flex flex-col items-center justify-center p-8 gap-5 animate-pulse-once">
+                    <div className="w-16 h-16 rounded-2xl bg-[#D97706]/10 flex items-center justify-center">
+                      <FileUp className="w-8 h-8 text-[#D97706]" strokeWidth={1.5} />
+                    </div>
+                    <div className="w-full rounded-xl border-2 border-dashed border-[#D97706]/40 bg-[#FDFAF5] px-5 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2.5 mb-1">
+                        <div className="w-7 h-8 bg-[#D97706]/20 rounded flex items-center justify-center">
+                          <span className="text-[8px] font-bold text-[#D97706]">PDF</span>
+                        </div>
+                        <span className="text-sm font-medium text-[#1A1A1A]">{demo.file}</span>
+                      </div>
+                      <p className="text-xs text-[#A8A29E]">{demo.pages} · Uploading…</p>
+                      <div className="mt-3 h-1.5 w-full rounded-full bg-[#E7E5E4] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[#D97706] transition-all duration-[2000ms] ease-out"
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#A8A29E]">AI is reading your notes…</p>
+                  </div>
+                )}
+
+                {/* Chat phase */}
+                {phase === "chat" && (
+                  <div className="flex flex-col">
+                    {/* Topic header */}
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FDFAF5] border-b border-[#E7E5E4]">
+                      <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
+                      <p className="text-[11px] text-[#57534E] font-medium truncate">{demo.topic}</p>
+                    </div>
+                    {/* Messages */}
+                    <div className="space-y-3 p-4 text-sm">
+                      {demo.messages.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"}`}>
+                          <div
+                            className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[13px] ${
+                              msg.role === "student"
+                                ? "rounded-tr-sm bg-[#1A1A1A] text-white"
+                                : "rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A]"
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Input bar mock */}
+                    <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
+                      <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
+                        Write your response…
+                      </div>
+                      <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
+                        <Send className="w-3 h-3 text-white" strokeWidth={2} />
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                      It&apos;s a quadratic. I think I can use the formula?
-                    </div>
-                  </div>
-                  <div className="flex justify-start">
-                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                      Good. What are a, b, and c in this equation?
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                      a=3, b=5, c=−2
-                    </div>
-                  </div>
-                  <div className="flex justify-start">
-                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                      Exactly right. Now plug those into the formula and tell me what you get under the square root.
-                    </div>
-                  </div>
-                </div>
-                {/* Input bar mock */}
-                <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
-                  <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
-                    Write your response...
-                  </div>
-                  <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
-                    <Send className="w-3 h-3 text-white" strokeWidth={2} />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -435,24 +533,24 @@ const HowItWorks = () => {
   const steps = [
     {
       number: "01",
-      icon: ClipboardList,
-      title: "Paste your assignment",
+      icon: FileUp,
+      title: "Upload your notes or paste a question",
       description:
-        "Share the problem you're working on: an essay prompt, maths question, or any exam topic.",
+        "Drop in your Grinds 360 PDFs, paste a LC exam question, or type any topic. The AI reads your material and builds your session from it.",
     },
     {
       number: "02",
       icon: Lightbulb,
-      title: "Get guided questions",
+      title: "Get Socratic questions, not answers",
       description:
-        "Your AI tutor asks thoughtful questions to help you break down the problem and explore it from every angle.",
+        "Your AI tutor asks you questions — it never gives the answer directly. You work through the material until you genuinely understand it.",
     },
     {
       number: "03",
       icon: Target,
-      title: "Reach the answer yourself",
+      title: "Get your Learning Receipt",
       description:
-        "Through guided thinking, you arrive at the solution with genuine understanding, not just a copied answer.",
+        "Every session ends with a scored breakdown: what you understood, what your gaps are, and an honest score out of 100. Share it or use it to plan your next session.",
     },
   ];
 
@@ -491,45 +589,198 @@ const HowItWorks = () => {
           ))}
         </div>
 
-        {/* Chat preview */}
+        {/* Chat preview — LC Biology */}
         <div className="mt-20 max-w-2xl mx-auto overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
           <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
             <div className="h-2 w-2 rounded-full bg-[#D97706]" />
-            <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">Science</span>
+            <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">LC Biology</span>
             <p className="text-xs text-[#57534E]">
-              Explain how photosynthesis converts light energy into glucose
+              2023 LC Higher — Explain the process of meiosis and its significance in sexual reproduction
             </p>
           </div>
           <div className="space-y-4 p-5 text-sm">
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                In one sentence: what do you think this assignment is asking
-                you to do?
+                Let&apos;s start with the basics — how many divisions happen in meiosis, and what type of cells does it produce?
               </div>
             </div>
             <div className="flex justify-end">
               <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                I think it wants me to explain how photosynthesis converts light
-                into energy?
+                Two divisions — and it produces 4 haploid cells?
               </div>
             </div>
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Good start. What molecule does the plant produce to store that
-                energy, and where does the carbon come from?
+                Good. Now — why is it essential that gametes are haploid? What would go wrong at fertilisation if they were diploid instead?
               </div>
             </div>
             <div className="flex justify-end">
               <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                Glucose? And the carbon comes from CO2 in the air?
+                The chromosome number would double every generation… the zygote would be tetraploid?
               </div>
             </div>
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Exactly right. Now where does the energy to drive that reaction come from, and what happens to the oxygen?
+                Exactly. Now explain what happens in Prophase I that doesn&apos;t occur in mitosis — and why that&apos;s significant for genetic variation.
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Try It Demo ──────────────────────────────────────────────────────────────
+
+const DEMO_PROMPTS = [
+  "Explain the difference between mitosis and meiosis for LC Biology",
+  "What is Le Chatelier's Principle? LC Chemistry",
+  "Explain Newton's First Law with an example — LC Physics",
+  "What caused the 1916 Rising? LC History essay",
+  "Differentiate f(x) = 3x² + 5x − 2 from first principles — LC Maths",
+];
+
+const DEMO_RESPONSES: Record<string, string> = {
+  "Explain the difference between mitosis and meiosis for LC Biology":
+    "Before I explain — what do you already know about what a cell is trying to achieve in each process? Think about the end result: how many cells, and what type?",
+  "What is Le Chatelier's Principle? LC Chemistry":
+    "Instead of me defining it — when you disturb a system at equilibrium (say, by increasing pressure), what do you think the system tries to do in response?",
+  "Explain Newton's First Law with an example — LC Physics":
+    "Good topic. Before the definition — can you describe what you observe when a ball rolls across a perfectly smooth surface with no friction? What happens to it, and why?",
+  "What caused the 1916 Rising? LC History essay":
+    "Let's build your argument from the ground up — if you had to identify the single most important long-term cause, which would you pick, and what's your justification for ranking it highest?",
+  "Differentiate f(x) = 3x² + 5x − 2 from first principles — LC Maths":
+    "Before we apply the limit definition — what does the derivative of a function actually represent geometrically? Describe it in your own words first.",
+};
+
+const TryItDemo = () => {
+  const [input, setInput] = useState(DEMO_PROMPTS[0]);
+  const [stage, setStage] = useState<"idle" | "thinking" | "response" | "gated">("idle");
+  const [response, setResponse] = useState("");
+
+  const handleTry = () => {
+    setStage("thinking");
+    setTimeout(() => {
+      const r = DEMO_RESPONSES[input] ?? "Before I answer — what do you already know about this topic? Try to explain it in your own words first.";
+      setResponse(r);
+      setStage("response");
+    }, 1100);
+  };
+
+  const handleSecondMessage = () => setStage("gated");
+
+  return (
+    <section id="try-it" className="py-20 md:py-28 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">Try it free</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-[#1A1A1A] mb-3">
+            See the difference — no sign-up needed
+          </h2>
+          <p className="text-[#57534E]">Pick an LC topic below and see how Sage responds.</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-sm">
+          {/* Topic picker */}
+          {stage === "idle" && (
+            <div className="p-6 space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E]">Choose a topic</p>
+              <div className="flex flex-wrap gap-2">
+                {DEMO_PROMPTS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setInput(p)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-all ${
+                      input === p
+                        ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
+                        : "border-[#E7E5E4] text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={handleTry}
+                  className="w-full bg-[#1A1A1A] text-white rounded-xl py-3.5 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.01]"
+                >
+                  Ask Sage →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Thinking */}
+          {stage === "thinking" && (
+            <div className="p-8 flex flex-col items-center justify-center gap-3">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-[#D97706] animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-[#A8A29E]">Sage is thinking…</p>
+            </div>
+          )}
+
+          {/* Response */}
+          {(stage === "response" || stage === "gated") && (
+            <div className="flex flex-col">
+              <div className="px-5 py-3 bg-[#F5F4F0] border-b border-[#E7E5E4] flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
+                <span className="text-xs text-[#57534E] font-medium truncate">{input}</span>
+              </div>
+              <div className="space-y-3 p-5 text-sm">
+                <div className="flex justify-start">
+                  <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                    {response}
+                  </div>
+                </div>
+              </div>
+
+              {stage === "response" && (
+                <div className="border-t border-[#E7E5E4] px-5 py-4 space-y-3">
+                  <button
+                    onClick={handleSecondMessage}
+                    className="w-full rounded-xl border-2 border-dashed border-[#E7E5E4] bg-[#FAFAF8] px-4 py-3 text-sm text-[#A8A29E] text-left hover:border-[#D97706]/40 transition-all"
+                  >
+                    Type your response to continue…
+                  </button>
+                </div>
+              )}
+
+              {stage === "gated" && (
+                <div className="border-t border-[#E7E5E4] p-5 bg-[#FDFAF5]">
+                  <div className="text-center space-y-3">
+                    <p className="text-sm font-medium text-[#1A1A1A]">
+                      Ready to keep going?
+                    </p>
+                    <p className="text-xs text-[#57534E]">
+                      Sign up free to continue this session, upload your notes, and track your progress.
+                    </p>
+                    <a
+                      href="/auth/signup"
+                      onClick={() => posthog.capture('cta_clicked', { cta_location: 'try_it_gate' })}
+                      className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] w-full"
+                    >
+                      Start free — no card required
+                    </a>
+                    <button
+                      onClick={() => { setStage("idle"); setResponse(""); }}
+                      className="text-xs text-[#A8A29E] hover:text-[#57534E] underline underline-offset-2"
+                    >
+                      Try a different topic
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -544,25 +795,25 @@ const Features = () => {
       icon: MessageCircle,
       title: "Socratic Method",
       description:
-        "Guided questioning that builds real understanding. The tutor never gives you the answer. It helps you find it.",
+        "Sage never gives the answer — it asks you questions until you get there yourself. Built for LC and JC exam technique: you learn to reason, not just recall.",
     },
     {
       icon: BookOpen,
       title: "Learning Receipts",
       description:
-        "Every session ends with a scored breakdown: concepts you handled, gaps to review, and an honest score out of 100.",
+        "Every session ends with a scored breakdown out of 100: what you understood, your gaps, and what to review before your mocks or the real LC.",
     },
     {
       icon: TrendingUp,
       title: "Session History",
       description:
-        "Every tutoring session is saved to your dashboard. See your progress across subjects over time.",
+        "Every tutoring session is saved to your dashboard. Track your progress subject by subject — see what you've covered and what still needs work.",
     },
     {
       icon: CheckSquare,
       title: "Answer Checker",
       description:
-        "Already done your work? Switch to marking mode and share your answers. Sage marks each one with direct feedback and explains what you got right and what needs work.",
+        "Already written your answer? Switch to marking mode. Sage marks it like an LC examiner — telling you exactly what you got right, what's missing, and what the marking scheme would award.",
     },
   ];
 
@@ -613,14 +864,14 @@ const Features = () => {
           <div className="bg-[#F5F4F0] border-b border-[#E7E5E4] px-6 py-4 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-0.5">Learning Receipt</p>
-              <p className="font-serif text-base font-medium text-[#1A1A1A]">Biology: Photosynthesis</p>
+              <p className="font-serif text-base font-medium text-[#1A1A1A]">LC Chemistry: Organic Chemistry</p>
             </div>
             <div className="text-right">
               <div className="flex items-baseline gap-0.5 justify-end">
-                <span className="font-serif text-3xl font-medium text-amber-600">72</span>
+                <span className="font-serif text-3xl font-medium text-amber-600">84</span>
                 <span className="text-sm text-[#A8A29E]">/100</span>
               </div>
-              <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 rounded-md px-2 py-0.5 mt-1 inline-block">Developing</span>
+              <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-100 rounded-md px-2 py-0.5 mt-1 inline-block">H2 Level</span>
             </div>
           </div>
 
@@ -629,7 +880,7 @@ const Features = () => {
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">Concepts covered</p>
               <div className="space-y-1.5">
-                {["Energy conversion in chloroplasts", "The role of chlorophyll", "Glucose as stored energy"].map((c) => (
+                {["Functional groups of alcohols, esters & aldehydes", "Condensation reactions & esterification", "Naming organic compounds (IUPAC)"].map((c) => (
                   <div key={c} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={2.5} />
                     <span className="text-sm text-[#1A1A1A]">{c}</span>
@@ -640,11 +891,11 @@ const Features = () => {
 
             {/* Gaps to review — highlighted as USP */}
             <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700 mb-2">Gaps to review</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700 mb-2">Gaps to review before mocks</p>
               <div className="space-y-2.5">
                 {[
-                  "Light-dependent vs light-independent reactions",
-                  "The specific role of NADPH and ATP",
+                  "Mechanism of addition reactions in alkenes",
+                  "Distinguishing tests for organic compounds",
                 ].map((g) => (
                   <div key={g} className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-2">
@@ -670,105 +921,17 @@ const Features = () => {
 };
 
 
-// ─── For Teachers ─────────────────────────────────────────────────────────────
-
-const ForTeachers = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) posthog.capture('for_teachers_section_viewed'); },
-      { threshold: 0.2 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const cards = [
-    {
-      icon: Users,
-      title: "Rooms",
-      body: "Create a class room, add assignments, and invite students with a single code. Works for grinds, school classes, or study groups.",
-    },
-    {
-      icon: FileText,
-      title: "Learning Receipts",
-      body: "Every session generates a scored receipt showing what each student covered, what they understood, and what needs work. Shareable and private.",
-    },
-    {
-      icon: BarChart2,
-      title: "Completion Tracking",
-      body: "See which students have completed each assignment and which haven't. No chasing. No guessing.",
-    },
-  ];
-
-  return (
-    <section
-      id="for-teachers"
-      ref={sectionRef}
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
-    >
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            For Teachers
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-6">
-            Assign work. See how your students think.
-          </h2>
-          <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
-            Create a room, share a 6-digit code, and your students are in. They work through assignments with Sage, and you see exactly where they struggled and what they understood. No marking. No guessing.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-12">
-          {cards.map((card, index) => (
-            <div
-              key={index}
-              className="group bg-white border border-[#E7E5E4] p-8 rounded-xl hover:shadow-lg transition-all duration-300"
-            >
-              <div className="flex items-start gap-5">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center group-hover:bg-[#D97706]/10 transition-colors">
-                  <card.icon className="w-6 h-6 text-[#D97706]" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
-                    {card.title}
-                  </h3>
-                  <p className="text-[#57534E] leading-relaxed">{card.body}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center">
-          <a
-            href="/app/rooms"
-            onClick={() => posthog.capture('cta_clicked', { cta_location: 'teacher_section' })}
-            className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-8 py-4 text-base font-medium transition-all hover:scale-[1.02]"
-          >
-            Create a free room
-          </a>
-          <p className="text-sm text-[#A8A29E] mt-3">Free during beta — limited spots.</p>
-        </div>
-      </div>
-    </section>
-  );
-};
 
 // ─── Comparison ───────────────────────────────────────────────────────────────
 
 const Comparison = () => {
   const rows = [
-    { feature: "Gives you the answer directly", chatgpt: true, humanTutor: false, studywith: false },
-    { feature: "Builds genuine understanding", chatgpt: false, humanTutor: true, studywith: true },
-    { feature: "Available 24/7", chatgpt: true, humanTutor: false, studywith: true },
-    { feature: "Scored learning breakdown", chatgpt: false, humanTutor: false, studywith: true },
-    { feature: "Answer checker with direct marking", chatgpt: false, humanTutor: true, studywith: true },
-    { feature: "Free to use", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Gives you the answer (useless for exams)", chatgpt: true, humanTutor: false, studywith: false },
+    { feature: "Builds genuine H1-level understanding", chatgpt: false, humanTutor: true, studywith: true },
+    { feature: "Available at 2am before your mocks", chatgpt: true, humanTutor: false, studywith: true },
+    { feature: "Knows your specific Grinds 360 notes", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Scored breakdown after every session", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Marks your answers like an LC examiner", chatgpt: false, humanTutor: true, studywith: true },
   ];
 
   const Cell = ({ value, highlight }: { value: boolean; highlight?: boolean }) =>
@@ -789,7 +952,7 @@ const Comparison = () => {
             Not all AI tutors are equal
           </h2>
           <p className="text-lg text-[#57534E]">
-            ChatGPT answers for you. Human tutors cost €40/hr. StudyWith does something different.
+            ChatGPT writes your answers. Human grinds cost €40/hr. StudyWith makes you actually understand it.
           </p>
         </div>
 
@@ -844,25 +1007,25 @@ const Comparison = () => {
 const UseCases = () => {
   const useCases = [
     {
-      icon: GraduationCap,
-      title: "Exam Preparation",
+      icon: FlaskConical,
+      title: "LC Science Subjects",
       description:
-        "Work through past papers and practice questions with guided support that helps you understand concepts, not just memorise answers.",
-      example: "Perfect for A-Levels, Leaving Cert, GCSEs, and university",
+        "Work through Chemistry, Biology, and Physics past papers question by question. Sage guides you to the right reasoning — never just hands you the answer.",
+      example: "Chemistry, Biology, Physics, Agricultural Science",
     },
     {
-      icon: PenLine,
-      title: "Essay Writing",
+      icon: FunctionSquare,
+      title: "LC & JC Maths",
       description:
-        "Develop stronger arguments and structure your thoughts. Get questions that help you think critically about your thesis and evidence.",
-      example: "Great for history, literature, and social sciences",
+        "Step through Paper 1 and Paper 2 problems one line at a time. Build the method, not just the answer — because the LC marking scheme rewards method marks.",
+      example: "Higher & Ordinary Level · Paper 1 & Paper 2",
     },
     {
-      icon: Calculator,
-      title: "Maths Problems",
+      icon: Dna,
+      title: "Essay & Language Subjects",
       description:
-        "Step through complex problems one question at a time. Build confidence in your approach rather than jumping straight to formulas.",
-      example: "From algebra to calculus and statistics",
+        "Structure your LC English essay, develop a History argument, or practise Irish expression. Sage helps you find your own thesis — not write it for you.",
+      example: "English, Irish, History, Geography, Business, Economics",
     },
   ];
 
@@ -871,10 +1034,10 @@ const UseCases = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16 md:mb-20">
           <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            Real use cases
+            LC &amp; JC subjects
           </p>
           <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
-            How students use it
+            Every subject. Every paper.
           </h2>
         </div>
 
@@ -1027,39 +1190,44 @@ const Pricing = () => {
 const FAQ = () => {
   const faqs = [
     {
-      question: "How is this different from just asking ChatGPT?",
+      question: "Is this built specifically for the Leaving Cert and Junior Cycle?",
       answer:
-        "ChatGPT will just give you the answer. StudyWith is specifically designed to refuse that. It uses the Socratic method to guide your thinking. The goal is to make you better at reasoning through problems, not to complete your homework for you.",
+        "Yes. StudyWith is designed around the Irish curriculum — LC and JC subjects, SEC exam formats, marking scheme logic, and H1/H2 exam technique. The AI knows the difference between LC Higher and Ordinary Level, understands what SRPs are in essay marking, and is familiar with all the major LC subjects from Chemistry to Irish to History.",
     },
     {
-      question: "What is the Socratic method?",
+      question: "Why not just use ChatGPT for my LC studying?",
       answer:
-        "The Socratic method is a teaching technique developed by the ancient Greek philosopher Socrates. Instead of lecturing or giving direct answers, a teacher asks a series of probing questions that lead the student to reason their way to understanding. The idea is that genuine understanding can't be handed to you. It has to be reached through your own thinking. Socrates believed that asking the right questions was more powerful than providing the right answers, because it builds reasoning skills that last. That's exactly the philosophy behind StudyWith.",
+        "ChatGPT will write your answer for you — which is exactly what you don't want when preparing for the LC. When the exam comes, there's no AI in the room. StudyWith refuses to give you the answer directly. Instead, it asks you questions until you get there yourself. That's what builds the understanding you need on exam day. Plus, ChatGPT doesn't know your specific Grinds 360 notes — StudyWith reads your uploaded PDFs and works from your actual material.",
     },
     {
-      question: "How does the Socratic tutoring method work?",
+      question: "Can I upload my Grinds 360 notes?",
       answer:
-        "Instead of giving you direct answers, our AI tutor asks thoughtful questions that guide you to discover the solution yourself. This approach builds deeper understanding and better retention. For example, if you're stuck on a maths problem, we might ask 'What do you know about the relationship between these variables?' rather than showing you the formula.",
+        "Yes. You can upload your Grinds 360 PDFs directly and StudyWith will work through them with you using Socratic questioning. The AI reads your specific notes and builds questions from that material — so you're always studying what's actually relevant to your exams, not generic content.",
     },
     {
       question: "Does the AI just give away answers directly?",
       answer:
-        "No. That's exactly what we avoid. The AI will never simply hand over the answer. Instead, it guides you through the reasoning process with questions and hints. When you reach the answer, you'll genuinely understand how you got there.",
+        "No — and that's the whole point. The AI is specifically instructed never to hand over an answer, even if you ask it directly. It will give hints, ask guiding questions, and help you get unstuck — but you have to reach the answer yourself. This is what builds the exam-ready understanding you need.",
     },
     {
-      question: "What subjects does StudyWith cover?",
+      question: "What LC subjects does StudyWith cover?",
       answer:
-        "StudyWith covers a wide range of subjects including mathematics, sciences (physics, chemistry, biology), humanities (history, literature, philosophy), languages, programming, and more. Paste any assignment and the tutor adapts.",
+        "All of them. Chemistry, Biology, Physics, Maths (Paper 1 and Paper 2), English, Irish, History, Geography, Business, Economics, Accounting, Agricultural Science, Computer Science, Languages (French, German, Spanish), Art, Music, Home Economics, PE, and more. Paste any question or topic and the tutor adapts to the subject.",
     },
     {
       question: "What is a Learning Receipt?",
       answer:
-        "At the end of each session, StudyWith generates a Learning Receipt, a scored breakdown of the session. It shows your score out of 100, the concepts you demonstrated understanding of, gaps to review, and a written summary. Each receipt has a unique shareable link.",
+        "At the end of every session, StudyWith generates a Learning Receipt — a scored breakdown out of 100. It shows the concepts you demonstrated understanding of, the gaps you still need to review before your mocks or the real LC, and an honest overall score. Each receipt has a unique shareable link so you can keep a record of your progress.",
     },
     {
-      question: "Is StudyWith free?",
+      question: "How much does it cost?",
       answer:
-        "StudyWith is currently free for beta users.",
+        "There's a 7-day free trial with no charge upfront — no card required to start. After the trial, plans start at €7.42/month on annual billing. Student pricing (€5.99/mo or €39/yr) is applied automatically at checkout if you have a .ac.ie or .edu email. You can cancel anytime.",
+    },
+    {
+      question: "Is my data private? Where do my PDFs go?",
+      answer:
+        "Your uploaded PDFs and session conversations are private to your account and are never used to train the AI or shared with anyone. Sessions are stored so you can review them, and you can delete your data at any time from your account settings.",
     },
   ];
 
@@ -1102,8 +1270,7 @@ const Footer = () => {
               StudyWith
             </a>
             <p className="text-[#57534E] mt-4 text-sm leading-relaxed">
-              An AI tutor that helps you think, not just copy. Learn through
-              guided discovery.
+              The AI study companion built for Leaving Cert and Junior Cycle students. Upload your notes. Understand your material. Get the H1.
             </p>
           </div>
 
@@ -1172,7 +1339,7 @@ const Footer = () => {
             {currentYear} StudyWith. All rights reserved.
           </p>
           <p className="text-sm text-[#57534E]">
-            Made for students who want to actually learn.
+            Made for LC &amp; JC students who want to actually understand it.
           </p>
         </div>
       </div>
@@ -1215,27 +1382,29 @@ export default function StudyWithLanding() {
       <main>
         <Hero />
         <HowItWorks />
+        <TryItDemo />
         <Features />
-        <ForTeachers />
         <Comparison />
         <UseCases />
+        <Pricing />
         <FAQ />
         {/* Closing CTA */}
         <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
-              Ready to actually understand your work?
+              Your mocks are closer than you think.
             </h2>
             <p className="text-lg text-[#57534E] mb-10">
-              Join students studying smarter with Sage.
+              Start studying smarter today. Upload your Grinds 360 notes and let Sage guide you to the H1.
             </p>
             <a
               href="/auth/signup"
               onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
-              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
             >
-              Get started free
+              Start free — no card required
             </a>
+            <p className="text-sm text-[#A8A29E] mt-4">7-day free trial · Cancel anytime</p>
           </div>
         </section>
       </main>
