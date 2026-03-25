@@ -34,16 +34,18 @@ function detectSubject(text: string): Subject {
   const t = text.toLowerCase();
   if (/\b(algorithm|programming|code|python|javascript|java|c\+\+|database|software|html|css|function|loop|array|recursion|compiler|network|api|git)\b/.test(t)) return "Computer Science";
   if (/\b(circuit|thermodynamics|mechanical|structural|stress|strain|fluid|engineering|cad|electronics|statics|dynamics|beam|torque|voltage)\b/.test(t)) return "Engineering";
-  if (/\b(economics|supply|demand|gdp|inflation|macroeconom|microeconom|fiscal|monetary|elasticity|equilibrium|market|trade)\b/.test(t)) return "Economics";
+  if (/\b(economics|supply|demand|gdp|inflation|macroeconom|microeconom|fiscal|monetary|elasticity|equilibrium|market|trade|cao points|cao)\b/.test(t)) return "Economics";
   if (/\b(psychology|behaviour|cognitive|memory|attachment|personality|experiment|mental|stimulus|response|piaget|freud|brain)\b/.test(t)) return "Psychology";
   if (/\b(accounting|ledger|debit|credit|trial balance|balance sheet|income statement|profit.{0,5}loss|depreciation|amortis|accrual|prepaid|receivable|payable|non-current|nca|financial statement|double entry)\b/.test(t)) return "Business";
   if (/\b(business|marketing|management|strategy|finance|revenue|profit|entrepreneur|stakeholder|swot|cash flow)\b/.test(t)) return "Business";
   if (/\b(art|design|colour|composition|painting|sculpture|photography|typography|texture|perspective|visual|aesthetic)\b/.test(t)) return "Art & Design";
-  if (/\b(math|algebra|calculus|equation|differentiat|integrat|trigonometry|geometry|probability|statistics|vector|matrix|polynomial|logarithm|quadratic|times|multiply|divide|fraction|percentage|decimal|squared|cubed|factorial|prime|arithmetic|calculate)\b/.test(t) || /\d\s*[×÷+\-*/^]\s*\d/.test(t) || /\bwhat(?:'?s| is)\s+\d+/.test(t)) return "Maths";
-  if (/\b(biology|chemistry|physics|photosynthesis|atom|molecule|cell|dna|evolution|force|energy|wave|element|compound|reaction|enzyme)\b/.test(t)) return "Science";
-  if (/\b(essay|literature|poem|poetry|novel|write|writing|argument|thesis|character|theme|metaphor|narrative|prose|language analysis)\b/.test(t)) return "English";
-  if (/\b(history|war|revolution|empire|century|medieval|ancient|cold war|world war|industrial|political|government|democracy|monarch)\b/.test(t)) return "History";
-  if (/\b(french|spanish|german|italian|japanese|chinese|korean|arabic|latin|translate|conjugat|vocabulary|grammar|verb|tense)\b/.test(t)) return "Languages";
+  // LC Maths-specific terms
+  if (/\b(math|algebra|calculus|equation|differentiat|integrat|trigonometry|geometry|probability|statistics|vector|matrix|polynomial|logarithm|quadratic|times|multiply|divide|fraction|percentage|decimal|squared|cubed|factorial|prime|arithmetic|calculate|surd|complex number|binomial|proof by induction|limits?|derivatives?|first principles|paper 1|paper 2|lc maths|jc maths)\b/.test(t) || /\d\s*[×÷+\-*/^]\s*\d/.test(t) || /\bwhat(?:'?s| is)\s+\d+/.test(t)) return "Maths";
+  // LC Science-specific terms
+  if (/\b(biology|chemistry|physics|photosynthesis|atom|molecule|cell|dna|evolution|force|energy|wave|element|compound|reaction|enzyme|meiosis|mitosis|osmosis|respiration|titration|equilibrium|le chatelier|mole|molarity|isotope|radioactiv|organ system|genetics|inheritance|allele|dominant|recessive|chromosome|ecological|ecosystem|food chain|newton|momentum|velocity|acceleration|electric field|magnetic field|refraction|diffraction|organic chemistry|alkane|alkene|alcohol|ester|carboxylic|functional group|periodic table|ionic|covalent|electroly|oxidation|reduction|redox|ph|acid|base|buffer|agricultural science)\b/.test(t)) return "Science";
+  if (/\b(essay|literature|poem|poetry|novel|write|writing|argument|thesis|character|theme|metaphor|narrative|prose|language analysis|comparative|single text|unseen|srp|lc english|jc english)\b/.test(t)) return "English";
+  if (/\b(history|war|revolution|empire|century|medieval|ancient|cold war|world war|industrial|political|government|democracy|monarch|1916|irish independence|partition|treaty|civil war|renaissance|reformation|plantation|famine|rising)\b/.test(t)) return "History";
+  if (/\b(french|spanish|german|italian|japanese|chinese|korean|arabic|latin|irish|gaeilge|translate|conjugat|vocabulary|grammar|verb|tense|as gaeilge|scrúdú)\b/.test(t)) return "Languages";
   return "General";
 }
 
@@ -103,7 +105,7 @@ function getReviewOpeningMessage(topic: string): string {
 type SessionMode = "tutor" | "corrector";
 
 const CORRECTOR_OPENING_MESSAGES = [
-  "Share your answers and I'll mark them for you — correct, incorrect, or partially correct, with an explanation for each.",
+  "Share your answers and I'll mark them for you: correct, incorrect, or partially correct, with an explanation for each.",
   "Ready to review your work. Paste your answers (all at once or one by one) and I'll give you direct feedback on each.",
   "Let's go through your answers. Share what you've got and I'll tell you what's right, what needs fixing, and why.",
 ];
@@ -863,7 +865,7 @@ export default function TutorChat({
                 setMode("corrector");
                 setMessages((prev) => [
                   ...prev,
-                  { id: crypto.randomUUID(), role: "tutor" as const, content: "Switching to marking mode. Share your completed answers — text or a photo of your work — and I'll go through them for you." },
+                  { id: crypto.randomUUID(), role: "tutor" as const, content: "Switching to marking mode. Share your completed answers, text or a photo of your work, and I'll go through them for you." },
                 ]);
               }}
               className="shrink-0 rounded-lg border border-[#E7E5E4] px-3 py-1.5 text-xs font-medium text-[#57534E] hover:border-emerald-400 hover:text-emerald-700 transition whitespace-nowrap"

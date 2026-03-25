@@ -107,6 +107,7 @@ ${transcript}`;
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       max_tokens: 1024,
+      response_format: { type: "json_object" },
       messages: [{ role: "user", content: receiptPrompt }],
     });
     receiptText = completion.choices[0]?.message?.content ?? "{}";

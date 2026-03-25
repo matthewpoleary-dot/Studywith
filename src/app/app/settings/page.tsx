@@ -515,7 +515,7 @@ export default function SettingsPage() {
                   <div>
                     <h2 className="font-medium text-[#1A1A1A] mb-1">
                       StudyWith Pro
-                      {planInfo.interval === "year" ? " — Annual" : " — Monthly"}
+                      {planInfo.interval === "year" ? " (Annual)" : " (Monthly)"}
                     </h2>
                     <p className="text-sm text-[#57534E]">
                       {planInfo.trialing
@@ -587,11 +587,11 @@ export default function SettingsPage() {
                     <h2 className="font-medium text-[#1A1A1A]">Save with annual billing</h2>
                   </div>
                   <p className="text-sm text-[#57534E] mb-4">
-                    Switch to an annual plan and save over 40% — just €7.42/month.
+                    Switch to an annual plan and save over 40%. Just €7.42/month.
                   </p>
                   <CheckoutButton
                     plan="annual"
-                    label="Switch to Annual — €89/yr"
+                    label="Switch to Annual | €89/yr"
                     className="inline-flex items-center justify-center rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition disabled:opacity-60"
                   />
                 </section>
@@ -625,7 +625,7 @@ export default function SettingsPage() {
                     Free
                   </span>
                 </div>
-                <p className="text-xs text-[#A8A29E] mb-4">Then €12.99/month — cancel anytime.</p>
+                <p className="text-xs text-[#A8A29E] mb-4">Then €12.99/month, cancel anytime.</p>
                 <CheckoutButton
                   plan="trial"
                   label="Start free trial"
@@ -664,7 +664,7 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <p className="text-sm text-[#57534E]">
-                      Best value — just €7.42 per month, billed annually.
+                      Best value. Just €7.42 per month, billed annually.
                     </p>
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-[#1A1A1A]">

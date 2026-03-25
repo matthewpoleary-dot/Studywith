@@ -105,7 +105,7 @@ export default function UpgradePage() {
                 <p className="text-sm font-semibold">
                   {loading === "trial" ? "Redirecting…" : "Start 7-day free trial"}
                 </p>
-                <p className="text-xs text-white/60 mt-0.5">Then €12.99/mo — cancel anytime</p>
+                <p className="text-xs text-white/60 mt-0.5">Then €12.99/mo, cancel anytime</p>
               </div>
               <span className="text-xs bg-white/20 rounded-full px-2.5 py-1 font-medium">
                 Free

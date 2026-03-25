@@ -50,13 +50,27 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="font-serif text-2xl font-medium mb-4">4. Third-party services</h2>
+            <h2 className="font-serif text-2xl font-medium mb-4">4. Third-party services and data transfers</h2>
             <p className="text-[#57534E] leading-relaxed mb-3">We use the following third-party providers to operate the service:</p>
             <ul className="space-y-2 text-[#57534E]">
-              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Supabase</strong> — database and authentication. Your account data and session history are stored on Supabase infrastructure.</span></li>
-              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Groq</strong> — AI inference. Your session messages are sent to Groq&apos;s API to generate tutor responses. Groq&apos;s data processing terms apply.</span></li>
-              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Stripe</strong> — payment processing. Billing is handled entirely by Stripe. We do not see or store your full card details.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Supabase</strong> &mdash; database and authentication. Your account data and session history are stored on Supabase infrastructure (AWS, EU region). Supabase is compliant with GDPR as a data processor.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Groq</strong> &mdash; AI inference. The content of your tutoring sessions (messages and assignment text) is sent to Groq&apos;s API to generate tutor responses in real time. Groq processes this data as a data processor under its Terms of Service and does not use customer data submitted via API to train its models. Data is processed in the United States under standard contractual clauses. You can review Groq&apos;s privacy policy at groq.com.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Stripe</strong> &mdash; payment processing. Billing is handled entirely by Stripe. We do not see or store your card details. Stripe is PCI-DSS compliant.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Resend</strong> &mdash; transactional email. Email addresses are shared with Resend solely to send account-related emails (confirmations, password resets). Resend does not use this data for marketing.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">PostHog</strong> &mdash; product analytics. We collect anonymised usage events (e.g. pages visited, buttons clicked) to understand how the service is used. No session content is included. PostHog is hosted in the EU.</span></li>
             </ul>
+            <p className="text-[#57534E] leading-relaxed mt-3">Where personal data is transferred outside the European Economic Area (EEA), we rely on appropriate safeguards such as standard contractual clauses (SCCs) approved by the European Commission.</p>
+          </section>
+
+          <section>
+            <h2 className="font-serif text-2xl font-medium mb-4">4a. Data protection and legal basis (GDPR Articles 13 &amp; 14)</h2>
+            <p className="text-[#57534E] leading-relaxed mb-3">We are the data controller for personal data collected via StudyWith. We process your data on the following legal bases under GDPR Article 6:</p>
+            <ul className="space-y-2 text-[#57534E]">
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Contract performance (Article 6(1)(b)):</strong> We process your email address, session content, and usage data in order to provide the tutoring service you signed up for.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Legitimate interests (Article 6(1)(f)):</strong> We process anonymised analytics data to improve the service. Our legitimate interest does not override your rights.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span><strong className="text-[#1A1A1A]">Legal obligation (Article 6(1)(c)):</strong> We may retain billing records as required by Irish and EU tax law.</span></li>
+            </ul>
+            <p className="text-[#57534E] leading-relaxed mt-3">You have the right to lodge a complaint with the Irish Data Protection Commission (DPC) at dataprotection.ie if you believe your data rights have not been respected.</p>
           </section>
 
           <section>

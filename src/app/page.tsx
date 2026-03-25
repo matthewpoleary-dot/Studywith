@@ -325,9 +325,9 @@ const HERO_DEMOS = [
     textColor: "text-[#D97706]",
     file: "LC_Chemistry_Notes.pdf",
     pages: "63 pages",
-    topic: "Organic Chemistry — Alcohols & Esters",
+    topic: "Organic Chemistry: Alcohols & Esters",
     messages: [
-      { role: "tutor", text: "Before we dive into esters — what functional group defines an alcohol, and how would you identify one from a structural formula?" },
+      { role: "tutor", text: "Before we dive into esters. What functional group defines an alcohol, and how would you identify one from a structural formula?" },
       { role: "student", text: "It has an OH group attached to a carbon chain?" },
       { role: "tutor", text: "Exactly. Now, what two reactants combine to form an ester in a condensation reaction, and what small molecule is released in the process?" },
     ],
@@ -339,11 +339,11 @@ const HERO_DEMOS = [
     textColor: "text-green-700",
     file: "LC_Biology_Notes.pdf",
     pages: "81 pages",
-    topic: "Genetics — Meiosis & Inheritance",
+    topic: "Genetics: Meiosis & Inheritance",
     messages: [
-      { role: "tutor", text: "Let's start with the key distinction — what is the difference between mitosis and meiosis in terms of the cells they produce?" },
+      { role: "tutor", text: "Let's start with the key distinction. What is the difference between mitosis and meiosis in terms of the cells they produce?" },
       { role: "student", text: "Meiosis produces 4 haploid cells, mitosis produces 2 diploid cells?" },
-      { role: "tutor", text: "Good. Why is it essential that gametes are haploid rather than diploid — what would happen at fertilisation if they weren't?" },
+      { role: "tutor", text: "Good. Why is it essential that gametes are haploid rather than diploid? What would happen at fertilisation if they weren't?" },
     ],
   },
   {
@@ -353,9 +353,9 @@ const HERO_DEMOS = [
     textColor: "text-violet-700",
     file: "LC_Maths_Notes.pdf",
     pages: "55 pages",
-    topic: "Calculus — Differentiation from First Principles",
+    topic: "Calculus: Differentiation from First Principles",
     messages: [
-      { role: "tutor", text: "Before applying the rule — can you tell me what the derivative of a function actually represents, in your own words?" },
+      { role: "tutor", text: "Before applying the rule. Can you tell me what the derivative of a function actually represents, in your own words?" },
       { role: "student", text: "It's the rate of change, or the slope of the tangent at a point?" },
       { role: "tutor", text: "Exactly right. Now, using first principles, write the limit definition of f′(x) and identify what each part of that expression represents." },
     ],
@@ -394,12 +394,6 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row lg:items-center gap-16 lg:gap-24">
           {/* Left: copy */}
           <div className="flex-1 min-w-0">
-            {/* LC badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#D97706]/30 bg-[#D97706]/8 px-4 py-1.5 mb-6">
-              <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
-              <span className="text-xs font-semibold text-[#D97706] uppercase tracking-wide">Built for Leaving Cert &amp; Junior Cycle</span>
-            </div>
-
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-4xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
               Get the <em className="italic text-[#D97706]">H1</em>. Actually understand it.
             </h1>
@@ -411,7 +405,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
               <div className="sm:flex-none sm:w-auto">
                 <CheckoutButton
-                  label="Start free — upload your notes"
+                  label="Start free: upload your notes"
                   className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                 />
               </div>
@@ -543,7 +537,7 @@ const HowItWorks = () => {
       icon: Lightbulb,
       title: "Get Socratic questions, not answers",
       description:
-        "Your AI tutor asks you questions — it never gives the answer directly. You work through the material until you genuinely understand it.",
+        "Your AI tutor asks you questions. It never gives the answer directly. You work through the material until you genuinely understand it.",
     },
     {
       number: "03",
@@ -595,23 +589,23 @@ const HowItWorks = () => {
             <div className="h-2 w-2 rounded-full bg-[#D97706]" />
             <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">LC Biology</span>
             <p className="text-xs text-[#57534E]">
-              2023 LC Higher — Explain the process of meiosis and its significance in sexual reproduction
+              2023 LC Higher | Explain the process of meiosis and its significance in sexual reproduction
             </p>
           </div>
           <div className="space-y-4 p-5 text-sm">
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Let&apos;s start with the basics — how many divisions happen in meiosis, and what type of cells does it produce?
+                Let&apos;s start with the basics. How many divisions happen in meiosis, and what type of cells does it produce?
               </div>
             </div>
             <div className="flex justify-end">
               <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                Two divisions — and it produces 4 haploid cells?
+                Two divisions, and it produces 4 haploid cells?
               </div>
             </div>
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Good. Now — why is it essential that gametes are haploid? What would go wrong at fertilisation if they were diploid instead?
+                Good. Why is it essential that gametes are haploid? What would go wrong at fertilisation if they were diploid instead?
               </div>
             </div>
             <div className="flex justify-end">
@@ -621,7 +615,7 @@ const HowItWorks = () => {
             </div>
             <div className="flex justify-start">
               <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Exactly. Now explain what happens in Prophase I that doesn&apos;t occur in mitosis — and why that&apos;s significant for genetic variation.
+                Exactly. Now explain what happens in Prophase I that doesn&apos;t occur in mitosis, and why that&apos;s significant for genetic variation.
               </div>
             </div>
           </div>
@@ -636,39 +630,42 @@ const HowItWorks = () => {
 const DEMO_PROMPTS = [
   "Explain the difference between mitosis and meiosis for LC Biology",
   "What is Le Chatelier's Principle? LC Chemistry",
-  "Explain Newton's First Law with an example — LC Physics",
+  "Explain Newton's First Law with an example | LC Physics",
   "What caused the 1916 Rising? LC History essay",
-  "Differentiate f(x) = 3x² + 5x − 2 from first principles — LC Maths",
+  "Differentiate f(x) = 3x² + 5x - 2 from first principles | LC Maths",
 ];
 
 const DEMO_RESPONSES: Record<string, string> = {
   "Explain the difference between mitosis and meiosis for LC Biology":
-    "Before I explain — what do you already know about what a cell is trying to achieve in each process? Think about the end result: how many cells, and what type?",
+    "Before I explain. What do you already know about what a cell is trying to achieve in each process? Think about the end result: how many cells, and what type?",
   "What is Le Chatelier's Principle? LC Chemistry":
-    "Instead of me defining it — when you disturb a system at equilibrium (say, by increasing pressure), what do you think the system tries to do in response?",
-  "Explain Newton's First Law with an example — LC Physics":
-    "Good topic. Before the definition — can you describe what you observe when a ball rolls across a perfectly smooth surface with no friction? What happens to it, and why?",
+    "Instead of me defining it. When you disturb a system at equilibrium (say, by increasing pressure), what do you think the system tries to do in response?",
+  "Explain Newton's First Law with an example | LC Physics":
+    "Good topic. Before the definition, can you describe what you observe when a ball rolls across a perfectly smooth surface with no friction? What happens to it, and why?",
   "What caused the 1916 Rising? LC History essay":
-    "Let's build your argument from the ground up — if you had to identify the single most important long-term cause, which would you pick, and what's your justification for ranking it highest?",
-  "Differentiate f(x) = 3x² + 5x − 2 from first principles — LC Maths":
-    "Before we apply the limit definition — what does the derivative of a function actually represent geometrically? Describe it in your own words first.",
+    "Let's build your argument from the ground up. If you had to identify the single most important long-term cause, which would you pick, and what's your justification for ranking it highest?",
+  "Differentiate f(x) = 3x² + 5x - 2 from first principles | LC Maths":
+    "Before we apply the limit definition. What does the derivative of a function actually represent geometrically? Describe it in your own words first.",
 };
 
 const TryItDemo = () => {
   const [input, setInput] = useState(DEMO_PROMPTS[0]);
   const [stage, setStage] = useState<"idle" | "thinking" | "response" | "gated">("idle");
   const [response, setResponse] = useState("");
+  const [userReply, setUserReply] = useState("");
 
   const handleTry = () => {
     setStage("thinking");
     setTimeout(() => {
-      const r = DEMO_RESPONSES[input] ?? "Before I answer — what do you already know about this topic? Try to explain it in your own words first.";
+      const r = DEMO_RESPONSES[input] ?? "Before I answer, what do you already know about this topic? Try to explain it in your own words first.";
       setResponse(r);
       setStage("response");
     }, 1100);
   };
 
-  const handleSecondMessage = () => setStage("gated");
+  const handleSecondMessage = () => {
+    if (userReply.trim()) setStage("gated");
+  };
 
   return (
     <section id="try-it" className="py-20 md:py-28 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
@@ -676,7 +673,7 @@ const TryItDemo = () => {
         <div className="text-center mb-10">
           <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">Try it free</p>
           <h2 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-[#1A1A1A] mb-3">
-            See the difference — no sign-up needed
+            See the difference. No sign-up needed.
           </h2>
           <p className="text-[#57534E]">Pick an LC topic below and see how Sage responds.</p>
         </div>
@@ -744,13 +741,25 @@ const TryItDemo = () => {
               </div>
 
               {stage === "response" && (
-                <div className="border-t border-[#E7E5E4] px-5 py-4 space-y-3">
-                  <button
-                    onClick={handleSecondMessage}
-                    className="w-full rounded-xl border-2 border-dashed border-[#E7E5E4] bg-[#FAFAF8] px-4 py-3 text-sm text-[#A8A29E] text-left hover:border-[#D97706]/40 transition-all"
-                  >
-                    Type your response to continue…
-                  </button>
+                <div className="border-t border-[#E7E5E4] px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={userReply}
+                      onChange={(e) => setUserReply(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSecondMessage(); }}
+                      placeholder="Type your response…"
+                      autoFocus
+                      className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-4 py-2.5 text-sm text-[#1A1A1A] placeholder:text-[#A8A29E] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+                    />
+                    <button
+                      onClick={handleSecondMessage}
+                      disabled={!userReply.trim()}
+                      className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#1A1A1A]/80"
+                    >
+                      <Send className="w-4 h-4 text-white" strokeWidth={2} />
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -768,7 +777,7 @@ const TryItDemo = () => {
                       onClick={() => posthog.capture('cta_clicked', { cta_location: 'try_it_gate' })}
                       className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] w-full"
                     >
-                      Start free — no card required
+                      Start free, no card required
                     </a>
                     <button
                       onClick={() => { setStage("idle"); setResponse(""); }}
@@ -795,7 +804,7 @@ const Features = () => {
       icon: MessageCircle,
       title: "Socratic Method",
       description:
-        "Sage never gives the answer — it asks you questions until you get there yourself. Built for LC and JC exam technique: you learn to reason, not just recall.",
+        "Sage never gives the answer. It asks you questions until you get there yourself. Built for LC and JC exam technique: you learn to reason, not just recall.",
     },
     {
       icon: BookOpen,
@@ -807,13 +816,13 @@ const Features = () => {
       icon: TrendingUp,
       title: "Session History",
       description:
-        "Every tutoring session is saved to your dashboard. Track your progress subject by subject — see what you've covered and what still needs work.",
+        "Every tutoring session is saved to your dashboard. Track your progress subject by subject and see what you've covered and what still needs work.",
     },
     {
       icon: CheckSquare,
       title: "Answer Checker",
       description:
-        "Already written your answer? Switch to marking mode. Sage marks it like an LC examiner — telling you exactly what you got right, what's missing, and what the marking scheme would award.",
+        "Already written your answer? Switch to marking mode. Sage marks it like an LC examiner, telling you exactly what you got right, what's missing, and what the marking scheme would award.",
     },
   ];
 
@@ -1010,21 +1019,21 @@ const UseCases = () => {
       icon: FlaskConical,
       title: "LC Science Subjects",
       description:
-        "Work through Chemistry, Biology, and Physics past papers question by question. Sage guides you to the right reasoning — never just hands you the answer.",
+        "Work through Chemistry, Biology, and Physics past papers question by question. Sage guides you to the right reasoning, never just handing you the answer.",
       example: "Chemistry, Biology, Physics, Agricultural Science",
     },
     {
       icon: FunctionSquare,
       title: "LC & JC Maths",
       description:
-        "Step through Paper 1 and Paper 2 problems one line at a time. Build the method, not just the answer — because the LC marking scheme rewards method marks.",
+        "Step through Paper 1 and Paper 2 problems one line at a time. Build the method, not just the answer, because the LC marking scheme rewards method marks.",
       example: "Higher & Ordinary Level · Paper 1 & Paper 2",
     },
     {
       icon: Dna,
       title: "Essay & Language Subjects",
       description:
-        "Structure your LC English essay, develop a History argument, or practise Irish expression. Sage helps you find your own thesis — not write it for you.",
+        "Structure your LC English essay, develop a History argument, or practise Irish expression. Sage helps you find your own thesis, not write it for you.",
       example: "English, Irish, History, Geography, Business, Economics",
     },
   ];
@@ -1192,22 +1201,22 @@ const FAQ = () => {
     {
       question: "Is this built specifically for the Leaving Cert and Junior Cycle?",
       answer:
-        "Yes. StudyWith is designed around the Irish curriculum — LC and JC subjects, SEC exam formats, marking scheme logic, and H1/H2 exam technique. The AI knows the difference between LC Higher and Ordinary Level, understands what SRPs are in essay marking, and is familiar with all the major LC subjects from Chemistry to Irish to History.",
+        "Yes. StudyWith is designed around the Irish curriculum: LC and JC subjects, SEC exam formats, marking scheme logic, and H1/H2 exam technique. The AI knows the difference between LC Higher and Ordinary Level, understands what SRPs are in essay marking, and is familiar with all the major LC subjects from Chemistry to Irish to History.",
     },
     {
       question: "Why not just use ChatGPT for my LC studying?",
       answer:
-        "ChatGPT will write your answer for you — which is exactly what you don't want when preparing for the LC. When the exam comes, there's no AI in the room. StudyWith refuses to give you the answer directly. Instead, it asks you questions until you get there yourself. That's what builds the understanding you need on exam day. Plus, ChatGPT has no idea what's in your notes — StudyWith reads your uploaded PDFs and works from your actual material.",
+        "ChatGPT will write your answer for you, which is exactly what you don't want when preparing for the LC. When the exam comes, there's no AI in the room. StudyWith refuses to give you the answer directly. Instead, it asks you questions until you get there yourself. That's what builds the understanding you need on exam day. Plus, ChatGPT has no idea what's in your notes. StudyWith reads your uploaded PDFs and works from your actual material.",
     },
     {
       question: "Can I upload my own notes?",
       answer:
-        "Yes. You can upload your notes as a PDF and StudyWith will work through them with you using Socratic questioning. The AI reads your specific material and builds questions from it — so you're always studying what's actually relevant to your exams, not generic content.",
+        "Yes. You can upload your notes as a PDF and StudyWith will work through them with you using Socratic questioning. The AI reads your specific material and builds questions from it, so you're always studying what's actually relevant to your exams, not generic content.",
     },
     {
       question: "Does the AI just give away answers directly?",
       answer:
-        "No — and that's the whole point. The AI is specifically instructed never to hand over an answer, even if you ask it directly. It will give hints, ask guiding questions, and help you get unstuck — but you have to reach the answer yourself. This is what builds the exam-ready understanding you need.",
+        "No, and that's the whole point. The AI is specifically instructed never to hand over an answer, even if you ask it directly. It will give hints, ask guiding questions, and help you get unstuck, but you have to reach the answer yourself. This is what builds the exam-ready understanding you need.",
     },
     {
       question: "What LC subjects does StudyWith cover?",
@@ -1217,12 +1226,12 @@ const FAQ = () => {
     {
       question: "What is a Learning Receipt?",
       answer:
-        "At the end of every session, StudyWith generates a Learning Receipt — a scored breakdown out of 100. It shows the concepts you demonstrated understanding of, the gaps you still need to review before your mocks or the real LC, and an honest overall score. Each receipt has a unique shareable link so you can keep a record of your progress.",
+        "At the end of every session, StudyWith generates a Learning Receipt: a scored breakdown out of 100. It shows the concepts you demonstrated understanding of, the gaps you still need to review before your mocks or the real LC, and an honest overall score. Each receipt has a unique shareable link so you can keep a record of your progress.",
     },
     {
       question: "How much does it cost?",
       answer:
-        "There's a 7-day free trial with no charge upfront — no card required to start. After the trial, plans start at €7.42/month on annual billing. Student pricing (€5.99/mo or €39/yr) is applied automatically at checkout if you have a .ac.ie or .edu email. You can cancel anytime.",
+        "There's a 7-day free trial with no charge upfront, no card required to start. After the trial, plans start at €7.42/month on annual billing. Student pricing (€5.99/mo or €39/yr) is applied automatically at checkout if you have a .ac.ie or .edu email. You can cancel anytime.",
     },
     {
       question: "Is my data private? Where do my PDFs go?",
@@ -1336,7 +1345,7 @@ const Footer = () => {
 
         <div className="pt-8 border-t border-[#E7E5E4] flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-[#57534E]">
-            {currentYear} StudyWith. All rights reserved.
+            &copy; {currentYear} StudyWith. All rights reserved.
           </p>
           <p className="text-sm text-[#57534E]">
             Made for LC &amp; JC students who want to actually understand it.
@@ -1402,7 +1411,7 @@ export default function StudyWithLanding() {
               onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
               className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
             >
-              Start free — no card required
+              Start free, no card required
             </a>
             <p className="text-sm text-[#A8A29E] mt-4">7-day free trial · Cancel anytime</p>
           </div>
