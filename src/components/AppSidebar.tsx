@@ -329,7 +329,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
   const [sessions, setSessions] = useState<Session[]>(initialSessions);
   const pathname = usePathname();
 
-  // Re-fetch on mount to always get fresh sessions (bypasses SSR caching issues)
+  // Re-fetch whenever the user navigates so new sessions appear immediately
   useEffect(() => {
     fetch("/api/sessions")
       .then((r) => r.json())
@@ -339,7 +339,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
       .catch(() => {
         // silently keep initial SSR data on error
       });
-  }, []);
+  }, [pathname]);
 
   // Hide bottom nav on any chat/session page (full-screen layout)
   const isSessionPage =

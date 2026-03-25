@@ -321,67 +321,60 @@ const HERO_DEMOS = [
   {
     subject: "LC Chemistry",
     color: "#D97706",
-    bgColor: "bg-[#D97706]/10",
     textColor: "text-[#D97706]",
-    file: "LC_Chemistry_Notes.pdf",
-    pages: "63 pages",
-    topic: "Organic Chemistry: Alcohols & Esters",
+    tag: "Higher Level · Q4(b)",
+    question: "Le Chatelier's Principle: what happens when pressure increases in N₂ + 3H₂ ⇌ 2NH₃?",
     messages: [
-      { role: "tutor", text: "Before we dive into esters. What functional group defines an alcohol, and how would you identify one from a structural formula?" },
-      { role: "student", text: "It has an OH group attached to a carbon chain?" },
-      { role: "tutor", text: "Exactly. Now, what two reactants combine to form an ester in a condensation reaction, and what small molecule is released in the process?" },
+      { role: "tutor", text: "Before any definition. When a system at equilibrium is disturbed, what do you think it tries to do?" },
+      { role: "student", text: "Undo the change?" },
+      { role: "tutor", text: "Exactly. So increasing pressure causes a shift toward fewer moles of gas. Count the moles on each side — which way does the equilibrium shift?" },
     ],
   },
   {
     subject: "LC Biology",
     color: "#16a34a",
-    bgColor: "bg-green-100",
     textColor: "text-green-700",
-    file: "LC_Biology_Notes.pdf",
-    pages: "81 pages",
-    topic: "Genetics: Meiosis & Inheritance",
+    tag: "Higher Level · Q6(a)",
+    question: "Describe meiosis and explain its significance in sexual reproduction.",
     messages: [
-      { role: "tutor", text: "Let's start with the key distinction. What is the difference between mitosis and meiosis in terms of the cells they produce?" },
-      { role: "student", text: "Meiosis produces 4 haploid cells, mitosis produces 2 diploid cells?" },
-      { role: "tutor", text: "Good. Why is it essential that gametes are haploid rather than diploid? What would happen at fertilisation if they weren't?" },
+      { role: "tutor", text: "Let's start at the output. What type of cells does meiosis produce, and how many chromosomes do they carry compared to body cells?" },
+      { role: "student", text: "Haploid cells — half the chromosomes?" },
+      { role: "tutor", text: "Good. Now think about fertilisation. What would happen to chromosome number each generation if gametes were diploid instead?" },
     ],
   },
   {
     subject: "LC Maths P1",
     color: "#7c3aed",
-    bgColor: "bg-violet-100",
     textColor: "text-violet-700",
-    file: "LC_Maths_Notes.pdf",
-    pages: "55 pages",
-    topic: "Calculus: Differentiation from First Principles",
+    tag: "Higher Level · Q7",
+    question: "Differentiate f(x) = 3x² + 5x from first principles.",
     messages: [
-      { role: "tutor", text: "Before applying the rule. Can you tell me what the derivative of a function actually represents, in your own words?" },
-      { role: "student", text: "It's the rate of change, or the slope of the tangent at a point?" },
-      { role: "tutor", text: "Exactly right. Now, using first principles, write the limit definition of f′(x) and identify what each part of that expression represents." },
+      { role: "tutor", text: "Before any formula. What does the derivative of a function actually represent geometrically?" },
+      { role: "student", text: "The slope of the tangent at any point on the curve?" },
+      { role: "tutor", text: "Exactly. Now write f(x+h) for f(x) = 3x². Expand it out — what do you get when you form f(x+h) - f(x)?" },
     ],
   },
 ];
 
 const Hero = () => {
   const [demoIndex, setDemoIndex] = useState(0);
-  const [phase, setPhase] = useState<"upload" | "chat">("upload");
+  const [visibleMsgs, setVisibleMsgs] = useState(0);
   const scrollToSection = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
+  // Reveal messages one by one, then cycle to next subject
   useEffect(() => {
-    // Show upload phase for 2.2s, chat for 5s, then cycle
-    const uploadTimer = setTimeout(() => setPhase("chat"), 2200);
-    return () => clearTimeout(uploadTimer);
+    setVisibleMsgs(0);
+    const delays = [800, 2000, 3400];
+    const timers = delays.map((delay, i) =>
+      setTimeout(() => setVisibleMsgs(i + 1), delay)
+    );
+    // After all messages shown, wait then cycle
+    const cycleTimer = setTimeout(() => {
+      setDemoIndex((idx) => (idx + 1) % HERO_DEMOS.length);
+    }, 6500);
+    return () => { timers.forEach(clearTimeout); clearTimeout(cycleTimer); };
   }, [demoIndex]);
-
-  useEffect(() => {
-    if (phase !== "chat") return;
-    const chatTimer = setTimeout(() => {
-      setPhase("upload");
-      setDemoIndex((i) => (i + 1) % HERO_DEMOS.length);
-    }, 5000);
-    return () => clearTimeout(chatTimer);
-  }, [phase]);
 
   const demo = HERO_DEMOS[demoIndex];
 
@@ -399,13 +392,13 @@ const Hero = () => {
             </h1>
 
             <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
-              Upload your notes or past papers. Your AI tutor guides you through them with Socratic questions so you actually understand it, not just memorise it.
+              Paste any LC or JC question. Sage never gives you the answer — it asks you questions until you actually understand it. That's what builds the H1.
             </p>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
               <div className="sm:flex-none sm:w-auto">
                 <CheckoutButton
-                  label="Start free: upload your notes"
+                  label="Start free, no card required"
                   className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                 />
               </div>
@@ -429,18 +422,18 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right: animated PDF → chat demo */}
+          {/* Right: animated Socratic Q&A demo */}
           <div className="hidden lg:block flex-shrink-0 w-[420px]">
             <div className="relative">
               <div className="absolute inset-0 scale-110 rounded-3xl bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(217,119,6,0.08),transparent)]" />
-              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden min-h-[340px]">
+              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden">
 
                 {/* Subject tab strip */}
                 <div className="flex border-b border-[#E7E5E4] bg-[#F5F4F0]">
                   {HERO_DEMOS.map((d, i) => (
                     <button
                       key={i}
-                      onClick={() => { setDemoIndex(i); setPhase("upload"); }}
+                      onClick={() => setDemoIndex(i)}
                       className={`flex-1 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
                         i === demoIndex
                           ? "bg-white border-b-2 border-[#D97706] text-[#D97706]"
@@ -452,66 +445,51 @@ const Hero = () => {
                   ))}
                 </div>
 
-                {/* Upload phase */}
-                {phase === "upload" && (
-                  <div className="flex flex-col items-center justify-center p-8 gap-5 animate-pulse-once">
-                    <div className="w-16 h-16 rounded-2xl bg-[#D97706]/10 flex items-center justify-center">
-                      <FileUp className="w-8 h-8 text-[#D97706]" strokeWidth={1.5} />
-                    </div>
-                    <div className="w-full rounded-xl border-2 border-dashed border-[#D97706]/40 bg-[#FDFAF5] px-5 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2.5 mb-1">
-                        <div className="w-7 h-8 bg-[#D97706]/20 rounded flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-[#D97706]">PDF</span>
-                        </div>
-                        <span className="text-sm font-medium text-[#1A1A1A]">{demo.file}</span>
-                      </div>
-                      <p className="text-xs text-[#A8A29E]">{demo.pages} · Uploading…</p>
-                      <div className="mt-3 h-1.5 w-full rounded-full bg-[#E7E5E4] overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[#D97706] transition-all duration-[2000ms] ease-out"
-                          style={{ width: "100%" }}
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-[#A8A29E]">AI is reading your notes…</p>
-                  </div>
-                )}
+                {/* Question prompt */}
+                <div className="px-4 py-3 bg-[#FDFAF5] border-b border-[#E7E5E4]">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E]">{demo.tag}</span>
+                  <p className="text-[12px] text-[#57534E] mt-0.5 leading-snug">{demo.question}</p>
+                </div>
 
-                {/* Chat phase */}
-                {phase === "chat" && (
-                  <div className="flex flex-col">
-                    {/* Topic header */}
-                    <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FDFAF5] border-b border-[#E7E5E4]">
-                      <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
-                      <p className="text-[11px] text-[#57534E] font-medium truncate">{demo.topic}</p>
-                    </div>
-                    {/* Messages */}
-                    <div className="space-y-3 p-4 text-sm">
-                      {demo.messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"}`}>
-                          <div
-                            className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[13px] ${
-                              msg.role === "student"
-                                ? "rounded-tr-sm bg-[#1A1A1A] text-white"
-                                : "rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A]"
-                            }`}
-                          >
-                            {msg.text}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Input bar mock */}
-                    <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
-                      <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
-                        Write your response…
-                      </div>
-                      <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
-                        <Send className="w-3 h-3 text-white" strokeWidth={2} />
+                {/* Messages */}
+                <div className="space-y-3 p-4 min-h-[220px]">
+                  {demo.messages.slice(0, visibleMsgs).map((msg, i) => (
+                    <div
+                      key={`${demoIndex}-${i}`}
+                      className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"} animate-fade-in`}
+                    >
+                      <div
+                        className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[13px] ${
+                          msg.role === "student"
+                            ? "rounded-tr-sm bg-[#1A1A1A] text-white"
+                            : "rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A]"
+                        }`}
+                      >
+                        {msg.text}
                       </div>
                     </div>
+                  ))}
+                  {/* Typing indicator between messages */}
+                  {visibleMsgs < demo.messages.length && visibleMsgs > 0 && (
+                    <div className="flex justify-start">
+                      <div className="bg-[#FAFAF8] border border-[#EDECEA] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1">
+                        {[0,1,2].map((i) => (
+                          <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#A8A29E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input bar mock */}
+                <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
+                    Write your response…
                   </div>
-                )}
+                  <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
+                    <Send className="w-3 h-3 text-white" strokeWidth={2} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -648,23 +626,57 @@ const DEMO_RESPONSES: Record<string, string> = {
     "Before we apply the limit definition. What does the derivative of a function actually represent geometrically? Describe it in your own words first.",
 };
 
+// Second Sage response — a natural follow-up regardless of what the user typed
+const DEMO_FOLLOWUPS: Record<string, string> = {
+  "Explain the difference between mitosis and meiosis for LC Biology":
+    "Good. Now push further: what happens during Prophase I that doesn't occur in mitosis at all? Think about the genetic implications — this is a classic LC question.",
+  "What is Le Chatelier's Principle? LC Chemistry":
+    "You're getting it. Now apply it: in the Haber Process (N₂ + 3H₂ ⇌ 2NH₃), what conditions of temperature and pressure maximise yield, and what trade-off does the industry face?",
+  "Explain Newton's First Law with an example | LC Physics":
+    "Good example. Now link it to a car crash: why does a passenger lurch forward when the brakes are applied? Use Newton's First Law in your explanation.",
+  "What caused the 1916 Rising? LC History essay":
+    "Good start. Now structure your LC essay argument: rank your top two causes with justification. Which would you put first, and what evidence from the period supports that ranking?",
+  "Differentiate f(x) = 3x² + 5x - 2 from first principles | LC Maths":
+    "Good. Now work through it: expand f(x+h) = 3(x+h)² + 5(x+h) - 2, then subtract f(x), and simplify. What do you get before you take the limit as h→0?",
+};
+
 const TryItDemo = () => {
   const [input, setInput] = useState(DEMO_PROMPTS[0]);
-  const [stage, setStage] = useState<"idle" | "thinking" | "response" | "gated">("idle");
-  const [response, setResponse] = useState("");
-  const [userReply, setUserReply] = useState("");
+  const [stage, setStage] = useState<"idle" | "thinking1" | "response1" | "thinking2" | "response2" | "gated">("idle");
+  const [response1, setResponse1] = useState("");
+  const [response2, setResponse2] = useState("");
+  const [userReply1, setUserReply1] = useState("");
+  const [userReply2, setUserReply2] = useState("");
 
   const handleTry = () => {
-    setStage("thinking");
+    setStage("thinking1");
     setTimeout(() => {
       const r = DEMO_RESPONSES[input] ?? "Before I answer, what do you already know about this topic? Try to explain it in your own words first.";
-      setResponse(r);
-      setStage("response");
+      setResponse1(r);
+      setStage("response1");
     }, 1100);
   };
 
-  const handleSecondMessage = () => {
-    if (userReply.trim()) setStage("gated");
+  const handleFirstReply = () => {
+    if (!userReply1.trim()) return;
+    setStage("thinking2");
+    setTimeout(() => {
+      const r = DEMO_FOLLOWUPS[input] ?? "Good thinking. Let's go deeper — what's the next logical step from what you just said?";
+      setResponse2(r);
+      setStage("response2");
+    }, 900);
+  };
+
+  const handleSecondReply = () => {
+    if (userReply2.trim()) setStage("gated");
+  };
+
+  const reset = () => {
+    setStage("idle");
+    setResponse1("");
+    setResponse2("");
+    setUserReply1("");
+    setUserReply2("");
   };
 
   return (
@@ -709,69 +721,97 @@ const TryItDemo = () => {
             </div>
           )}
 
-          {/* Thinking */}
-          {stage === "thinking" && (
+          {/* Thinking indicators */}
+          {(stage === "thinking1" || stage === "thinking2") && (
             <div className="p-8 flex flex-col items-center justify-center gap-3">
               <div className="flex gap-1.5">
                 {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-[#D97706] animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }}
-                  />
+                  <div key={i} className="w-2 h-2 rounded-full bg-[#D97706] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
               <p className="text-sm text-[#A8A29E]">Sage is thinking…</p>
             </div>
           )}
 
-          {/* Response */}
-          {(stage === "response" || stage === "gated") && (
+          {/* Conversation thread */}
+          {(stage === "response1" || stage === "thinking2" || stage === "response2" || stage === "gated") && (
             <div className="flex flex-col">
               <div className="px-5 py-3 bg-[#F5F4F0] border-b border-[#E7E5E4] flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
                 <span className="text-xs text-[#57534E] font-medium truncate">{input}</span>
               </div>
+
               <div className="space-y-3 p-5 text-sm">
+                {/* Sage turn 1 */}
                 <div className="flex justify-start">
-                  <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                    {response}
-                  </div>
+                  <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">{response1}</div>
                 </div>
+                {/* Student turn 1 */}
+                {userReply1 && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white text-sm">{userReply1}</div>
+                  </div>
+                )}
+                {/* Sage turn 2 */}
+                {response2 && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">{response2}</div>
+                  </div>
+                )}
+                {/* Student turn 2 */}
+                {userReply2 && stage === "gated" && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white text-sm">{userReply2}</div>
+                  </div>
+                )}
               </div>
 
-              {stage === "response" && (
+              {/* Input after turn 1 */}
+              {stage === "response1" && (
                 <div className="border-t border-[#E7E5E4] px-5 py-4">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
-                      value={userReply}
-                      onChange={(e) => setUserReply(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleSecondMessage(); }}
-                      placeholder="Type your response…"
+                      value={userReply1}
+                      onChange={(e) => setUserReply1(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleFirstReply(); }}
+                      placeholder="Your answer…"
                       autoFocus
                       className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-4 py-2.5 text-sm text-[#1A1A1A] placeholder:text-[#A8A29E] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
                     />
-                    <button
-                      onClick={handleSecondMessage}
-                      disabled={!userReply.trim()}
-                      className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#1A1A1A]/80"
-                    >
+                    <button onClick={handleFirstReply} disabled={!userReply1.trim()} className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#1A1A1A]/80">
                       <Send className="w-4 h-4 text-white" strokeWidth={2} />
                     </button>
                   </div>
                 </div>
               )}
 
+              {/* Input after turn 2 */}
+              {stage === "response2" && (
+                <div className="border-t border-[#E7E5E4] px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={userReply2}
+                      onChange={(e) => setUserReply2(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSecondReply(); }}
+                      placeholder="Keep going…"
+                      autoFocus
+                      className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-4 py-2.5 text-sm text-[#1A1A1A] placeholder:text-[#A8A29E] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+                    />
+                    <button onClick={handleSecondReply} disabled={!userReply2.trim()} className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#1A1A1A]/80">
+                      <Send className="w-4 h-4 text-white" strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Signup gate */}
               {stage === "gated" && (
                 <div className="border-t border-[#E7E5E4] p-5 bg-[#FDFAF5]">
                   <div className="text-center space-y-3">
-                    <p className="text-sm font-medium text-[#1A1A1A]">
-                      Ready to keep going?
-                    </p>
-                    <p className="text-xs text-[#57534E]">
-                      Sign up free to continue this session, upload your notes, and track your progress.
-                    </p>
+                    <p className="text-sm font-medium text-[#1A1A1A]">Ready to keep going?</p>
+                    <p className="text-xs text-[#57534E]">Sign up free to continue — unlimited sessions, all LC subjects.</p>
                     <a
                       href="/auth/signup"
                       onClick={() => posthog.capture('cta_clicked', { cta_location: 'try_it_gate' })}
@@ -779,10 +819,7 @@ const TryItDemo = () => {
                     >
                       Start free, no card required
                     </a>
-                    <button
-                      onClick={() => { setStage("idle"); setResponse(""); }}
-                      className="text-xs text-[#A8A29E] hover:text-[#57534E] underline underline-offset-2"
-                    >
+                    <button onClick={reset} className="text-xs text-[#A8A29E] hover:text-[#57534E] underline underline-offset-2">
                       Try a different topic
                     </button>
                   </div>

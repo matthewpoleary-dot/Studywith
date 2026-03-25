@@ -44,6 +44,7 @@ export async function POST(request: Request) {
   }
 
   // Build transcript for the AI to analyse
+  const studentMessages = body.messages.filter((m) => m.role === "student");
   const transcript = body.messages
     .filter((m) => m.role !== "system")
     .map((m) => `${m.role === "student" ? "Student" : "Tutor"}: ${m.content}`)
@@ -101,6 +102,25 @@ ${body.assignment}
 
 Transcript:
 ${transcript}`;
+
+  // If the student never sent a single message, skip AI and return a zero-score receipt
+  if (studentMessages.length === 0) {
+    const emptyReceipt = {
+      conceptsCovered: [],
+      gaps: [],
+      score: 0,
+      summary: "No responses were submitted in this session.",
+      closingMessage: "Looks like you didn't get a chance to respond this time. Open a new session whenever you're ready.",
+      questionsTotal: 0,
+      questionsAttempted: 0,
+      gritEarned: 0,
+    };
+    await (getSupabaseAdmin().from("sessions") as any)
+      .update({ receipt: emptyReceipt, messages: body.messages })
+      .eq("id", body.sessionId)
+      .eq("user_id", user.id);
+    return Response.json({ receiptId: body.sessionId, gritEarned: 0 });
+  }
 
   let receiptText = "{}";
   try {
