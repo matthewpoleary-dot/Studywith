@@ -405,7 +405,7 @@ const Hero = () => {
             </h1>
 
             <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
-              Upload your Grinds 360 notes or any LC material. Your AI tutor guides you through it with Socratic questions — so you understand it, not just memorise it.
+              Upload your notes or past papers. Your AI tutor guides you through them with Socratic questions so you actually understand it, not just memorise it.
             </p>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
@@ -536,7 +536,7 @@ const HowItWorks = () => {
       icon: FileUp,
       title: "Upload your notes or paste a question",
       description:
-        "Drop in your Grinds 360 PDFs, paste a LC exam question, or type any topic. The AI reads your material and builds your session from it.",
+        "Drop in your notes as a PDF, paste a LC exam question, or type any topic. The AI reads your material and builds your session from it.",
     },
     {
       number: "02",
@@ -929,7 +929,7 @@ const Comparison = () => {
     { feature: "Gives you the answer (useless for exams)", chatgpt: true, humanTutor: false, studywith: false },
     { feature: "Builds genuine H1-level understanding", chatgpt: false, humanTutor: true, studywith: true },
     { feature: "Available at 2am before your mocks", chatgpt: true, humanTutor: false, studywith: true },
-    { feature: "Knows your specific Grinds 360 notes", chatgpt: false, humanTutor: false, studywith: true },
+    { feature: "Works from your own uploaded notes", chatgpt: false, humanTutor: false, studywith: true },
     { feature: "Scored breakdown after every session", chatgpt: false, humanTutor: false, studywith: true },
     { feature: "Marks your answers like an LC examiner", chatgpt: false, humanTutor: true, studywith: true },
   ];
@@ -1197,12 +1197,12 @@ const FAQ = () => {
     {
       question: "Why not just use ChatGPT for my LC studying?",
       answer:
-        "ChatGPT will write your answer for you — which is exactly what you don't want when preparing for the LC. When the exam comes, there's no AI in the room. StudyWith refuses to give you the answer directly. Instead, it asks you questions until you get there yourself. That's what builds the understanding you need on exam day. Plus, ChatGPT doesn't know your specific Grinds 360 notes — StudyWith reads your uploaded PDFs and works from your actual material.",
+        "ChatGPT will write your answer for you — which is exactly what you don't want when preparing for the LC. When the exam comes, there's no AI in the room. StudyWith refuses to give you the answer directly. Instead, it asks you questions until you get there yourself. That's what builds the understanding you need on exam day. Plus, ChatGPT has no idea what's in your notes — StudyWith reads your uploaded PDFs and works from your actual material.",
     },
     {
-      question: "Can I upload my Grinds 360 notes?",
+      question: "Can I upload my own notes?",
       answer:
-        "Yes. You can upload your Grinds 360 PDFs directly and StudyWith will work through them with you using Socratic questioning. The AI reads your specific notes and builds questions from that material — so you're always studying what's actually relevant to your exams, not generic content.",
+        "Yes. You can upload your notes as a PDF and StudyWith will work through them with you using Socratic questioning. The AI reads your specific material and builds questions from it — so you're always studying what's actually relevant to your exams, not generic content.",
     },
     {
       question: "Does the AI just give away answers directly?",
@@ -1395,7 +1395,7 @@ export default function StudyWithLanding() {
               Your mocks are closer than you think.
             </h2>
             <p className="text-lg text-[#57534E] mb-10">
-              Start studying smarter today. Upload your Grinds 360 notes and let Sage guide you to the H1.
+              Start studying smarter today. Upload your notes and let Sage guide you to the H1.
             </p>
             <a
               href="/auth/signup"

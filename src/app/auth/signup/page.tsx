@@ -192,7 +192,7 @@ export default function SignupPage() {
             Start studying smarter
           </h1>
           <p className="text-sm text-[#57534E]">
-            Create your account to start your 7-day free trial. Upload your Grinds 360 notes and get to work. No card required.
+            Create your account to start your 7-day free trial. Upload your notes and get to work. No card required.
           </p>
         </div>
 
