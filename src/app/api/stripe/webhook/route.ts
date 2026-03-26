@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-  // Read raw bytes — NEVER call request.json() here; it breaks HMAC verification
+  // Read raw bytes - NEVER call request.json() here; it breaks HMAC verification
   const rawBody = Buffer.from(await request.arrayBuffer());
 
   const headersList = await headers();

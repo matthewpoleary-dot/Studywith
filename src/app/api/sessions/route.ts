@@ -29,7 +29,7 @@ export async function GET() {
     .limit(50);
 
   if (error) {
-    // title column may not exist — fall back without it
+    // title column may not exist - fall back without it
     const { data: sessionsFallback } = await getSupabaseAdmin()
       .from("sessions")
       .select("id, assignment_text, created_at, receipt")

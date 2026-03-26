@@ -330,7 +330,7 @@ const HERO_DEMOS = [
     messages: [
       { role: "tutor", text: "Before any definition. When a system at equilibrium is disturbed, what do you think it tries to do?" },
       { role: "student", text: "Undo the change?" },
-      { role: "tutor", text: "Exactly. So increasing pressure causes a shift toward fewer moles of gas. Count the moles on each side — which way does the equilibrium shift?" },
+      { role: "tutor", text: "Exactly. So increasing pressure causes a shift toward fewer moles of gas. Count the moles on each side. Which way does the equilibrium shift?" },
     ],
   },
   {
@@ -341,7 +341,7 @@ const HERO_DEMOS = [
     question: "Describe meiosis and explain its significance in sexual reproduction.",
     messages: [
       { role: "tutor", text: "Let's start at the output. What type of cells does meiosis produce, and how many chromosomes do they carry compared to body cells?" },
-      { role: "student", text: "Haploid cells — half the chromosomes?" },
+      { role: "student", text: "Haploid cells, half the chromosomes?" },
       { role: "tutor", text: "Good. Now think about fertilisation. What would happen to chromosome number each generation if gametes were diploid instead?" },
     ],
   },
@@ -354,7 +354,7 @@ const HERO_DEMOS = [
     messages: [
       { role: "tutor", text: "Before any formula. What does the derivative of a function actually represent geometrically?" },
       { role: "student", text: "The slope of the tangent at any point on the curve?" },
-      { role: "tutor", text: "Exactly. Now write f(x+h) for f(x) = 3x². Expand it out — what do you get when you form f(x+h) - f(x)?" },
+      { role: "tutor", text: "Exactly. Now write f(x+h) for f(x) = 3x². Expand it out. What do you get when you form f(x+h) - f(x)?" },
     ],
   },
 ];
@@ -395,7 +395,7 @@ const Hero = () => {
             </h1>
 
             <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
-              Paste any LC or JC question. Sage never gives you the answer — it asks you questions until you actually understand it. That's what builds the H1.
+              Paste any LC or JC question. Sage never gives you the answer. It asks you questions until you actually understand it. That's what builds the H1.
             </p>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
@@ -565,7 +565,7 @@ const HowItWorks = () => {
           ))}
         </div>
 
-        {/* Chat preview — LC Biology */}
+        {/* Chat preview - LC Biology */}
         <div className="mt-20 max-w-2xl mx-auto overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
           <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
             <div className="h-2 w-2 rounded-full bg-[#D97706]" />
@@ -630,10 +630,10 @@ const DEMO_RESPONSES: Record<string, string> = {
     "Before we apply the limit definition. What does the derivative of a function actually represent geometrically? Describe it in your own words first.",
 };
 
-// Second Sage response — a natural follow-up regardless of what the user typed
+// Second Sage response - a natural follow-up regardless of what the user typed
 const DEMO_FOLLOWUPS: Record<string, string> = {
   "Explain the difference between mitosis and meiosis for LC Biology":
-    "Good. Now push further: what happens during Prophase I that doesn't occur in mitosis at all? Think about the genetic implications — this is a classic LC question.",
+    "Good. Now push further: what happens during Prophase I that doesn't occur in mitosis at all? Think about the genetic implications. This is a classic LC question.",
   "What is Le Chatelier's Principle? LC Chemistry":
     "You're getting it. Now apply it: in the Haber Process (N₂ + 3H₂ ⇌ 2NH₃), what conditions of temperature and pressure maximise yield, and what trade-off does the industry face?",
   "Explain Newton's First Law with an example | LC Physics":
@@ -665,7 +665,7 @@ const TryItDemo = () => {
     if (!userReply1.trim()) return;
     setStage("thinking2");
     setTimeout(() => {
-      const r = DEMO_FOLLOWUPS[input] ?? "Good thinking. Let's go deeper — what's the next logical step from what you just said?";
+      const r = DEMO_FOLLOWUPS[input] ?? "Good thinking. Let's go deeper. What's the next logical step from what you just said?";
       setResponse2(r);
       setStage("response2");
     }, 900);
@@ -815,7 +815,7 @@ const TryItDemo = () => {
                 <div className="border-t border-[#E7E5E4] p-5 bg-[#FDFAF5]">
                   <div className="text-center space-y-3">
                     <p className="text-sm font-medium text-[#1A1A1A]">Ready to keep going?</p>
-                    <p className="text-xs text-[#57534E]">Sign up free to continue — unlimited sessions, all LC subjects.</p>
+                    <p className="text-xs text-[#57534E]">Sign up free to continue. Unlimited sessions for all LC subjects.</p>
                     <a
                       href="/auth/signup"
                       onClick={() => posthog.capture('cta_clicked', { cta_location: 'try_it_gate' })}
@@ -939,7 +939,7 @@ const Features = () => {
               </div>
             </div>
 
-            {/* Gaps to review — highlighted as USP */}
+            {/* Gaps to review - highlighted as USP */}
             <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700 mb-2">Gaps to review before mocks</p>
               <div className="space-y-2.5">
@@ -1120,7 +1120,7 @@ const UseCases = () => {
   );
 };
 
-// ─── Pricing (removed — free early access) ───────────────────────────────────
+// ─── Pricing (removed - free early access) ───────────────────────────────────
 
 const Pricing = () => {
   const features = [
@@ -1199,7 +1199,7 @@ const Pricing = () => {
             <p className="text-center text-xs text-[#A8A29E] mt-2">No trial. Access starts immediately.</p>
           </div>
 
-          {/* Annual — highlighted */}
+          {/* Annual - highlighted */}
           <div className="relative bg-[#1A1A1A] border border-[#1A1A1A] p-8 rounded-2xl hover:shadow-xl transition-all duration-300 flex flex-col">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full whitespace-nowrap">
               Best value, save 43%

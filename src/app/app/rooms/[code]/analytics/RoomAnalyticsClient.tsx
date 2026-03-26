@@ -132,11 +132,11 @@ export default function RoomAnalyticsClient({ code }: { code: string }) {
         <div>
           <h2 className="font-medium text-[#1A1A1A] mb-1">Concept heatmap</h2>
           <p className="text-xs text-[#A8A29E] mb-4">
-            Concepts with the lowest average score across all sessions — these are your class&apos;s biggest gaps.
+            Concepts with the lowest average score across all sessions. These are your class&apos;s biggest gaps.
           </p>
           {heatmap.length === 0 ? (
             <div className="bg-white border border-dashed border-[#E7E5E4] rounded-2xl p-8 text-center">
-              <p className="text-sm text-[#A8A29E]">No completed sessions yet — check back after students finish their first session.</p>
+              <p className="text-sm text-[#A8A29E]">No completed sessions yet. Check back after students finish their first session.</p>
             </div>
           ) : (
             <div className="space-y-2">

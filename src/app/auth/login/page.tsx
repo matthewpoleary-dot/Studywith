@@ -42,7 +42,7 @@ function LoginForm() {
     // Persist the user's "keep me signed in" preference
     localStorage.setItem("sw_remember", keepSignedIn ? "1" : "0");
 
-    // Check subscription — heals DB via Stripe fallback if webhook was missed
+    // Check subscription - heals DB via Stripe fallback if webhook was missed
     try {
       const res = await fetch("/api/check-subscription");
       const data = (await res.json()) as { subscribed: boolean };

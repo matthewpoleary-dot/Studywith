@@ -58,7 +58,7 @@ export default async function SessionSummaryPage({
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="w-full max-w-2xl mx-auto px-6 py-10 md:py-14">
 
-        {/* 1. Closing message — emotional beat, centered, prominent */}
+        {/* 1. Closing message - emotional beat, centered, prominent */}
         {receipt.closingMessage && (
           <div className="text-center mb-10 px-4">
             <p className="font-serif text-2xl md:text-3xl text-[#1A1A1A] leading-snug">
@@ -192,7 +192,7 @@ export default async function SessionSummaryPage({
             </section>
           )}
 
-          {/* 5. Worth revisiting — links to Study Page */}
+          {/* 5. Worth revisiting - links to Study Page */}
           {(receipt.toRevisit ?? receipt.gaps).length > 0 && (
             <section className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 mb-3">

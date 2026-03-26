@@ -103,7 +103,7 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
 
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null);
 
-  // Delete state — separate confirm vs loading
+  // Delete state - separate confirm vs loading
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
 
@@ -366,9 +366,9 @@ export default function RoomClient({ code, userId, userEmail }: Props) {
         if (data.text?.trim()) {
           parts.push(data.text.trim());
         }
-        // If extraction fails/empty, parts already has title+content — Sage still has context
+        // If extraction fails/empty, parts already has title+content - Sage still has context
       } catch {
-        // silently continue — Sage has at least the title/description
+        // silently continue - Sage has at least the title/description
       }
     } else if (assignment.file_url) {
       parts.push(`[Attached file: ${assignment.file_name ?? assignment.file_url}]`);

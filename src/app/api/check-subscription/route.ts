@@ -43,7 +43,7 @@ export async function GET() {
     const hasAccess = (status: string) =>
       status === "active" || status === "trialing";
 
-    // Stripe fallback path 1: we have a customer ID saved — check directly
+    // Stripe fallback path 1: we have a customer ID saved - check directly
     if (data?.stripe_customer_id) {
       const subs = await stripe.subscriptions.list({
         customer: data.stripe_customer_id,
@@ -94,7 +94,7 @@ export async function GET() {
       }
     }
   } catch {
-    // Stripe API error — fall through and return false
+    // Stripe API error - fall through and return false
   }
 
   return Response.json({ subscribed: false });

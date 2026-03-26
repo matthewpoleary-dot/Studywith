@@ -397,7 +397,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
               Sessions
             </button>
 
-            {/* centre spacer — + button floats here */}
+            {/* centre spacer - + button floats here */}
             <div className="flex-1" />
 
             <a
@@ -433,7 +433,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
         </nav>
       )}
 
-      {/* Desktop collapsed — floating toggle with brand */}
+      {/* Desktop collapsed - floating toggle with brand */}
       {desktopCollapsed && (
         <div className="hidden md:flex fixed top-0 left-0 z-50 items-center gap-2.5 px-4 h-[62px] border-b border-[#E7E5E4] bg-[#F5F4F0]">
           <button

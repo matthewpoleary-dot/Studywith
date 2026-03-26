@@ -47,7 +47,7 @@ export default async function SessionPage({
   if (!fullError) {
     session = full as SessionRow;
   } else {
-    // title column may not exist yet — fall back without it
+    // title column may not exist yet - fall back without it
     const { data: basic } = await admin
       .select("id, user_id, assignment_text, messages, receipt, created_at")
       .eq("id", id)
@@ -59,7 +59,7 @@ export default async function SessionPage({
 
   const messages = (session.messages ?? []) as TutorMessage[];
 
-  // Completed session — show tabbed chat + receipt view
+  // Completed session - show tabbed chat + receipt view
   if (session.receipt) {
     return (
       <CompletedSessionView
@@ -73,7 +73,7 @@ export default async function SessionPage({
     );
   }
 
-  // Active session — show the live chat
+  // Active session - show the live chat
   return (
     <TutorChat
       initialAssignment={session.assignment_text}

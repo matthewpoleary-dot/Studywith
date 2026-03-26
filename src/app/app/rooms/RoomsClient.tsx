@@ -146,7 +146,7 @@ export default function RoomsClient() {
           {/* Create room */}
           <div className="flex-1">
             {newlyCreatedRoom ? (
-              // Success state — show code prominently
+              // Success state - show code prominently
               <div className="bg-white border border-emerald-200 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={2} />

@@ -196,7 +196,7 @@ function KnowledgeBaseTab() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={10}
-            placeholder="Paste the full text here — syllabus sections, marking scheme points, examiner notes, past paper questions and answers..."
+            placeholder="Paste the full text here (syllabus sections, marking scheme points, examiner notes, past paper questions and answers)..."
             className="w-full rounded-xl border border-[#E7E5E4] px-4 py-3 text-sm text-[#1A1A1A] placeholder-[#C8C4C0] focus:outline-none focus:border-[#D97706] bg-[#FAFAF8] resize-y font-mono leading-relaxed"
           />
           <p className="text-[11px] text-[#A8A29E] mt-1">{content.length.toLocaleString()} characters · ~{Math.ceil(content.length / 1500)} chunk{Math.ceil(content.length / 1500) !== 1 ? "s" : ""}</p>
@@ -371,7 +371,7 @@ export default function AdminClient() {
               <div className="rounded-2xl border border-[#E7E5E4] bg-white p-5 text-xs text-[#57534E] space-y-1.5">
                 <p className="font-medium text-[#1A1A1A] mb-2">Notes</p>
                 <p>• MRR is calculated from Stripe active subscriptions (annual plans normalised to monthly).</p>
-                <p>• Stripe is in <span className="font-mono bg-amber-50 text-amber-700 px-1 rounded">test mode</span> — figures are test data only.</p>
+                <p>• Stripe is in <span className="font-mono bg-amber-50 text-amber-700 px-1 rounded">test mode</span>. Figures are test data only.</p>
                 <p>• Token spend tracking: Groq does not expose per-request token logs via API. Use Groq dashboard → Usage for cost data.</p>
               </div>
             </>

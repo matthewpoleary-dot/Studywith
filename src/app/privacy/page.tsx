@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — StudyWith",
+  title: "Privacy Policy - StudyWith",
   description: "How StudyWith collects, uses, and protects your personal data.",
 };
 
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
               <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span>Correct inaccurate data.</span></li>
               <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span>Request deletion of your data.</span></li>
               <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span>Object to or restrict processing.</span></li>
-              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span>Data portability — receive a copy of your data in a machine-readable format.</span></li>
+              <li className="flex gap-2"><span className="text-[#D97706] shrink-0">•</span><span>Data portability: receive a copy of your data in a machine-readable format.</span></li>
             </ul>
             <p className="text-[#57534E] leading-relaxed mt-3">To exercise any of these rights, contact us at the address below.</p>
           </section>

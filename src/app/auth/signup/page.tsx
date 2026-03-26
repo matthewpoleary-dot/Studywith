@@ -29,7 +29,7 @@ export default function SignupPage() {
         const data = (await res.json()) as { subscribed: boolean };
         if (data.subscribed) router.replace("/app");
       } catch {
-        // ignore — let them see the signup page
+        // ignore - let them see the signup page
       }
     });
   }, [router]);
@@ -95,7 +95,7 @@ export default function SignupPage() {
             | null)
         : null;
 
-    // No plan chosen — default to trial (matches signup messaging)
+    // No plan chosen - default to trial (matches signup messaging)
     const planToUse = storedPlan ?? "trial";
 
     localStorage.removeItem("studywith_plan");
@@ -134,7 +134,7 @@ export default function SignupPage() {
     setResendDone(true);
   };
 
-  // Email confirmation required — show check-your-inbox screen
+  // Email confirmation required - show check-your-inbox screen
   if (confirmEmail) {
     return (
       <div className="flex items-center justify-center px-6 py-12">

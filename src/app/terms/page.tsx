@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of Service — StudyWith",
+  title: "Terms of Service - StudyWith",
   description: "The terms and conditions governing use of StudyWith.",
 };
 

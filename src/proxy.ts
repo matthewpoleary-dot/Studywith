@@ -63,7 +63,7 @@ export async function proxy(request: NextRequest) {
       );
   }
 
-  // Subscription gate — unsubscribed users are sent to the pricing/checkout page.
+  // Subscription gate - unsubscribed users are sent to the pricing/checkout page.
   // Allow /app/settings so they can still sign out or manage their account.
   const subscribed = userData?.subscribed ?? false;
   const pathname = request.nextUrl.pathname;

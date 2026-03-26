@@ -26,7 +26,7 @@ async function hasUsedTrial(
   const customerIds = new Set<string>();
   if (customerId) customerIds.add(customerId);
 
-  // Also search by email — catches deleted accounts that re-registered
+  // Also search by email - catches deleted accounts that re-registered
   if (email) {
     const customers = await stripe.customers.list({ email, limit: 5 });
     for (const c of customers.data) customerIds.add(c.id);
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     if (body.plan === "monthly") plan = "monthly";
     referredBy = body.referred_by || undefined;
   } catch {
-    // No body — default to monthly
+    // No body - default to monthly
   }
 
   // Authenticate user
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
   const email = userData?.email ?? user.email ?? "";
   const student = isStudentEmail(email);
 
-  // Trial abuse prevention — one trial per person, tracked via Stripe history
+  // Trial abuse prevention - one trial per person, tracked via Stripe history
   if (plan === "trial") {
     const trialUsed = await hasUsedTrial(stripe, customerId, email);
     if (trialUsed) {
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     metadata: { supabase_user_id: user.id },
   };
 
-  // Free trial — 7 days (14 for referred users)
+  // Free trial - 7 days (14 for referred users)
   if (plan === "trial") {
     sessionConfig.subscription_data = {
       trial_period_days: referredBy ? 14 : 7,

@@ -9,7 +9,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
   const { code } = await params;
   const upperCode = code.toUpperCase();
 
-  // Fetch room by code (public — no auth required)
+  // Fetch room by code (public - no auth required)
   const admin = getSupabaseAdmin();
   const { data: room } = await admin
     .from("rooms")
@@ -42,7 +42,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
 
   // Logged in: auto-join and redirect
   if (user) {
-    // Join the room (upsert — safe to call even if already a member)
+    // Join the room (upsert - safe to call even if already a member)
     await admin
       .from("room_members")
       .upsert({ room_id: room.id, user_id: user.id }, { onConflict: "room_id,user_id" });

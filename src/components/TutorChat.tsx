@@ -226,7 +226,7 @@ export default function TutorChat({
   const [sageAvatar, setSageAvatar] = useState("🌿");
   const [showPdf, setShowPdf] = useState(false);
 
-  // Pending image URL from room assignment — attached automatically on first send
+  // Pending image URL from room assignment - attached automatically on first send
   const pendingImageUrlRef = useRef<string | null>(initialImageUrl ?? null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -481,7 +481,7 @@ export default function TutorChat({
       const gateRes = await fetch("/api/freemium-check");
       const gate = (await gateRes.json()) as { allowed: boolean; reason?: string };
       if (!gate.allowed) { router.push("/upgrade"); return; }
-    } catch { /* Non-critical — allow through */ }
+    } catch { /* Non-critical - allow through */ }
 
     setIsStarting(true);
 
@@ -496,7 +496,7 @@ export default function TutorChat({
       });
       const createData = (await createRes.json()) as { sessionId?: string | null };
       eagerSessionId = createData.sessionId ?? null;
-    } catch { /* fall through — tutor route will create session */ }
+    } catch { /* fall through - tutor route will create session */ }
 
     if (eagerSessionId) {
       setSessionId(eagerSessionId);
@@ -758,7 +758,7 @@ export default function TutorChat({
             className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706]/70 focus:ring-2 focus:ring-[#D97706]/20 transition-all mb-3 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]"
           />
 
-          {/* Helper text — shown when textarea is empty */}
+          {/* Helper text - shown when textarea is empty */}
           {!assignment.trim() && !imageBase64 && (
             <p className="text-xs text-[#A8A29E] mb-3 -mt-1">
               Sage will ask what you already know, then guide you from there.
@@ -966,7 +966,7 @@ export default function TutorChat({
             </div>
           ))}
 
-          {/* Typing indicator — shown only while waiting for first streaming token */}
+          {/* Typing indicator - shown only while waiting for first streaming token */}
           {isLoading && !streamingMsgId && (
             <div className="flex justify-start">
               <div className="flex flex-col items-center mr-2.5 shrink-0">
@@ -989,7 +989,7 @@ export default function TutorChat({
         </div>
       </div>
 
-      {/* Hidden file input — always mounted */}
+      {/* Hidden file input - always mounted */}
       <input ref={fileInputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleImageSelect} />
 
       {/* Input bar */}

@@ -29,12 +29,12 @@ export async function retrieveRelevantContext(
       .map((doc) => {
         const label = [doc.subject, doc.doc_type, doc.title]
           .filter(Boolean)
-          .join(" — ");
+          .join(" - ");
         return `[${label}]\n${doc.content}`;
       })
       .join("\n\n---\n\n");
 
-    return `\n\nCURRICULUM KNOWLEDGE BASE — Retrieved LC/JC reference material for this session:\n${chunks}`;
+    return `\n\nCURRICULUM KNOWLEDGE BASE - Retrieved LC/JC reference material for this session:\n${chunks}`;
   } catch {
     // Never block the tutor route if RAG fails
     return "";

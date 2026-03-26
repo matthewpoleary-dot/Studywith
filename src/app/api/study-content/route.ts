@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   "subject": "LC/JC subject area (e.g. 'LC Biology', 'LC Chemistry', 'LC History', 'LC Maths')",
   "mentalModel": "Two paragraphs. First: explain the core concept with one vivid analogy that sticks. Second: push the analogy to cover the most common point of confusion or the part most often tested on the LC.",
   "fastFacts": [
-    "The single most important exam fact — what you must know for full marks",
+    "The single most important exam fact (what you must know for full marks)",
     "A critical second fact or definition students often miss or mix up",
     "A third LC-exam-relevant fact, formula, or rule worth memorising",
     "A fourth fact tied to a specific common exam question on this topic",
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   ],
   "commonMistakes": [
     "First common mistake LC students make on this topic in exams, and how to avoid it",
-    "Second common mistake — often costs marks in the marking scheme",
+    "Second common mistake (often costs marks in the marking scheme)",
     "Third mistake: a terminology or definition error that loses marks"
   ]
 }`;

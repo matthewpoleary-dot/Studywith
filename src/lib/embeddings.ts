@@ -1,5 +1,5 @@
 // Splits text into ~1500-char chunks at sentence/paragraph boundaries with overlap.
-// No embedding API needed — retrieval uses PostgreSQL full-text search.
+// No embedding API needed - retrieval uses PostgreSQL full-text search.
 export function chunkText(text: string, chunkSize = 1500, overlap = 200): string[] {
   const chunks: string[] = [];
   let start = 0;

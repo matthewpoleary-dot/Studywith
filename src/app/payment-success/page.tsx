@@ -23,7 +23,7 @@ export default function PaymentSuccessPage() {
           return;
         }
       } catch {
-        // network hiccup — keep retrying
+        // network hiccup - keep retrying
       }
       setAttempts((a) => a + 1);
     }, 2000);

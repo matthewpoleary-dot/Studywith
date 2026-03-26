@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     if (entry) {
       entry.sessions.push(s);
     } else {
-      // Session from a user no longer in the room — include them anyway
+      // Session from a user no longer in the room - include them anyway
       const { data: { user: authUser } } = await admin.auth.admin.getUserById(s.user_id);
       studentMap.set(s.user_id, {
         email: authUser?.email ?? s.user_id,

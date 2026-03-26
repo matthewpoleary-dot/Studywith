@@ -46,7 +46,7 @@ export async function DELETE() {
         }
       }
     } catch {
-      // Stripe error — continue with account deletion
+      // Stripe error - continue with account deletion
     }
   }
 
