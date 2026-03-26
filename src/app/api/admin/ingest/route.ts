@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
-import { embedText, chunkText } from "@/lib/embeddings";
+import { chunkText } from "@/lib/embeddings";
 
 export const dynamic = "force-dynamic";
 
@@ -43,36 +43,28 @@ export async function POST(request: Request) {
     return Response.json({ error: "No usable content after chunking" }, { status: 400 });
   }
 
-  const inserted: string[] = [];
+  const rows = chunks.map((chunk, i) => ({
+    title,
+    subject: subject ?? null,
+    doc_type: doc_type ?? "notes",
+    year: year ?? null,
+    chunk_index: i,
+    content: chunk,
+  }));
 
-  for (let i = 0; i < chunks.length; i++) {
-    // Prepend title so each chunk has context about what document it came from
-    const textToEmbed = `${title}\n\n${chunks[i]}`;
-    const embedding = await embedText(textToEmbed);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (getSupabaseAdmin() as any)
+    .from("lc_documents")
+    .insert(rows);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (getSupabaseAdmin() as any)
-      .from("lc_documents")
-      .insert({
-        title,
-        subject: subject ?? null,
-        doc_type: doc_type ?? "notes",
-        year: year ?? null,
-        chunk_index: i,
-        content: chunks[i],
-        embedding,
-      })
-      .select("id")
-      .single();
-
-    if (!error && data) inserted.push(data.id as string);
+  if (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 
-  return Response.json({ success: true, chunks: inserted.length });
+  return Response.json({ success: true, chunks: rows.length });
 }
 
-export async function GET(request: Request) {
-  // List all documents (distinct titles)
+export async function GET() {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -91,13 +83,20 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false });
 
   // Group by title to get unique documents with chunk counts
-  const docMap = new Map<string, { title: string; subject: string; doc_type: string; year: number | null; chunks: number; created_at: string }>();
+  const docMap = new Map<string, {
+    title: string; subject: string; doc_type: string;
+    year: number | null; chunks: number; created_at: string;
+  }>();
+
   for (const row of (data ?? [])) {
     const key = `${row.title}||${row.subject}`;
     if (docMap.has(key)) {
       docMap.get(key)!.chunks++;
     } else {
-      docMap.set(key, { title: row.title, subject: row.subject, doc_type: row.doc_type, year: row.year, chunks: 1, created_at: row.created_at });
+      docMap.set(key, {
+        title: row.title, subject: row.subject, doc_type: row.doc_type,
+        year: row.year, chunks: 1, created_at: row.created_at,
+      });
     }
   }
 
