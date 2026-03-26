@@ -43,6 +43,7 @@ const SubscribeBannerBar = () => {
           Subscribe to unlock your tutor.
         </p>
         <CheckoutButton
+          plan="trial"
           label="Start your free trial"
           className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
         />
@@ -236,6 +237,7 @@ const Navigation = () => {
                   Sign in
                 </a>
                 <CheckoutButton
+                  plan="trial"
                   label="Sign up"
                   className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 whitespace-nowrap"
                 />
@@ -302,6 +304,7 @@ const Navigation = () => {
                     Sign in
                   </a>
                   <CheckoutButton
+                    plan="trial"
                     label="Sign up"
                     className="bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                   />
@@ -398,6 +401,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
               <div className="sm:flex-none sm:w-auto">
                 <CheckoutButton
+                  plan="trial"
                   label="Start free, no card required"
                   className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                 />

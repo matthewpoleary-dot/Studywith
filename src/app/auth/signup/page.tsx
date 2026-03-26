@@ -95,11 +95,8 @@ export default function SignupPage() {
             | null)
         : null;
 
-    // No plan chosen — send them to the pricing section to pick one
-    if (!storedPlan) {
-      window.location.href = "/#pricing";
-      return;
-    }
+    // No plan chosen — default to trial (matches signup messaging)
+    const planToUse = storedPlan ?? "trial";
 
     localStorage.removeItem("studywith_plan");
 
@@ -107,7 +104,7 @@ export default function SignupPage() {
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: storedPlan }),
+        body: JSON.stringify({ plan: planToUse }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
