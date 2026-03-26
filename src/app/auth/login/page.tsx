@@ -15,6 +15,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [needsSubscription, setNeedsSubscription] = useState(false);
   const searchParams = useSearchParams();
+  const resetSuccess = searchParams.get("reset") === "success";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +91,11 @@ function LoginForm() {
 
   return (
     <form onSubmit={(e) => void handleLogin(e)} className="flex flex-col gap-4">
+      {resetSuccess && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+          Password updated. Please sign in with your new password.
+        </div>
+      )}
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-[#57534E]" htmlFor="email">
           Email
