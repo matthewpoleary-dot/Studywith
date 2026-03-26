@@ -143,11 +143,11 @@ export default async function AppDashboard() {
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[#A8A29E] mb-3 text-center">Try an example</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {[
-                "Explain the Doppler Effect",
-                "Solve: 3x + 5 = 14",
-                "Causes of World War 1",
-                "What is photosynthesis?",
-                "Help me write a thesis statement",
+                "LC Biology: explain meiosis vs mitosis",
+                "LC Maths: differentiate f(x) = x³ + 4x from first principles",
+                "LC History: causes of the 1916 Rising",
+                "LC Chemistry: Le Chatelier's Principle and the Haber Process",
+                "LC English: how to write a comparative essay",
               ].map((prompt) => (
                 <Link
                   key={prompt}

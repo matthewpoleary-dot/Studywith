@@ -13,7 +13,7 @@ StudyWith is an AI-powered learning platform architected to solve the "passive l
 ## 🎓 Key Features
 * **Socratic Scaffolding:** Advanced system-prompting that prioritizes inquiry-based learning.
 * **Curriculum Optimization:** Tailored for Junior Cycle and Leaving Certificate marking schemes.
-* **Modular Architecture:** Fully decoupled frontend/backend for rapid integration into existing EdTech ecosystems (e.g., Grinds 360).
+* **Modular Architecture:** Fully decoupled frontend/backend for rapid integration into existing EdTech ecosystems.
 
 ## 🚀 Development & Portability
 The project is built as a turnkey asset. All configuration is centralized in environment variables, allowing for a 5-minute handover/deployment process.
