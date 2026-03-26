@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
+import { retrieveRelevantContext } from "@/lib/rag";
 import type { Database } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -251,6 +252,9 @@ export async function POST(request: Request) {
       .eq("user_id", user.id);
   }
 
+  // Retrieve relevant LC/JC curriculum context from knowledge base (non-blocking)
+  const ragContext = await retrieveRelevantContext(body.assignment);
+
   // Build message list — if image attached, use vision model and inject image into last user message
   const isCorrectorMode = body.mode === "corrector";
   const systemPromptBase = isCorrectorMode ? CORRECTOR_PROMPT : BASE_PROMPT;
@@ -259,7 +263,7 @@ export async function POST(request: Request) {
     : (SUBJECT_ADDONS[body.subject ?? ""] ?? "");
   const systemMessage = {
     role: "system" as const,
-    content: `${systemPromptBase}${systemPromptAddon}\n\nThe student's assignment is:\n${body.assignment}`,
+    content: `${systemPromptBase}${systemPromptAddon}${ragContext}\n\nThe student's assignment is:\n${body.assignment}`,
   };
 
   type GroqMessage =
