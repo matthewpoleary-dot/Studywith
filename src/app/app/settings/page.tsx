@@ -625,7 +625,7 @@ export default function SettingsPage() {
                     Free
                   </span>
                 </div>
-                <p className="text-xs text-[#A8A29E] mb-4">Then €12.99/month, cancel anytime.</p>
+                <p className="text-xs text-[#A8A29E] mb-4">Then €12.99/month. No card required to start.</p>
                 <CheckoutButton
                   plan="trial"
                   label="Start free trial"

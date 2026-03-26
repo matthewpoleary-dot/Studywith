@@ -150,7 +150,9 @@ export async function POST(request: Request) {
   const sessionConfig: Stripe.Checkout.SessionCreateParams = {
     customer: customerId,
     mode: "subscription",
-    payment_method_collection: "always", // Card always required
+    // For the free trial we allow "no card required" by not collecting a payment method up front.
+    // If the user doesn't add a payment method by trial end, the subscription will be cancelled.
+    payment_method_collection: plan === "trial" ? "if_required" : "always",
     payment_method_types: ["card"],
     line_items: [
       {
@@ -167,6 +169,11 @@ export async function POST(request: Request) {
   if (plan === "trial") {
     sessionConfig.subscription_data = {
       trial_period_days: referredBy ? 14 : 7,
+      trial_settings: {
+        end_behavior: {
+          missing_payment_method: "cancel",
+        },
+      },
       metadata: {
         supabase_user_id: user.id,
         referred_by: referredBy ?? "",

@@ -1154,7 +1154,7 @@ const Pricing = () => {
               <span className="font-serif text-4xl font-medium text-[#1A1A1A]">€0</span>
               <span className="text-[#57534E] text-sm">today</span>
             </div>
-            <p className="text-xs text-[#A8A29E] mb-6">Then €12.99/mo. Card required to start.</p>
+            <p className="text-xs text-[#A8A29E] mb-6">Then €12.99/mo. No card required to start.</p>
             <ul className="space-y-3 mb-8 flex-1">
               {features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2.5">
@@ -1168,7 +1168,7 @@ const Pricing = () => {
               label="Start 7-day free trial"
               className="w-full rounded-lg py-3 text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
-            <p className="text-center text-xs text-[#A8A29E] mt-2">7 days free, then auto-renews.</p>
+            <p className="text-center text-xs text-[#A8A29E] mt-2">7 days free. Add a card to continue after the trial.</p>
           </div>
 
           {/* Monthly */}
