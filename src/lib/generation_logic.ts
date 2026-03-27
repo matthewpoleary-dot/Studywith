@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 
 // ── Shared types ────────────────────────────────────────────────────────────
 
@@ -18,7 +18,7 @@ export interface QuizQuestion {
 
 // ── Model ───────────────────────────────────────────────────────────────────
 
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "mixtral-8x7b-32768";
 
 // ── Flashcard Service ────────────────────────────────────────────────────────
 
@@ -83,13 +83,16 @@ function stripFences(raw: string): string {
 // ── Public API ───────────────────────────────────────────────────────────────
 
 export async function generateFlashcards(extractedText: string): Promise<Flashcard[]> {
-  const client = new Anthropic();
+  const client = new Groq();
 
-  const message = await client.messages.create({
+  const message = await client.chat.completions.create({
     model: MODEL,
     max_tokens: 4096,
-    system: FLASHCARD_SYSTEM,
     messages: [
+      {
+        role: "system",
+        content: FLASHCARD_SYSTEM,
+      },
       {
         role: "user",
         content: `Generate flashcards from these student notes:\n\n${extractedText.slice(0, 12000)}`,
@@ -97,7 +100,7 @@ export async function generateFlashcards(extractedText: string): Promise<Flashca
     ],
   });
 
-  const raw = stripFences((message.content[0] as { type: "text"; text: string }).text);
+  const raw = stripFences(message.choices[0].message.content ?? "");
   const parsed = JSON.parse(raw) as { flashcards?: unknown };
 
   if (!Array.isArray(parsed.flashcards)) {
@@ -113,13 +116,16 @@ export async function generateFlashcards(extractedText: string): Promise<Flashca
 }
 
 export async function generateQuiz(extractedText: string): Promise<QuizQuestion[]> {
-  const client = new Anthropic();
+  const client = new Groq();
 
-  const message = await client.messages.create({
+  const message = await client.chat.completions.create({
     model: MODEL,
     max_tokens: 4096,
-    system: QUIZ_SYSTEM,
     messages: [
+      {
+        role: "system",
+        content: QUIZ_SYSTEM,
+      },
       {
         role: "user",
         content: `Generate practice quiz questions from these student notes:\n\n${extractedText.slice(0, 12000)}`,
@@ -127,7 +133,7 @@ export async function generateQuiz(extractedText: string): Promise<QuizQuestion[
     ],
   });
 
-  const raw = stripFences((message.content[0] as { type: "text"; text: string }).text);
+  const raw = stripFences(message.choices[0].message.content ?? "");
   const parsed = JSON.parse(raw) as { questions?: unknown };
 
   if (!Array.isArray(parsed.questions)) {
