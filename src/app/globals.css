@@ -91,6 +91,12 @@ body {
   height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Print styles — hide app chrome, show only quiz results */
+@media print {
+  .no-print { display: none !important; }
+  body::before { display: none; }
+}
+
 /* Hero message fade-in */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }

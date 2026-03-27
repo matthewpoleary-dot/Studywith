@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2 } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
@@ -287,6 +287,18 @@ function SidebarContent({
         <div className="flex items-center px-4 mb-1">
           <p className="text-xs text-[#A8A29E] truncate">{userEmail}</p>
         </div>
+        <a
+          href="/app/study-materials"
+          onClick={onNav}
+          className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
+            pathname === "/app/study-materials"
+              ? "bg-[#E7E5E4] text-[#1A1A1A]"
+              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" strokeWidth={1.5} />
+          Study Materials
+        </a>
         <a
           href="/app/stats"
           onClick={onNav}

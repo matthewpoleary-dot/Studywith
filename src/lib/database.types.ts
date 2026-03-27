@@ -115,6 +115,76 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      study_materials: {
+        Row: {
+          id: string;
+          user_id: string;
+          file_name: string;
+          topic: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          file_name: string;
+          topic?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          topic?: string | null;
+        };
+        Relationships: [];
+      };
+      flashcards: {
+        Row: {
+          id: string;
+          material_id: string;
+          user_id: string;
+          question: string;
+          answer: string;
+          topic: string;
+          confidence: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          material_id: string;
+          user_id: string;
+          question: string;
+          answer: string;
+          topic: string;
+          confidence?: number;
+          created_at?: string;
+        };
+        Update: {
+          confidence?: number;
+        };
+        Relationships: [];
+      };
+      quiz_questions: {
+        Row: {
+          id: string;
+          material_id: string;
+          user_id: string;
+          question: string;
+          options: Json;
+          correct_index: number;
+          explanation: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          material_id: string;
+          user_id: string;
+          question: string;
+          options: Json;
+          correct_index: number;
+          explanation: string;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       room_assignments: {
         Row: {
           id: string;
