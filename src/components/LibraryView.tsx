@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Layers, BookOpen, ChevronDown, X } from "lucide-react";
+import { Layers, BookOpen, ChevronDown, X, FileText } from "lucide-react";
 import FlashcardDeck, { type FlashcardRow } from "./FlashcardDeck";
 import PracticeQuiz, { type QuizQuestionRow } from "./PracticeQuiz";
 
@@ -151,9 +151,9 @@ export default function LibraryView({
       ) : selectedMaterial ? (
         <div className="bg-white border border-[#E7E5E4] rounded-xl overflow-hidden">
           {tab === "flashcards" ? (
-            <FlashcardDeck flashcards={selectedMaterial.flashcards} />
+            <FlashcardDeck cards={selectedMaterial.flashcards} onConfidenceChange={() => {}} />
           ) : (
-            <PracticeQuiz questions={selectedMaterial.quiz_questions} />
+            <PracticeQuiz questions={selectedMaterial.quiz_questions} fileName={selectedMaterial.material.file_name} />
           )}
         </div>
       ) : null}
