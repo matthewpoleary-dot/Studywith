@@ -136,6 +136,22 @@ function SidebarContent({
         </a>
       </div>
 
+      {/* Study Materials */}
+      <div className="px-3 pb-2">
+        <a
+          href="/app"
+          onClick={onNav}
+          className={`flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/app"
+              ? "bg-[#D97706] text-white shadow-sm"
+              : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
+          }`}
+        >
+          <BookOpen className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          Study Materials
+        </a>
+      </div>
+
       {/* Sessions list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
         {(() => {
