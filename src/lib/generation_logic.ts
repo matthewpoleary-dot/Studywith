@@ -18,7 +18,7 @@ export interface QuizQuestion {
 
 // ── Model ───────────────────────────────────────────────────────────────────
 
-const MODEL = "mixtral-8x7b-32768";
+const MODEL = "llama-3.1-70b-versatile";
 
 // ── Flashcard Service ────────────────────────────────────────────────────────
 
