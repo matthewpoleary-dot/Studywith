@@ -45,6 +45,16 @@ function detectSensitive(session: Session): boolean {
   return /\b(suicide|self-harm|self harm|kill myself|end my life|abuse|assault|rape|overdose|crisis)\b/.test(t);
 }
 
+function subjectIcon(subject: string): string {
+  const icons: Record<string, string> = {
+    Maths: "∑", Biology: "🧬", Chemistry: "⚗️", Physics: "⚡",
+    History: "📜", English: "✍️", Languages: "🌐", Business: "📊",
+    Science: "🔬", "Computer Science": "💻", Economics: "📈",
+    Psychology: "🧠", "Art & Design": "🎨", Engineering: "⚙️", General: "📁",
+  };
+  return icons[subject] ?? "📁";
+}
+
 function masteryForSubject(sessions: Session[]): number | null {
   const scored = sessions
     .map((s) => (s.receipt as LearningReceipt | null)?.score)
@@ -226,7 +236,7 @@ function SidebarContent({
                       if (e.key === "Enter") void saveRename(session.id);
                       if (e.key === "Escape") setRenamingId(null);
                     }}
-                    className="flex-1 min-w-0 bg-white border border-[#D97706]/50 rounded-lg px-2 py-0.5 text-xs text-[#1A1A1A] outline-none focus:ring-1 focus:ring-[#D97706]/30"
+                    className="flex-1 min-w-0 bg-white border border-[#2563EB]/40 rounded-lg px-2 py-0.5 text-xs text-[#1A1A1A] outline-none focus:ring-1 focus:ring-[#2563EB]/20"
                     autoFocus
                   />
                 ) : (
@@ -315,7 +325,7 @@ function SidebarContent({
                       <div className="min-w-0 flex-1 text-left">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A2B3C] truncate">
-                            {subject}
+                            <span className="mr-1 not-italic">{subjectIcon(subject)}</span>{subject}
                           </p>
                           <span className="text-[10px] text-[#64748B] shrink-0">
                             {subjectSessions.length}

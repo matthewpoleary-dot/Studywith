@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Send, ImagePlus, X, FileText, BookOpen } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
@@ -225,6 +225,7 @@ export default function TutorChat({
   const prevSubjectRef = useRef<Subject>(detectSubject(initialAssignment));
   const [sageAvatar, setSageAvatar] = useState("🌿");
   const [showPdf, setShowPdf] = useState(false);
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   // Pending image URL from room assignment - attached automatically on first send
   const pendingImageUrlRef = useRef<string | null>(initialImageUrl ?? null);
@@ -239,6 +240,51 @@ export default function TutorChat({
   const pathname = usePathname();
   const isSessionRoute =
     !!pathname?.startsWith("/app/session/") || pathname === "/app/new";
+
+  // ── Tutor Margin content extraction ──────────────────────────────────────
+  const marginContent = useMemo(() => {
+    const tutorMsgs = messages.filter((m) => m.role === "tutor");
+
+    // Bold terms: **term** patterns across all tutor messages
+    const keyTerms: string[] = [];
+    const seen = new Set<string>();
+    for (const m of tutorMsgs) {
+      for (const match of m.content.matchAll(/\*\*([^*\n]{1,60})\*\*/g)) {
+        const term = match[1].trim();
+        if (!seen.has(term.toLowerCase()) && term.length > 2) {
+          keyTerms.push(term);
+          seen.add(term.toLowerCase());
+        }
+      }
+    }
+
+    // Last question posed by tutor
+    let lastQuestion: string | null = null;
+    for (let i = tutorMsgs.length - 1; i >= 0; i--) {
+      const sentences = tutorMsgs[i].content.split(/(?<=[.?!])\s+/);
+      for (let j = sentences.length - 1; j >= 0; j--) {
+        const s = sentences[j].trim();
+        if (s.endsWith("?") && s.length > 15 && !s.startsWith("*")) {
+          lastQuestion = s.replace(/\*\*/g, "");
+          break;
+        }
+      }
+      if (lastQuestion) break;
+    }
+
+    // Numbered list items (marking scheme / steps)
+    const checklistItems: string[] = [];
+    for (const m of tutorMsgs) {
+      for (const match of m.content.matchAll(/^\s*\d+\.\s+(.+)$/gm)) {
+        const item = match[1].trim().replace(/\*\*/g, "");
+        if (item.length > 5 && checklistItems.length < 7) {
+          checklistItems.push(item);
+        }
+      }
+    }
+
+    return { keyTerms: keyTerms.slice(0, 8), lastQuestion, checklistItems };
+  }, [messages]);
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "instant" });
@@ -708,11 +754,11 @@ export default function TutorChat({
           onChange={handleImageSelect}
         />
         <div className="w-full max-w-xl mx-auto">
-          <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-2 leading-tight">
+          <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A2B3C] mb-2 leading-tight">
             What are we working on?
           </h1>
-          <p className="text-sm text-[#57534E] mb-6 leading-relaxed">
-            Paste a question, topic, or assignment, or upload a photo of your notes.
+          <p className="text-sm text-[#64748B] mb-6 leading-relaxed">
+            Paste a question, topic, or assignment — or upload a photo of your notes.
           </p>
 
           {/* File preview */}
@@ -720,7 +766,7 @@ export default function TutorChat({
             <div className="relative mb-4 rounded-2xl overflow-hidden border border-[#E7E5E4] shadow-sm">
               {imageMime === "application/pdf" ? (
                 <div className="flex items-center gap-3 px-4 py-3 bg-white">
-                  <FileText className="w-8 h-8 shrink-0 text-[#D97706]" strokeWidth={1.5} />
+                  <FileText className="w-8 h-8 shrink-0 text-[#1A2B3C]" strokeWidth={1.5} />
                   <span className="text-sm text-[#1A1A1A] truncate">{fileName}</span>
                 </div>
               ) : (
@@ -755,13 +801,13 @@ export default function TutorChat({
                 : "e.g. 'Explain the causes of WW1' or paste your assignment directly..."
             }
             rows={6}
-            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#D97706]/70 focus:ring-2 focus:ring-[#D97706]/20 transition-all mb-3 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]"
+            className="w-full resize-none rounded-2xl border border-[#E7E5E4] bg-white px-4 py-3.5 text-sm text-[#1A1A1A] outline-none placeholder:text-[#A8A29E] focus:border-[#1A2B3C]/50 focus:ring-2 focus:ring-[#1A2B3C]/10 transition-all mb-3 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]"
           />
 
           {/* Helper text - shown when textarea is empty */}
           {!assignment.trim() && !imageBase64 && (
-            <p className="text-xs text-[#A8A29E] mb-3 -mt-1">
-              Sage will ask what you already know, then guide you from there.
+            <p className="text-xs text-[#64748B] mb-3 -mt-1">
+              Sage will probe what you already know, then guide you toward the answer through questions.
             </p>
           )}
 
@@ -780,7 +826,7 @@ export default function TutorChat({
                     key={prompt}
                     type="button"
                     onClick={() => setAssignment(prompt)}
-                    className="rounded-lg border border-[#E7E5E4] bg-white px-3 py-1.5 text-xs text-[#57534E] hover:border-[#D97706]/50 hover:text-[#1A1A1A] transition-colors text-left"
+                    className="rounded-lg border border-[#E7E5E4] bg-white px-3 py-1.5 text-xs text-[#57534E] hover:border-[#1A2B3C]/30 hover:text-[#1A1A1A] transition-colors text-left"
                   >
                     {prompt}
                   </button>
@@ -793,7 +839,7 @@ export default function TutorChat({
             <button
               onClick={() => void handleStart()}
               disabled={!canStart || isExtracting || isStarting}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#1A1A1A] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A1A1A]/85 transition-all shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1A2B3C] px-7 py-3 text-sm font-medium text-white hover:bg-[#1A2B3C]/90 transition-all shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {isExtracting ? (
                 "Reading file..."
@@ -809,7 +855,7 @@ export default function TutorChat({
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-xl border border-[#E7E5E4] bg-white px-4 py-3 text-sm text-[#57534E] hover:border-[#D97706]/60 hover:text-[#D97706] transition-all shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#E7E5E4] bg-white px-4 py-3 text-sm text-[#57534E] hover:border-[#2563EB]/50 hover:text-[#2563EB] transition-all shadow-sm"
               title="Upload image or PDF of assignment"
             >
               <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
@@ -829,7 +875,7 @@ export default function TutorChat({
   return (
     <div className="flex-1 min-h-0 flex flex-col relative">
       {/* Assignment strip */}
-      <div className="sticky top-0 z-10 bg-[#FDFCF8]/95 backdrop-blur-sm border-b border-[#E7E5E4] px-6 py-3">
+      <div className="sticky top-0 z-10 bg-[#F8FAFC]/95 backdrop-blur-sm border-b border-[#E2E8F0] px-6 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           {mode === "corrector" && (
             <span className="shrink-0 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700 uppercase tracking-wide">
@@ -837,7 +883,7 @@ export default function TutorChat({
             </span>
           )}
           {subject !== "General" && (
-            <span className="shrink-0 rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-medium text-[#D97706] uppercase tracking-wide">
+            <span className="shrink-0 rounded-md bg-[#1A2B3C]/10 px-2 py-0.5 text-[10px] font-medium text-[#1A2B3C] uppercase tracking-wide">
               {subject}
             </span>
           )}
@@ -853,7 +899,7 @@ export default function TutorChat({
           {assignmentFileUrl && (
             <button
               onClick={() => setShowPdf((v) => !v)}
-              className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition whitespace-nowrap ${showPdf ? "border-[#D97706] bg-[#D97706]/10 text-[#D97706]" : "border-[#E7E5E4] text-[#57534E] hover:border-[#D97706]/50 hover:text-[#D97706]"}`}
+              className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition whitespace-nowrap ${showPdf ? "border-[#1A2B3C] bg-[#1A2B3C]/10 text-[#1A2B3C]" : "border-[#E2E8F0] text-[#57534E] hover:border-[#1A2B3C]/40 hover:text-[#1A2B3C]"}`}
             >
               <BookOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
               Questions
@@ -924,7 +970,7 @@ export default function TutorChat({
                   <FileText className="w-8 h-8 text-red-400" strokeWidth={1.5} />
                   <p className="text-sm text-[#57534E] text-center">
                     PDF can&apos;t be previewed here.{" "}
-                    <a href={assignmentFileUrl} target="_blank" rel="noopener noreferrer" className="text-[#D97706] underline">Open in new tab</a>
+                    <a href={assignmentFileUrl} target="_blank" rel="noopener noreferrer" className="text-[#2563EB] underline">Open in new tab</a>
                   </p>
                 </div>
               </object>
@@ -1013,39 +1059,128 @@ export default function TutorChat({
         </div>
 
         {/* Tutor margin */}
-        <aside className="hidden lg:flex w-[360px] shrink-0 border-l border-[#E2E8F0] bg-[#F8FAFC] px-5 py-6">
-          <div className="w-full">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A2B3C]">
-              Tutor Margin
-            </p>
-            <div className="mt-4 space-y-4">
-              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4">
-                <p className="text-xs font-medium text-[#0F172A]">Session context</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {mode === "corrector" && (
-                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
-                      Marking mode
-                    </span>
-                  )}
-                  {subject !== "General" && (
-                    <span className="rounded-full border border-[#1A2B3C]/20 bg-[#1A2B3C]/10 px-2.5 py-1 text-[11px] font-medium text-[#1A2B3C]">
-                      {subject}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-3 text-xs text-[#64748B] leading-relaxed">
-                  As you work, this margin will show flashcards, checklists, and diagrams pulled from the tutor&apos;s guidance.
-                </p>
+        <aside className="hidden lg:flex flex-col w-[300px] xl:w-[340px] shrink-0 border-l border-[#E2E8F0] bg-[#F8FAFC] overflow-y-auto">
+          <div className="px-5 py-5 flex-1">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1A2B3C]">
+                Tutor Margin
+              </p>
+              <div className="flex gap-1.5">
+                {mode === "corrector" && (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                    Marking
+                  </span>
+                )}
+                {subject !== "General" && (
+                  <span className="rounded-full border border-[#1A2B3C]/20 bg-[#1A2B3C]/8 px-2 py-0.5 text-[10px] font-medium text-[#1A2B3C]">
+                    {subject}
+                  </span>
+                )}
               </div>
+            </div>
 
-              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4">
-                <p className="text-xs font-medium text-[#0F172A]">Learning signifiers</p>
-                <ul className="mt-2 space-y-1 text-xs text-[#475569]">
-                  <li><span className="font-medium text-[#1A2B3C]">Ink Blue</span> for links and references.</li>
-                  <li><span className="font-medium" style={{ color: "#B91C1C" }}>Red Pen</span> for fixes and missing marks.</li>
-                  <li><span className="px-1 rounded font-medium" style={{ background: "#FEF08A" }}>Highlighter</span> for what to focus on next.</li>
-                </ul>
-              </div>
+            <div className="space-y-3">
+              {/* Think About — last question from tutor */}
+              {marginContent.lastQuestion && (
+                <div className="rounded-xl border border-[#FEF08A] bg-[#FEF08A]/30 p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#854D0E] mb-2">
+                    Think About
+                  </p>
+                  <p className="text-xs text-[#1A1A1A] leading-relaxed italic">
+                    &ldquo;{marginContent.lastQuestion}&rdquo;
+                  </p>
+                </div>
+              )}
+
+              {/* Key Terms — extracted bold phrases */}
+              {marginContent.keyTerms.length > 0 && (
+                <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1A2B3C] mb-2.5">
+                    Key Terms
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {marginContent.keyTerms.map((term) => (
+                      <span
+                        key={term}
+                        className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-[11px] font-medium text-[#334155] leading-none"
+                      >
+                        {term}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Marking Scheme — numbered list items as interactive checklist */}
+              {marginContent.checklistItems.length > 0 && (
+                <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1A2B3C] mb-2.5">
+                    Marking Scheme
+                  </p>
+                  <ul className="space-y-2">
+                    {marginContent.checklistItems.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <button
+                          onClick={() =>
+                            setCheckedItems((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(item)) next.delete(item);
+                              else next.add(item);
+                              return next;
+                            })
+                          }
+                          className={`mt-0.5 shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                            checkedItems.has(item)
+                              ? "bg-[#1A2B3C] border-[#1A2B3C]"
+                              : "border-[#CBD5E1] bg-white hover:border-[#1A2B3C]/50"
+                          }`}
+                        >
+                          {checkedItems.has(item) && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </button>
+                        <span
+                          className={`text-xs leading-relaxed ${
+                            checkedItems.has(item) ? "line-through text-[#94A3B8]" : "text-[#334155]"
+                          }`}
+                        >
+                          {item}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Placeholder — shown before any content is extracted */}
+              {marginContent.keyTerms.length === 0 &&
+                !marginContent.lastQuestion &&
+                marginContent.checklistItems.length === 0 && (
+                  <>
+                    <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1A2B3C] mb-2">
+                        Learning Signifiers
+                      </p>
+                      <ul className="space-y-1.5 text-xs text-[#475569]">
+                        <li>
+                          <span className="font-semibold text-[#2563EB]">Ink Blue</span> — links &amp; references.
+                        </li>
+                        <li>
+                          <span className="font-semibold" style={{ color: "#B91C1C" }}>Red Pen</span> — errors &amp; missing marks.
+                        </li>
+                        <li>
+                          <mark className="rounded px-1 font-medium not-italic" style={{ background: "#FEF08A" }}>Highlighter</mark> — key focus areas.
+                        </li>
+                      </ul>
+                    </div>
+                    <p className="text-[11px] text-[#94A3B8] px-0.5 leading-relaxed">
+                      Key terms, questions to consider, and checklist items will appear here as Sage guides you.
+                    </p>
+                  </>
+                )}
             </div>
           </div>
         </aside>
@@ -1069,7 +1204,7 @@ export default function TutorChat({
               <div className="relative inline-flex items-center gap-2 bg-white border border-[#E7E5E4] rounded-xl px-3 py-2 shadow-sm">
                 {imageMime === "application/pdf" ? (
                   <>
-                    <FileText className="w-5 h-5 shrink-0 text-[#D97706]" strokeWidth={1.5} />
+                    <FileText className="w-5 h-5 shrink-0 text-[#1A2B3C]" strokeWidth={1.5} />
                     <span className="text-xs text-[#1A1A1A] max-w-[160px] truncate">{fileName}</span>
                   </>
                 ) : (
