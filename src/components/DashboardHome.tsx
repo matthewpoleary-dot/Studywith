@@ -51,7 +51,7 @@ export default function DashboardHome() {
       try {
         const sessionsRes = await fetch("/api/sessions");
         const sessionsData = await sessionsRes.json();
-        setSessions(sessionsData || []);
+        setSessions((sessionsData?.sessions as any[]) || []);
 
         const materialsRes = await fetch("/api/study-materials");
         const materialsData = await materialsRes.json();
