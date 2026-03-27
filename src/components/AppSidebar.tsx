@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Upload } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
@@ -30,18 +30,56 @@ function SidebarContent({
 }: AppSidebarProps & { onNav?: () => void; onCollapse?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [learningMenuOpen, setLearningMenuOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [sidebarError, setSidebarError] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [localTitles, setLocalTitles] = useState<Record<string, string>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     posthog.reset();
     router.push("/");
+  };
+
+  const handleSidebarUpload = async (file: File) => {
+    setUploading(true);
+    setSidebarError(null);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const data = (reader.result as string).split(",")[1] || "";
+          resolve(data);
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+
+      const response = await fetch("/api/study-materials/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name, text: base64 }),
+      });
+      const data = await response.json();
+      if (!data.materialId) throw new Error(data.error || "Upload failed.");
+      router.push("/app/library");
+    } catch (err) {
+      setSidebarError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSidebarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) void handleSidebarUpload(file);
   };
 
   const startRename = (session: Session, e: React.MouseEvent) => {
@@ -124,35 +162,77 @@ function SidebarContent({
         )}
       </div>
 
-      {/* New session button */}
-      <div className="px-3 pt-4 pb-2">
-        <a
-          href="/app/new"
-          onClick={onNav}
+          {/* Start Learning button */}
+      <div className="px-3 pt-4 pb-2 relative">
+        <button
+          onClick={() => setLearningMenuOpen((prev) => !prev)}
           className="flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 transition-all shadow-sm hover:shadow-md"
         >
           <Plus className="w-4 h-4 shrink-0" strokeWidth={2} />
-          New session
-        </a>
+          Start Learning
+        </button>
+
+        {learningMenuOpen && (
+          <div className="absolute left-3 right-3 mt-2 rounded-xl border border-[#E7E5E4] bg-white p-2 shadow-lg z-20">
+            <button
+              onClick={() => {
+                setLearningMenuOpen(false);
+                router.push("/app/new");
+                onNav?.();
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F4] rounded-lg"
+            >
+              <MessageSquare className="w-4 h-4" />
+              New Chat
+            </button>
+            <button
+              onClick={() => {
+                setLearningMenuOpen(false);
+                fileInputRef.current?.click();
+              }}
+              className="mt-1 flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F4] rounded-lg"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Material
+            </button>
+            {uploading && <p className="text-xs text-[#6B7280] mt-2">Uploading...</p>}
+            {sidebarError && <p className="text-xs text-red-500 mt-2">{sidebarError}</p>}
+          </div>
+        )}
+        <input
+          type="file"
+          accept="application/pdf"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleSidebarFileChange}
+        />
       </div>
 
-      {/* Study Materials */}
+      {/* Groups */}
       <div className="px-3 pb-2">
         <a
           href="/app"
           onClick={onNav}
           className={`flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/app"
-              ? "bg-[#D97706] text-white shadow-sm"
-              : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
+            pathname === "/app" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
           }`}
         >
-          <BookOpen className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-          Study Materials
+          <Home className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          Home
+        </a>
+        <a
+          href="/app/library"
+          onClick={onNav}
+          className={`mt-2 flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/app/library" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
+          }`}
+        >
+          <Layers className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          Library
         </a>
       </div>
 
-      {/* Sessions list */}
+      {/* Recent Tutors list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
         {(() => {
           const visible = sessions.filter((s) => !deletedIds.has(s.id));
