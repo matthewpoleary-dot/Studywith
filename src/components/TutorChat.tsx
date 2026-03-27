@@ -933,60 +933,122 @@ export default function TutorChat({
         </div>
       )}
 
-      {/* Messages */}
-      <div
-        ref={messagesContainerRef}
-        onScroll={handleContainerScroll}
-        className="flex-1 overflow-y-auto overscroll-contain py-8 px-6"
-      >
-        <div className="max-w-2xl mx-auto space-y-4">
-          {messages.map((m) => (
-            <div key={m.id} className={`flex ${m.role === "student" ? "justify-end" : "justify-start"}`}>
-              {m.role === "tutor" && (
-                <div className="flex flex-col items-center mr-2.5 shrink-0">
-                  <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
-                    {sageAvatar}
+      {/* Workspace */}
+      <div className="flex-1 min-h-0 flex">
+        {/* Digital paper */}
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleContainerScroll}
+          className="flex-1 min-w-0 overflow-y-auto overscroll-contain px-4 md:px-6 py-6"
+        >
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
+              <div className="border-b border-[#E2E8F0] px-5 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A2B3C]">
+                  Digital Paper
+                </p>
+                <p className="mt-2 text-sm text-[#334155] leading-relaxed whitespace-pre-wrap">
+                  {assignment}
+                </p>
+              </div>
+
+              <div className="px-5 py-5 space-y-5">
+                {messages.map((m) => (
+                  <div key={m.id} className="grid grid-cols-[84px_minmax(0,1fr)] gap-4">
+                    <div className="pt-0.5">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#64748B]">
+                        {m.role === "student" ? "You" : "Tutor"}
+                      </div>
+                      {m.role === "tutor" && (
+                        <div className="mt-2 inline-flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#1A2B3C]/10 border border-[#1A2B3C]/15 flex items-center justify-center text-base leading-none">
+                            {sageAvatar}
+                          </div>
+                          <span className="text-[10px] text-[#64748B]">Sage</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div
+                        className={`rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                          m.role === "student"
+                            ? "bg-[#F1F5F9] text-[#0F172A] border border-[#E2E8F0]"
+                            : "bg-white text-[#0F172A]"
+                        }`}
+                      >
+                        {m.role === "tutor" ? (
+                          <TutorBubble content={getDisplayContent(m.content)} />
+                        ) : (
+                          getDisplayContent(m.content)
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
-                </div>
-              )}
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                  m.role === "student"
-                    ? "bg-[#1A1A1A] text-white rounded-br-sm whitespace-pre-wrap"
-                    : "bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A] rounded-bl-sm shadow-[0_1px_4px_-2px_rgba(0,0,0,0.07)]"
-                }`}
-              >
-                {m.role === "tutor" ? (
-                  <TutorBubble content={getDisplayContent(m.content)} />
-                ) : (
-                  getDisplayContent(m.content)
+                ))}
+
+                {/* Typing indicator - shown only while waiting for first streaming token */}
+                {isLoading && !streamingMsgId && (
+                  <div className="grid grid-cols-[84px_minmax(0,1fr)] gap-4">
+                    <div className="pt-0.5">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#64748B]">
+                        Tutor
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+                        <div className="flex gap-1.5 items-center h-4">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1A2B3C] animate-bounce [animation-delay:0ms]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1A2B3C] animate-bounce [animation-delay:150ms]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1A2B3C] animate-bounce [animation-delay:300ms]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
+
+                <div ref={messagesEndRef} />
               </div>
             </div>
-          ))}
-
-          {/* Typing indicator - shown only while waiting for first streaming token */}
-          {isLoading && !streamingMsgId && (
-            <div className="flex justify-start">
-              <div className="flex flex-col items-center mr-2.5 shrink-0">
-                <div className="w-7 h-7 rounded-full bg-[#D97706]/10 border border-[#D97706]/20 flex items-center justify-center mt-0.5 text-base leading-none">
-                  {sageAvatar}
-                </div>
-                <span className="text-[9px] text-[#A8A29E] mt-0.5 leading-none">Sage</span>
-              </div>
-              <div className="bg-[#FAFAF8] border border-[#EDECEA] rounded-2xl rounded-bl-sm px-4 py-3 shadow-[0_1px_4px_-2px_rgba(0,0,0,0.07)]">
-                <div className="flex gap-1.5 items-center h-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-bounce [animation-delay:300ms]" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
+          </div>
         </div>
+
+        {/* Tutor margin */}
+        <aside className="hidden lg:flex w-[360px] shrink-0 border-l border-[#E2E8F0] bg-[#F8FAFC] px-5 py-6">
+          <div className="w-full">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A2B3C]">
+              Tutor Margin
+            </p>
+            <div className="mt-4 space-y-4">
+              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4">
+                <p className="text-xs font-medium text-[#0F172A]">Session context</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {mode === "corrector" && (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                      Marking mode
+                    </span>
+                  )}
+                  {subject !== "General" && (
+                    <span className="rounded-full border border-[#1A2B3C]/20 bg-[#1A2B3C]/10 px-2.5 py-1 text-[11px] font-medium text-[#1A2B3C]">
+                      {subject}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-3 text-xs text-[#64748B] leading-relaxed">
+                  As you work, this margin will show flashcards, checklists, and diagrams pulled from the tutor&apos;s guidance.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4">
+                <p className="text-xs font-medium text-[#0F172A]">Learning signifiers</p>
+                <ul className="mt-2 space-y-1 text-xs text-[#475569]">
+                  <li><span className="font-medium text-[#1A2B3C]">Ink Blue</span> for links and references.</li>
+                  <li><span className="font-medium" style={{ color: "#B91C1C" }}>Red Pen</span> for fixes and missing marks.</li>
+                  <li><span className="px-1 rounded font-medium" style={{ background: "#FEF08A" }}>Highlighter</span> for what to focus on next.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
 
       {/* Hidden file input - always mounted */}
@@ -994,11 +1056,11 @@ export default function TutorChat({
 
       {/* Input bar */}
       <div
-        className="sticky bottom-0 bg-[#FDFCF8]/95 backdrop-blur-sm border-t border-[#E7E5E4] px-6 pt-4 pb-4"
+        className="sticky bottom-0 bg-[#F8FAFC]/95 backdrop-blur-sm border-t border-[#E2E8F0] px-4 md:px-6 pt-4 pb-4"
         style={isSessionRoute ? { paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" } : undefined}
       >
         <form
-          className="max-w-2xl mx-auto"
+          className="max-w-3xl mx-auto"
           onSubmit={(e) => { e.preventDefault(); void handleSend(); }}
         >
           {/* File attachment preview */}
@@ -1021,7 +1083,7 @@ export default function TutorChat({
             </div>
           )}
 
-          <div className="flex items-end gap-3 bg-white border border-[#E7E5E4] rounded-2xl px-4 py-3 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] focus-within:border-[#D97706]/70 focus-within:ring-2 focus-within:ring-[#D97706]/20 transition-all">
+          <div className="flex items-end gap-3 bg-white border border-[#E2E8F0] rounded-2xl px-4 py-3 shadow-sm focus-within:border-[#1A2B3C]/45 focus-within:ring-2 focus-within:ring-[#1A2B3C]/10 transition-all">
             <textarea
               ref={textareaRef}
               value={input}
@@ -1038,7 +1100,7 @@ export default function TutorChat({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[#A8A29E] hover:text-[#D97706] transition"
+              className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[#64748B] hover:text-[#1A2B3C] transition"
               title="Attach image or PDF"
             >
               <ImagePlus className="w-4 h-4" strokeWidth={1.5} />
@@ -1046,12 +1108,12 @@ export default function TutorChat({
             <button
               type="submit"
               disabled={(!input.trim() && !imageBase64) || isLoading}
-              className="h-8 w-8 shrink-0 rounded-xl bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#1A1A1A]/80 transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100"
+              className="h-8 w-8 shrink-0 rounded-xl bg-[#1A2B3C] flex items-center justify-center text-white hover:bg-[#1A2B3C]/90 transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100"
             >
               <Send className="w-3.5 h-3.5" strokeWidth={2} />
             </button>
           </div>
-          <p className="text-center text-[11px] text-[#A8A29E] mt-2 hidden md:block">
+          <p className="text-center text-[11px] text-[#64748B] mt-2 hidden md:block">
             Enter to send · Shift+Enter for new line
           </p>
         </form>

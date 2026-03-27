@@ -359,7 +359,7 @@ const HERO_DEMOS = [
   },
 ];
 
-const Hero = () => {
+const Hero = ({ user }: { user: User | null }) => {
   const [demoIndex, setDemoIndex] = useState(0);
   const [visibleMsgs, setVisibleMsgs] = useState(0);
   const scrollToSection = (id: string) =>
@@ -391,39 +391,54 @@ const Hero = () => {
           {/* Left: copy */}
           <div className="flex-1 min-w-0">
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-4xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
-              Get the <em className="italic text-[#D97706]">H1</em>. Actually understand it.
+              Master the Marking Scheme through Active Recall.
             </h1>
 
             <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
-              Paste any LC or JC question. Sage never gives you the answer. It asks you questions until you actually understand it. That's what builds the H1.
+              Our Socratic Engine builds deep conceptual understanding by guiding, not telling.
             </p>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
-              <div className="sm:flex-none sm:w-auto">
-                <CheckoutButton
-                  plan="trial"
-                  label="Start free, no card required"
-                  className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
-                />
-              </div>
-              <button
-                onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
-                className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
-              >
-                Try it without signing up
-                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-              </button>
+              {user ? (
+                <div className="sm:flex-none sm:w-auto">
+                  <a
+                    href="/app"
+                    className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg"
+                  >
+                    Go to Dashboard
+                  </a>
+                </div>
+              ) : (
+                <>
+                  <div className="sm:flex-none sm:w-auto">
+                    <CheckoutButton
+                      plan="trial"
+                      label="Start free, no card required"
+                      className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
+                    />
+                  </div>
+                  <button
+                    onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
+                    className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
+                  >
+                    Try it without signing up
+                    <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                </>
+              )}
             </div>
 
-            <p className="text-sm text-[#A8A29E]">
-              Already a member?{" "}
-              <a
-                href="/auth/login"
-                className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
-              >
-                Sign in
-              </a>
-            </p>
+            {!user && (
+              <p className="text-sm text-[#A8A29E]">
+                Already a member?{" "}
+                <a
+                  href="/auth/login"
+                  className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
+                >
+                  Sign in
+                </a>
+              </p>
+            )}
           </div>
 
           {/* Right: animated Socratic Q&A demo */}
@@ -1401,10 +1416,29 @@ const Footer = () => {
 
 export default function StudyWithLanding() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     posthog.capture('landing_page_viewed')
   }, [])
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) {
+        // User is logged in, redirect to dashboard
+        router.push('/app');
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        router.push('/app');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   useEffect(() => {
     const remember = localStorage.getItem("sw_remember");
@@ -1430,7 +1464,7 @@ export default function StudyWithLanding() {
     <div className="min-h-screen bg-[#FDFCF8] overflow-x-hidden">
       <Navigation />
       <main>
-        <Hero />
+        <Hero user={user} />
         <HowItWorks />
         <TryItDemo />
         <Features />
@@ -1447,14 +1481,25 @@ export default function StudyWithLanding() {
             <p className="text-lg text-[#57534E] mb-10">
               Start studying smarter today. Upload your notes and let Sage guide you to the H1.
             </p>
-            <a
-              href="/auth/signup"
-              onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
-              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
-            >
-              Start free, no card required
-            </a>
-            <p className="text-sm text-[#A8A29E] mt-4">7-day free trial · Cancel anytime</p>
+            {user ? (
+              <a
+                href="/app"
+                className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+              >
+                Go to Dashboard
+              </a>
+            ) : (
+              <a
+                href="/auth/signup"
+                onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
+                className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+              >
+                Start free, no card required
+              </a>
+            )}
+            {!user && (
+              <p className="text-sm text-[#A8A29E] mt-4">7-day free trial · Cancel anytime</p>
+            )}
           </div>
         </section>
       </main>
