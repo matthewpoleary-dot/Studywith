@@ -2,11 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, LifeBuoy } from "lucide-react";
+import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
-import type { LearningReceipt } from "@/lib/database.types";
 
 interface Session {
   id: string;
@@ -20,38 +19,6 @@ interface AppSidebarProps {
   sessions: Session[];
   userEmail: string;
   gritStreak?: number;
-}
-
-function detectSubjectLabel(session: Session): string {
-  const receipt = session.receipt as LearningReceipt | null;
-  const fromReceipt = receipt?.subject?.trim();
-  if (fromReceipt) return fromReceipt;
-
-  const t = `${session.title ?? ""}\n${session.assignment_text}`.toLowerCase();
-  if (/\b(biology|dna|meiosis|mitosis|enzyme|photosynthesis|ecosystem)\b/.test(t)) return "Biology";
-  if (/\b(chemistry|mole|molar|equilibrium|le chatelier|haber|reaction|acid|base)\b/.test(t)) return "Chemistry";
-  if (/\b(physics|force|energy|wave|voltage|current|lens|newton)\b/.test(t)) return "Physics";
-  if (/\b(history|1916|rising|ww1|ww2|cold war|treaty|partition)\b/.test(t)) return "History";
-  if (/\b(english|poem|poetry|comparative|single text|composition|thesis)\b/.test(t)) return "English";
-  if (/\b(math|maths|algebra|calculus|differentiat|integrat|trigonometry|geometry|probability|statistics)\b/.test(t) || /\d\s*[×÷+\-*/^]\s*\d/.test(t)) return "Maths";
-  if (/\b(french|spanish|german|italian|translate|conjugat|vocabulary|grammar)\b/.test(t)) return "Languages";
-  if (/\b(business|accounting|economics|marketing|cash flow|supply|demand)\b/.test(t)) return "Business";
-  return "General";
-}
-
-function detectSensitive(session: Session): boolean {
-  const t = `${session.title ?? ""}\n${session.assignment_text}`.toLowerCase();
-  // Lightweight, explicit keywords. This is a UI flag, not a safety classifier.
-  return /\b(suicide|self-harm|self harm|kill myself|end my life|abuse|assault|rape|overdose|crisis)\b/.test(t);
-}
-
-function masteryForSubject(sessions: Session[]): number | null {
-  const scored = sessions
-    .map((s) => (s.receipt as LearningReceipt | null)?.score)
-    .filter((n): n is number => typeof n === "number" && Number.isFinite(n));
-  if (scored.length === 0) return null;
-  const avg = scored.reduce((a, b) => a + b, 0) / scored.length;
-  return Math.max(0, Math.min(100, Math.round(avg)));
 }
 
 function SidebarContent({
@@ -68,7 +35,6 @@ function SidebarContent({
   const [localTitles, setLocalTitles] = useState<Record<string, string>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-  const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({});
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   const handleSignOut = async () => {
@@ -132,17 +98,17 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Brand */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+      <div className="flex items-center justify-between px-5 py-5 border-b border-[#E7E5E4]">
         <a
           href="/"
-          className="font-serif text-xl font-semibold text-[#1A2B3C] hover:opacity-80 transition-opacity"
+          className="font-serif text-xl font-semibold text-[#1A1A1A] hover:opacity-70 transition-opacity"
         >
           StudyWith
         </a>
         {onCollapse && (
           <button
             onClick={onCollapse}
-            className="hidden md:flex p-1.5 rounded-lg text-[#64748B] hover:text-[#334155] hover:bg-white transition-colors"
+            className="hidden md:flex p-1.5 rounded-lg text-[#A8A29E] hover:text-[#57534E] hover:bg-[#E7E5E4] transition-colors"
             title="Collapse sidebar"
           >
             <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
@@ -151,7 +117,7 @@ function SidebarContent({
         {onNav && (
           <button
             onClick={onNav}
-            className="md:hidden p-1 text-[#334155] hover:text-[#0F172A] transition-colors"
+            className="md:hidden p-1 text-[#57534E] hover:text-[#1A1A1A] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -163,7 +129,7 @@ function SidebarContent({
         <a
           href="/app/new"
           onClick={onNav}
-          className="flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-[#1A2B3C] text-white hover:bg-[#1A2B3C]/90 transition-all shadow-sm hover:shadow-md"
+          className="flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 transition-all shadow-sm hover:shadow-md"
         >
           <Plus className="w-4 h-4 shrink-0" strokeWidth={2} />
           New session
@@ -174,19 +140,8 @@ function SidebarContent({
       <div className="flex-1 overflow-y-auto px-3 pb-3">
         {(() => {
           const visible = sessions.filter((s) => !deletedIds.has(s.id));
-          const bySubject = new Map<string, Session[]>();
-          for (const s of visible) {
-            const subject = detectSubjectLabel(s);
-            const arr = bySubject.get(subject) ?? [];
-            arr.push(s);
-            bySubject.set(subject, arr);
-          }
-
-          const orderedSubjects = Array.from(bySubject.keys()).sort((a, b) => {
-            if (a === "General") return 1;
-            if (b === "General") return -1;
-            return a.localeCompare(b);
-          });
+          const inProgress = visible.filter((s) => s.receipt === null);
+          const completed = visible.filter((s) => s.receipt !== null);
 
           const renderItem = (session: Session, allowEdit: boolean) => {
             const href = `/app/session/${session.id}`;
@@ -196,26 +151,20 @@ function SidebarContent({
               pathname === `/app/session/${session.id}/summary`;
             const isRenaming = renamingId === session.id;
             const isConfirmingDelete = deletingId === session.id;
-            const isSensitive = detectSensitive(session);
 
             return (
               <div
                 key={session.id}
-                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl border transition ${
+                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl transition ${
                   isActive
-                    ? "bg-white text-[#0F172A] border-[#CBD5E1]"
-                    : "text-[#334155] border-transparent hover:bg-white hover:border-[#E2E8F0] hover:text-[#0F172A]"
+                    ? "bg-[#E7E5E4] text-[#1A1A1A]"
+                    : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
                 }`}
-                style={isSensitive ? { borderColor: "#B91C1C", boxShadow: "0 0 0 1px rgba(185,28,28,0.10) inset" } : undefined}
               >
-                {isSensitive ? (
-                  <LifeBuoy className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#B91C1C]" strokeWidth={1.8} />
-                ) : (
-                  <BookOpen
-                    className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${session.receipt ? "text-[#64748B]" : "text-[#1A2B3C]"}`}
-                    strokeWidth={1.5}
-                  />
-                )}
+                <BookOpen
+                  className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${session.receipt ? "text-[#A8A29E]" : "text-[#D97706]"}`}
+                  strokeWidth={1.5}
+                />
                 {isRenaming ? (
                   <input
                     ref={renameInputRef}
@@ -242,23 +191,23 @@ function SidebarContent({
                         WebkitMaskImage: "linear-gradient(to right, black 60%, transparent 100%)",
                       }}
                     >
-                      {isSensitive ? "Resource & Support" : getTitle(session)}
+                      {getTitle(session)}
                     </span>
-                    <span className="text-[10px] text-[#64748B] mt-0.5">{getDate(session)}</span>
+                    <span className="text-[10px] text-[#A8A29E] mt-0.5">{getDate(session)}</span>
                   </a>
                 )}
                 {allowEdit && !isRenaming && !isConfirmingDelete && (
                   <div className="shrink-0 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
                     <button
                       onClick={(e) => startRename(session, e)}
-                      className="p-0.5 text-[#94A3B8] hover:text-[#334155] transition"
+                      className="p-0.5 text-[#A8A29E] hover:text-[#57534E] transition"
                       title="Rename"
                     >
                       <Pencil className="w-3 h-3" strokeWidth={1.5} />
                     </button>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingId(session.id); }}
-                      className="p-0.5 text-[#94A3B8] hover:text-red-600 transition"
+                      className="p-0.5 text-[#A8A29E] hover:text-red-400 transition"
                       title="Delete"
                     >
                       <Trash2 className="w-3 h-3" strokeWidth={1.5} />
@@ -293,60 +242,32 @@ function SidebarContent({
 
           return (
             <>
-              {orderedSubjects.map((subject) => {
-                const subjectSessions = (bySubject.get(subject) ?? []).slice().sort((a, b) =>
-                  new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-                );
-
-                const inProgress = subjectSessions.filter((s) => s.receipt === null);
-                const completed = subjectSessions.filter((s) => s.receipt !== null);
-                const mastery = masteryForSubject(completed);
-                const isOpen = openSubjects[subject] ?? true;
-
-                return (
-                  <div key={subject} className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenSubjects((prev) => ({ ...prev, [subject]: !(prev[subject] ?? true) }))
-                      }
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/70 transition"
-                    >
-                      <div className="min-w-0 flex-1 text-left">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A2B3C] truncate">
-                            {subject}
-                          </p>
-                          <span className="text-[10px] text-[#64748B] shrink-0">
-                            {subjectSessions.length}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <div className="h-1.5 flex-1 rounded-full bg-[#E2E8F0] overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${mastery ?? 8}%`,
-                                background: mastery == null ? "#CBD5E1" : "#1A2B3C",
-                              }}
-                            />
-                          </div>
-                          <span className="text-[10px] text-[#64748B] shrink-0 tabular-nums">
-                            {mastery == null ? "New" : `${mastery}%`}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-
-                    {isOpen && (
-                      <div className="mt-1 space-y-0.5">
-                        {inProgress.map((s) => renderItem(s, true))}
-                        {completed.map((s) => renderItem(s, true))}
-                      </div>
-                    )}
+              {/* In-progress sessions */}
+              {inProgress.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 px-4 pt-3 pb-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
+                    <p className="text-[10px] font-semibold text-[#A8A29E] uppercase tracking-widest">
+                      Continue
+                    </p>
                   </div>
-                );
-              })}
+                  <div className="space-y-0.5">
+                    {inProgress.map((s) => renderItem(s, true))}
+                  </div>
+                </>
+              )}
+
+              {/* Completed sessions */}
+              {completed.length > 0 && (
+                <>
+                  <p className="text-[10px] font-semibold text-[#A8A29E] px-4 pt-3 pb-1.5 uppercase tracking-widest">
+                    History
+                  </p>
+                  <div className="space-y-0.5">
+                    {completed.map((s) => renderItem(s, true))}
+                  </div>
+                </>
+              )}
             </>
           );
         })()}
@@ -364,15 +285,15 @@ function SidebarContent({
           </div>
         )}
         <div className="flex items-center px-4 mb-1">
-          <p className="text-xs text-[#64748B] truncate">{userEmail}</p>
+          <p className="text-xs text-[#A8A29E] truncate">{userEmail}</p>
         </div>
         <a
           href="/app/stats"
           onClick={onNav}
           className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
             pathname === "/app/stats"
-              ? "bg-white text-[#0F172A] border border-[#CBD5E1]"
-              : "text-[#334155] hover:bg-white hover:text-[#0F172A]"
+              ? "bg-[#E7E5E4] text-[#1A1A1A]"
+              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
           }`}
         >
           <BarChart2 className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -383,8 +304,8 @@ function SidebarContent({
           onClick={onNav}
           className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
             pathname === "/app/settings"
-              ? "bg-white text-[#0F172A] border border-[#CBD5E1]"
-              : "text-[#334155] hover:bg-white hover:text-[#0F172A]"
+              ? "bg-[#E7E5E4] text-[#1A1A1A]"
+              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
           }`}
         >
           <Settings className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -392,7 +313,7 @@ function SidebarContent({
         </a>
         <button
           onClick={() => void handleSignOut()}
-          className="flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm text-[#334155] hover:bg-white hover:text-[#0F172A] transition"
+          className="flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A] transition"
         >
           <LogOut className="w-3.5 h-3.5" strokeWidth={1.5} />
           Sign out
@@ -436,7 +357,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
 
       {/* Mobile: sessions slide-in drawer */}
       <aside
-        className={`md:hidden fixed top-0 left-0 h-full w-72 bg-[#F8FAFC] border-r border-[#E2E8F0] z-50 transform transition-transform duration-200 ${
+        className={`md:hidden fixed top-0 left-0 h-full w-72 bg-[#F5F4F0] border-r border-[#E7E5E4] z-50 transform transition-transform duration-200 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -451,7 +372,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
       {/* Mobile: bottom nav bar */}
       {!isSessionPage && (
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#F8FAFC] border-t border-[#E2E8F0]"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4]"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           {/* 5 zones: Home | Sessions | [spacer/+] | Stats | Settings */}
@@ -459,7 +380,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
             <a
               href="/app"
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                pathname === "/app" ? "text-[#0F172A]" : "text-[#64748B]"
+                pathname === "/app" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
               }`}
             >
               <Home className="w-5 h-5" strokeWidth={pathname === "/app" ? 2 : 1.5} />
@@ -469,7 +390,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
             <button
               onClick={() => setMobileOpen(true)}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                mobileOpen ? "text-[#0F172A]" : "text-[#64748B]"
+                mobileOpen ? "text-[#1A1A1A]" : "text-[#A8A29E]"
               }`}
             >
               <BookOpen className="w-5 h-5" strokeWidth={1.5} />
@@ -482,7 +403,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
             <a
               href="/app/stats"
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                pathname === "/app/stats" ? "text-[#0F172A]" : "text-[#64748B]"
+                pathname === "/app/stats" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
               }`}
             >
               <BarChart2 className="w-5 h-5" strokeWidth={pathname === "/app/stats" ? 2 : 1.5} />
@@ -492,7 +413,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
             <a
               href="/app/settings"
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                pathname === "/app/settings" ? "text-[#0F172A]" : "text-[#64748B]"
+                pathname === "/app/settings" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
               }`}
             >
               <Settings className="w-5 h-5" strokeWidth={pathname === "/app/settings" ? 2 : 1.5} />
@@ -504,7 +425,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
               href="/app/new"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             >
-              <div className="w-12 h-12 rounded-2xl bg-[#1A2B3C] flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 rounded-2xl bg-[#1A1A1A] flex items-center justify-center shadow-lg">
                 <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
               </div>
             </a>
@@ -514,21 +435,21 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
 
       {/* Desktop collapsed - floating toggle with brand */}
       {desktopCollapsed && (
-        <div className="hidden md:flex fixed top-0 left-0 z-50 items-center gap-2.5 px-4 h-[62px] border-b border-[#E2E8F0] bg-[#F8FAFC]">
+        <div className="hidden md:flex fixed top-0 left-0 z-50 items-center gap-2.5 px-4 h-[62px] border-b border-[#E7E5E4] bg-[#F5F4F0]">
           <button
             onClick={() => setDesktopCollapsed(false)}
             title="Open sidebar"
-            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#334155] hover:bg-white transition-colors"
+            className="p-1.5 rounded-lg text-[#A8A29E] hover:text-[#57534E] hover:bg-[#E7E5E4] transition-colors"
           >
             <PanelLeftOpen className="w-4 h-4" strokeWidth={1.5} />
           </button>
-          <a href="/" className="font-serif text-base font-semibold text-[#1A2B3C] hover:opacity-80 transition-opacity">StudyWith</a>
+          <a href="/" className="font-serif text-base font-semibold text-[#1A1A1A] hover:opacity-70 transition-opacity">StudyWith</a>
         </div>
       )}
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden md:flex md:flex-col shrink-0 h-full bg-[#F8FAFC] border-r border-[#E2E8F0] overflow-hidden transition-all duration-200 ease-in-out ${
+        className={`hidden md:flex md:flex-col shrink-0 h-full bg-[#F5F4F0] border-r border-[#E7E5E4] overflow-hidden transition-all duration-200 ease-in-out ${
           desktopCollapsed ? "w-0 border-r-0" : "w-64"
         }`}
       >

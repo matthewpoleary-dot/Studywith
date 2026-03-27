@@ -40,7 +40,7 @@ export default async function AppLayout({
   const gritStreak: number = typeof meta.grit_streak === "number" ? meta.grit_streak : 0;
 
   return (
-    <div className="flex h-[100dvh] bg-[#F8FAFC] overflow-hidden">
+    <div className="flex h-[100dvh] bg-[#FDFCF8] overflow-hidden">
       <AppSidebar
         sessions={(sessions ?? []) as {
           id: string;

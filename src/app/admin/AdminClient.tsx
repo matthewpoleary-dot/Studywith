@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Loader2, Users, CreditCard, BarChart2, TrendingUp, RefreshCw, BookOpen, Trash2, Upload, FileText, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Users, CreditCard, BarChart2, TrendingUp, RefreshCw, BookOpen, Trash2, Upload } from "lucide-react";
 
 type RecentCharge = { amount: number; currency: string; created: number; email: string | null };
 type Metrics = {
@@ -47,314 +47,6 @@ function StatCard({ label, value, sub, icon: Icon, accent = false }: {
   );
 }
 
-// ── Filename parser ────────────────────────────────────────────────────────────
-const SUBJECT_KEYWORDS: Record<string, string> = {
-  biology: "Biology", chemistry: "Chemistry", physics: "Physics",
-  maths: "Maths", math: "Maths", english: "English", irish: "Irish",
-  history: "History", geography: "Geography", business: "Business",
-  economics: "Economics", accounting: "Accounting", french: "French",
-  german: "German", spanish: "Spanish", art: "Art", music: "Music",
-  science: "Science", "home economics": "Home Economics",
-  "agricultural science": "Agricultural Science",
-  "computer science": "Computer Science", pe: "PE",
-};
-
-function parseFilename(filename: string): { title: string; subject: string; docType: string; year: string } {
-  const base = filename.replace(/\.[^.]+$/, "");
-  const spaced = base.replace(/[_\-\.]+/g, " ").replace(/\s+/g, " ").trim();
-  const lower = spaced.toLowerCase();
-
-  // Year
-  const yearMatch = spaced.match(/\b(20[0-2]\d)\b/);
-  const year = yearMatch ? yearMatch[1] : "";
-
-  // Doc type
-  let docType = "past_paper";
-  if (/marking|mark scheme/i.test(lower)) docType = "marking_scheme";
-  else if (/chief|examiner.?report/i.test(lower)) docType = "chief_examiner";
-  else if (/syllabus|specification/i.test(lower)) docType = "syllabus";
-  else if (/note/i.test(lower)) docType = "notes";
-  else if (/guideline/i.test(lower)) docType = "guidelines";
-
-  // Subject — detect level prefix then subject name
-  let subject = "General";
-  const levelMatch = spaced.match(/\b(LC|JC)\b/i);
-  if (levelMatch) {
-    const level = levelMatch[1].toUpperCase();
-    const afterLevel = lower.slice(lower.indexOf(levelMatch[1].toLowerCase()) + 2).trim();
-    for (const [kw, name] of Object.entries(SUBJECT_KEYWORDS)) {
-      if (afterLevel.startsWith(kw)) {
-        subject = level === "JC" && name === "Business" ? "JC Business Studies"
-          : level === "JC" && name === "Science" ? "JC Science"
-          : `${level} ${name}`;
-        break;
-      }
-    }
-    if (subject === "General") subject = level === "LC" ? "LC Maths" : "JC Maths"; // fallback
-  }
-
-  // Title: use the spaced name cleaned up, keep year
-  const docTypeLabel: Record<string, string> = {
-    past_paper: "Past Paper", marking_scheme: "Marking Scheme",
-    chief_examiner: "Chief Examiner Report", syllabus: "Syllabus",
-    notes: "Notes", guidelines: "Guidelines",
-  };
-  const title = year
-    ? `${subject} ${docTypeLabel[docType]} ${year}`
-    : `${subject} ${docTypeLabel[docType]}`;
-
-  return { title, subject, docType, year };
-}
-
-// ── Bulk Upload Section ────────────────────────────────────────────────────────
-type PendingFile = {
-  id: string;
-  file: File;
-  title: string;
-  subject: string;
-  docType: string;
-  year: string;
-  status: "pending" | "uploading" | "done" | "error";
-  result?: string;
-  expanded: boolean;
-};
-
-const SUBJECTS = [
-  "LC Biology", "LC Chemistry", "LC Physics", "LC Maths",
-  "LC English", "LC Irish", "LC History", "LC Geography",
-  "LC Business", "LC Economics", "LC Accounting",
-  "LC Agricultural Science", "LC Computer Science",
-  "LC French", "LC German", "LC Spanish",
-  "LC Home Economics", "LC Art", "LC Music", "LC PE",
-  "JC Science", "JC English", "JC Maths", "JC History",
-  "JC Irish", "JC Geography", "JC Business Studies",
-  "General",
-];
-
-const DOC_TYPES = [
-  { value: "syllabus", label: "Syllabus / Specification" },
-  { value: "marking_scheme", label: "Marking Scheme" },
-  { value: "past_paper", label: "Past Paper" },
-  { value: "chief_examiner", label: "Chief Examiner Report" },
-  { value: "notes", label: "Study Notes" },
-  { value: "guidelines", label: "Teacher Guidelines" },
-];
-
-function BulkUploadSection({ onDone }: { onDone: () => void }) {
-  const [files, setFiles] = useState<PendingFile[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const addFiles = (selected: FileList | null) => {
-    if (!selected) return;
-    const newFiles: PendingFile[] = [];
-    for (const file of Array.from(selected)) {
-      if (file.type !== "application/pdf") continue;
-      const parsed = parseFilename(file.name);
-      newFiles.push({
-        id: `${Date.now()}-${Math.random()}`,
-        file,
-        title: parsed.title,
-        subject: parsed.subject,
-        docType: parsed.docType,
-        year: parsed.year,
-        status: "pending",
-        expanded: false,
-      });
-    }
-    setFiles(prev => [...prev, ...newFiles]);
-  };
-
-  const updateFile = (id: string, patch: Partial<PendingFile>) => {
-    setFiles(prev => prev.map(f => f.id === id ? { ...f, ...patch } : f));
-  };
-
-  const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
-  };
-
-  const uploadAll = async () => {
-    const pending = files.filter(f => f.status === "pending");
-    if (pending.length === 0) return;
-    setUploading(true);
-    for (const pf of pending) {
-      updateFile(pf.id, { status: "uploading" });
-      try {
-        const fd = new FormData();
-        fd.append("file", pf.file);
-        fd.append("title", pf.title.trim());
-        fd.append("subject", pf.subject);
-        fd.append("doc_type", pf.docType);
-        if (pf.year) fd.append("year", pf.year);
-
-        const res = await fetch("/api/admin/ingest-pdf", { method: "POST", body: fd });
-        const json = await res.json() as { chunks?: number; error?: string };
-        if (res.ok) {
-          updateFile(pf.id, { status: "done", result: `${json.chunks} chunk${json.chunks !== 1 ? "s" : ""}` });
-        } else {
-          updateFile(pf.id, { status: "error", result: json.error ?? "Upload failed" });
-        }
-      } catch {
-        updateFile(pf.id, { status: "error", result: "Network error" });
-      }
-    }
-    setUploading(false);
-    onDone();
-  };
-
-  const pendingCount = files.filter(f => f.status === "pending").length;
-
-  return (
-    <div className="bg-white border border-[#E7E5E4] rounded-2xl p-6 space-y-4">
-      <div>
-        <h2 className="font-medium text-[#1A1A1A]">Bulk Upload PDFs</h2>
-        <p className="text-xs text-[#A8A29E] mt-1">
-          Upload multiple PDF past papers, marking schemes, and chief examiner reports at once. Metadata is auto-detected from the filename — review and adjust before uploading.
-        </p>
-      </div>
-
-      {/* Drop zone */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
-        className="border-2 border-dashed border-[#E7E5E4] rounded-xl px-6 py-8 text-center cursor-pointer hover:border-[#D97706] hover:bg-amber-50/30 transition group"
-      >
-        <Upload className="w-6 h-6 text-[#C8C4C0] group-hover:text-[#D97706] mx-auto mb-2 transition" strokeWidth={1.5} />
-        <p className="text-sm text-[#57534E]">Drop PDFs here or <span className="text-[#D97706] font-medium">browse files</span></p>
-        <p className="text-xs text-[#A8A29E] mt-1">Tip: name files like <span className="font-mono bg-[#F5F4F0] px-1 rounded">LC_Biology_PastPaper_2023.pdf</span> for auto-detection</p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,application/pdf"
-          multiple
-          className="hidden"
-          onChange={(e) => addFiles(e.target.files)}
-        />
-      </div>
-
-      {/* File queue */}
-      {files.length > 0 && (
-        <div className="space-y-2">
-          {files.map((pf) => (
-            <div key={pf.id} className={`border rounded-xl overflow-hidden transition ${
-              pf.status === "done" ? "border-emerald-200 bg-emerald-50/30"
-              : pf.status === "error" ? "border-red-200 bg-red-50/30"
-              : "border-[#E7E5E4] bg-[#FAFAF8]"
-            }`}>
-              {/* File row header */}
-              <div className="flex items-center gap-3 px-4 py-3">
-                <FileText className="w-4 h-4 shrink-0 text-[#A8A29E]" strokeWidth={1.5} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[#1A1A1A] truncate">{pf.title || pf.file.name}</p>
-                  <p className="text-xs text-[#A8A29E] truncate">
-                    {pf.file.name} · {pf.subject} · {DOC_TYPES.find(t => t.value === pf.docType)?.label}
-                    {pf.year ? ` · ${pf.year}` : ""}
-                    {pf.result ? ` · ${pf.result}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {pf.status === "uploading" && <Loader2 className="w-4 h-4 text-[#D97706] animate-spin" />}
-                  {pf.status === "done" && <CheckCircle className="w-4 h-4 text-emerald-500" />}
-                  {pf.status === "error" && <XCircle className="w-4 h-4 text-red-500" />}
-                  {pf.status === "pending" && (
-                    <>
-                      <button
-                        onClick={() => updateFile(pf.id, { expanded: !pf.expanded })}
-                        className="p-1 rounded-lg text-[#A8A29E] hover:text-[#1A1A1A] hover:bg-[#F5F4F0] transition"
-                        title="Edit metadata"
-                      >
-                        {pf.expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => removeFile(pf.id)}
-                        className="p-1 rounded-lg text-[#A8A29E] hover:text-red-500 hover:bg-red-50 transition"
-                        title="Remove"
-                      >
-                        <XCircle className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Expanded metadata editor */}
-              {pf.expanded && pf.status === "pending" && (
-                <div className="px-4 pb-4 pt-1 border-t border-[#E7E5E4] grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <label className="block text-xs font-medium text-[#57534E] mb-1">Title</label>
-                    <input
-                      value={pf.title}
-                      onChange={(e) => updateFile(pf.id, { title: e.target.value })}
-                      className="w-full rounded-xl border border-[#E7E5E4] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D97706] bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#57534E] mb-1">Subject</label>
-                    <select
-                      value={pf.subject}
-                      onChange={(e) => updateFile(pf.id, { subject: e.target.value })}
-                      className="w-full rounded-xl border border-[#E7E5E4] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D97706] bg-white"
-                    >
-                      {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#57534E] mb-1">Type</label>
-                    <select
-                      value={pf.docType}
-                      onChange={(e) => updateFile(pf.id, { docType: e.target.value })}
-                      className="w-full rounded-xl border border-[#E7E5E4] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D97706] bg-white"
-                    >
-                      {DOC_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#57534E] mb-1">Year</label>
-                    <input
-                      value={pf.year}
-                      onChange={(e) => updateFile(pf.id, { year: e.target.value })}
-                      placeholder="e.g. 2023"
-                      type="number"
-                      className="w-full rounded-xl border border-[#E7E5E4] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#D97706] bg-white"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {files.length > 0 && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-[#A8A29E]">
-            {pendingCount} pending · {files.filter(f => f.status === "done").length} done · {files.filter(f => f.status === "error").length} failed
-          </p>
-          <div className="flex gap-2">
-            {files.some(f => f.status === "done" || f.status === "error") && (
-              <button
-                onClick={() => setFiles(prev => prev.filter(f => f.status === "pending" || f.status === "uploading"))}
-                className="text-xs text-[#A8A29E] hover:text-[#1A1A1A] px-3 py-2 rounded-xl hover:bg-[#F5F4F0] transition"
-              >
-                Clear finished
-              </button>
-            )}
-            <button
-              onClick={() => void uploadAll()}
-              disabled={uploading || pendingCount === 0}
-              className="inline-flex items-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-5 py-2 text-sm font-medium hover:bg-[#1A1A1A]/85 transition disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-              {uploading ? "Uploading..." : `Upload ${pendingCount} PDF${pendingCount !== 1 ? "s" : ""}`}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Knowledge Base Tab ────────────────────────────────────────────────────────
 function KnowledgeBaseTab() {
   const [documents, setDocuments] = useState<LCDocument[]>([]);
@@ -367,6 +59,27 @@ function KnowledgeBaseTab() {
   const [docType, setDocType] = useState("syllabus");
   const [year, setYear] = useState("");
   const [content, setContent] = useState("");
+
+  const SUBJECTS = [
+    "LC Biology", "LC Chemistry", "LC Physics", "LC Maths",
+    "LC English", "LC Irish", "LC History", "LC Geography",
+    "LC Business", "LC Economics", "LC Accounting",
+    "LC Agricultural Science", "LC Computer Science",
+    "LC French", "LC German", "LC Spanish",
+    "LC Home Economics", "LC Art", "LC Music", "LC PE",
+    "JC Science", "JC English", "JC Maths", "JC History",
+    "JC Irish", "JC Geography", "JC Business Studies",
+    "General",
+  ];
+
+  const DOC_TYPES = [
+    { value: "syllabus", label: "Syllabus / Specification" },
+    { value: "marking_scheme", label: "Marking Scheme" },
+    { value: "past_paper", label: "Past Paper" },
+    { value: "chief_examiner", label: "Chief Examiner Report" },
+    { value: "notes", label: "Study Notes" },
+    { value: "guidelines", label: "Teacher Guidelines" },
+  ];
 
   const loadDocuments = async () => {
     setLoading(true);
@@ -423,10 +136,7 @@ function KnowledgeBaseTab() {
 
   return (
     <div className="space-y-8">
-      {/* Bulk PDF Upload */}
-      <BulkUploadSection onDone={() => void loadDocuments()} />
-
-      {/* Manual text upload form */}
+      {/* Upload form */}
       <div className="bg-white border border-[#E7E5E4] rounded-2xl p-6 space-y-4">
         <h2 className="font-medium text-[#1A1A1A]">Upload LC/JC Document</h2>
         <p className="text-xs text-[#A8A29E]">
