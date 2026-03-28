@@ -69,7 +69,7 @@ function SidebarContent({
       });
       const data = await response.json();
       if (!data.materialId) throw new Error(data.error || "Upload failed.");
-      router.push("/app/library");
+      router.push("/app/study-materials");
     } catch (err) {
       setSidebarError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -221,10 +221,10 @@ function SidebarContent({
           Home
         </a>
         <a
-          href="/app/library"
+          href="/app/study-materials"
           onClick={onNav}
           className={`mt-2 flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/app/library" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
+            pathname === "/app/study-materials" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
           }`}
         >
           <Layers className="w-4 h-4 shrink-0" strokeWidth={1.5} />
@@ -383,18 +383,6 @@ function SidebarContent({
         <div className="flex items-center px-4 mb-1">
           <p className="text-xs text-[#A8A29E] truncate">{userEmail}</p>
         </div>
-        <a
-          href="/app/study-materials"
-          onClick={onNav}
-          className={`flex items-center gap-2 w-full px-4 py-2 rounded-xl text-sm transition ${
-            pathname === "/app/study-materials"
-              ? "bg-[#E7E5E4] text-[#1A1A1A]"
-              : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" strokeWidth={1.5} />
-          Study Materials
-        </a>
         <a
           href="/app/stats"
           onClick={onNav}
