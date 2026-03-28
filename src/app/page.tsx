@@ -66,31 +66,26 @@ const FAQAccordion = ({
     if (isOpening) posthog.capture('faq_expanded', { question });
   };
   return (
-    <div className="space-y-4">
+    <div className="divide-y divide-[#E4E2DE]">
       {items.map((item, index) => (
-        <div
-          key={index}
-          className="bg-white border border-[#E7E5E4] rounded-xl overflow-hidden"
-        >
+        <div key={index}>
           <button
             onClick={() => handleOpen(index, item.question)}
-            className="w-full flex items-center justify-between p-5 text-left font-serif text-lg font-medium text-[#1A1A1A] hover:bg-[#F5F4F0]/50 transition-colors"
+            className="w-full flex items-center justify-between py-5 text-left text-base font-medium text-[#111110] hover:text-[#111110]"
           >
             {item.question}
             <ChevronDown
-              className={`w-5 h-5 text-[#57534E] transition-transform duration-200 shrink-0 ml-4 ${
+              className={`w-4 h-4 text-[#A09C97] transition-transform duration-200 shrink-0 ml-4 ${
                 openIndex === index ? "rotate-180" : ""
               }`}
             />
           </button>
           <div
-            className={`overflow-hidden transition-all duration-300 ${
-              openIndex === index ? "max-h-96" : "max-h-0"
+            className={`overflow-hidden transition-all duration-250 ${
+              openIndex === index ? "max-h-96 pb-5" : "max-h-0"
             }`}
           >
-            <p className="px-5 pb-5 text-[#57534E] leading-relaxed">
-              {item.answer}
-            </p>
+            <p className="text-[#6B6760] leading-relaxed text-sm">{item.answer}</p>
           </div>
         </div>
       ))}
@@ -108,7 +103,7 @@ const Navigation = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -151,8 +146,8 @@ const Navigation = () => {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[#FDFCF8]/95 backdrop-blur-md shadow-sm border-b border-[#E7E5E4]/50"
-          : "bg-[#FDFCF8] border-b border-[#E7E5E4]/30"
+          ? "bg-[#FDFCF8]/95 backdrop-blur-xl border-b border-[#E4E2DE]"
+          : "bg-transparent border-b border-transparent"
       }`}
     >
       {/* Subscribe banner lives inside the fixed nav so it never overlaps */}
@@ -161,63 +156,52 @@ const Navigation = () => {
       </Suspense>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           <a
             href="/"
-            className="font-serif text-2xl font-semibold text-[#1A1A1A] hover:opacity-80 transition-opacity"
+            className={`font-serif text-xl font-medium hover:opacity-80 transition-opacity ${
+              scrolled ? "text-[#111110]" : "text-[#EDE9E2]"
+            }`}
           >
             StudyWith
           </a>
-
-          <div className="hidden md:flex items-center gap-6">
-            {[
-              { id: "how-it-works", label: "How it works" },
-              { id: "features", label: "Features" },
-              { id: "pricing", label: "Pricing" },
-              { id: "faq", label: "FAQ" },
-            ].map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => scrollToSection(id)}
-                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium whitespace-nowrap"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
                 <a
                   href="/app"
-                  className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all whitespace-nowrap"
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
+                    scrolled
+                      ? "border-[#E4E2DE] text-[#6B6760] hover:border-[#111110] hover:text-[#111110]"
+                      : "border-white/15 text-[#EDE9E2] hover:border-white/30"
+                  }`}
                 >
                   Dashboard
                 </a>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 rounded-lg bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/90 transition-all"
+                    className="flex items-center gap-2 rounded-lg bg-[#D97706] px-4 py-2 text-sm font-medium text-white hover:bg-[#C46A00] transition"
                   >
                     <span className="max-w-[120px] truncate">{displayName}</span>
                     <ChevronDown className="w-4 h-4 flex-shrink-0" />
                   </button>
                   {dropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#E7E5E4] rounded-xl shadow-lg py-1 z-50">
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#E4E2DE] rounded-xl shadow-lg py-1 z-50">
                       <a
                         href="/app"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A1A1A] hover:bg-[#F5F4F0] transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#111110] hover:bg-[#F7F5F1] transition-colors"
                       >
                         Dashboard
                       </a>
                       <a
                         href="/app/settings"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A1A1A] hover:bg-[#F5F4F0] transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#111110] hover:bg-[#F7F5F1] transition-colors"
                       >
                         Settings
                       </a>
-                      <div className="my-1 border-t border-[#E7E5E4]" />
+                      <div className="my-1 border-t border-[#E4E2DE]" />
                       <button
                         onClick={() => void handleSignOut()}
                         className="w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -232,14 +216,18 @@ const Navigation = () => {
               <>
                 <a
                   href="/auth/login"
-                  className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all whitespace-nowrap"
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
+                    scrolled
+                      ? "border-[#E4E2DE] text-[#6B6760] hover:border-[#111110] hover:text-[#111110]"
+                      : "border-white/15 text-[#EDE9E2] hover:border-white/30"
+                  }`}
                 >
                   Sign in
                 </a>
                 <CheckoutButton
                   plan="trial"
-                  label="Sign up"
-                  className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 whitespace-nowrap"
+                  label="Start free"
+                  className="bg-[#D97706] text-white hover:bg-[#C46A00] rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </>
             )}
@@ -250,41 +238,27 @@ const Navigation = () => {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
-              <X className="w-6 h-6 text-[#1A1A1A]" />
+              <X className={`w-6 h-6 ${scrolled ? "text-[#111110]" : "text-[#EDE9E2]"}`} />
             ) : (
-              <Menu className="w-6 h-6 text-[#1A1A1A]" />
+              <Menu className={`w-6 h-6 ${scrolled ? "text-[#111110]" : "text-[#EDE9E2]"}`} />
             )}
           </button>
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#FDFCF8] border-t border-[#E7E5E4] py-4">
-            <div className="flex flex-col gap-4">
-              {[
-                { id: "how-it-works", label: "How it works" },
-                { id: "features", label: "Features" },
-                { id: "pricing", label: "Pricing" },
-                { id: "faq", label: "FAQ" },
-              ].map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => scrollToSection(id)}
-                  className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium py-2"
-                >
-                  {label}
-                </button>
-              ))}
+          <div className="md:hidden bg-[#FDFCF8] border-t border-[#E4E2DE] py-4">
+            <div className="flex flex-col gap-3">
               {user ? (
                 <>
                   <a
                     href="/app"
-                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                    className="rounded-lg border border-[#E4E2DE] px-6 py-3 text-sm font-medium text-[#6B6760] text-center"
                   >
                     Dashboard
                   </a>
                   <a
                     href="/app/settings"
-                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                    className="rounded-lg border border-[#E4E2DE] px-6 py-3 text-sm font-medium text-[#6B6760] text-center"
                   >
                     Settings
                   </a>
@@ -299,14 +273,14 @@ const Navigation = () => {
                 <>
                   <a
                     href="/auth/login"
-                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
+                    className="rounded-lg border border-[#E4E2DE] px-6 py-3 text-sm font-medium text-[#6B6760] text-center"
                   >
                     Sign in
                   </a>
                   <CheckoutButton
                     plan="trial"
-                    label="Sign up"
-                    className="bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                    label="Start free"
+                    className="bg-[#D97706] text-white rounded-lg px-6 py-3 text-sm font-medium text-center disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </>
               )}
@@ -382,122 +356,63 @@ const Hero = () => {
   const demo = HERO_DEMOS[demoIndex];
 
   return (
-    <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24 overflow-hidden">
-      {/* Warm radial glow */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_-5%_0%,rgba(217,119,6,0.07),transparent_70%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_30%_at_100%_80%,rgba(217,119,6,0.04),transparent_70%)]" />
-      <div className="max-w-7xl mx-auto relative">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-16 lg:gap-24">
-          {/* Left: copy */}
-          <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-4xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
-              Get the <em className="italic text-[#D97706]">H1</em>. Actually understand it.
-            </h1>
+    <section className="relative min-h-screen bg-[#111110] flex flex-col items-center justify-center px-6 overflow-hidden">
+      {/* Subtle noise texture */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")',
+          opacity: 0.025,
+        }}
+      />
 
-            <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
-              Paste any LC or JC question. Sage never gives you the answer. It asks you questions until you actually understand it. That's what builds the H1.
-            </p>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
-              <div className="sm:flex-none sm:w-auto">
-                <CheckoutButton
-                  plan="trial"
-                  label="Start free, no card required"
-                  className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
-                />
-              </div>
-              <button
-                onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
-                className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
-              >
-                Try it without signing up
-                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-              </button>
-            </div>
-
-            <p className="text-sm text-[#A8A29E]">
-              Already a member?{" "}
-              <a
-                href="/auth/login"
-                className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
-              >
-                Sign in
-              </a>
-            </p>
-          </div>
-
-          {/* Right: animated Socratic Q&A demo */}
-          <div className="hidden lg:block flex-shrink-0 w-[420px]">
-            <div className="relative">
-              <div className="absolute inset-0 scale-110 rounded-3xl bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(217,119,6,0.08),transparent)]" />
-              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden">
-
-                {/* Subject tab strip */}
-                <div className="flex border-b border-[#E7E5E4] bg-[#F5F4F0]">
-                  {HERO_DEMOS.map((d, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setDemoIndex(i)}
-                      className={`flex-1 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
-                        i === demoIndex
-                          ? "bg-white border-b-2 border-[#D97706] text-[#D97706]"
-                          : "text-[#A8A29E] hover:text-[#57534E]"
-                      }`}
-                    >
-                      {d.subject}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Question prompt */}
-                <div className="px-4 py-3 bg-[#FDFAF5] border-b border-[#E7E5E4]">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E]">{demo.tag}</span>
-                  <p className="text-[12px] text-[#57534E] mt-0.5 leading-snug">{demo.question}</p>
-                </div>
-
-                {/* Messages */}
-                <div className="space-y-3 p-4 min-h-[220px]">
-                  {demo.messages.slice(0, visibleMsgs).map((msg, i) => (
-                    <div
-                      key={`${demoIndex}-${i}`}
-                      className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"} animate-fade-in`}
-                    >
-                      <div
-                        className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[13px] ${
-                          msg.role === "student"
-                            ? "rounded-tr-sm bg-[#1A1A1A] text-white"
-                            : "rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A]"
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                  {/* Typing indicator between messages */}
-                  {visibleMsgs < demo.messages.length && visibleMsgs > 0 && (
-                    <div className="flex justify-start">
-                      <div className="bg-[#FAFAF8] border border-[#EDECEA] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1">
-                        {[0,1,2].map((i) => (
-                          <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#A8A29E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Input bar mock */}
-                <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
-                  <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
-                    Write your response…
-                  </div>
-                  <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
-                    <Send className="w-3 h-3 text-white" strokeWidth={2} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="relative z-10 max-w-2xl w-full text-center">
+        {/* Badge */}
+        <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-[#A09C97] mb-10 tracking-wide">
+          Built for Leaving Cert &amp; Junior Cycle
         </div>
+
+        {/* Headline */}
+        <h1 className="font-serif text-5xl sm:text-6xl lg:text-[4.5rem] font-medium leading-[1.05] tracking-tight text-[#EDE9E2] mb-6 text-center">
+          Get the <em className="not-italic text-[#D97706]">H1</em>. Actually understand it.
+        </h1>
+
+        {/* Subline */}
+        <p className="text-lg text-[#87847F] leading-relaxed mb-10 max-w-lg mx-auto text-center">
+          Paste any LC or JC question. Sage never gives you the answer. It asks you questions until you get there yourself.
+        </p>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+          <CheckoutButton
+            plan="trial"
+            label="Start free, no card required"
+            className="inline-flex items-center gap-2 bg-[#D97706] text-white hover:bg-[#C46A00] rounded-lg px-6 py-3 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+          <button
+            onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/12 text-[#A09C97] hover:border-white/25 hover:text-[#EDE9E2] px-6 py-3 text-sm font-medium transition"
+          >
+            Try it without signing up
+            <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Already a member */}
+        <p className="text-sm text-[#6B6760]">
+          Already a member?{" "}
+          <a
+            href="/auth/login"
+            className="text-[#A09C97] hover:text-[#EDE9E2] underline underline-offset-2 transition"
+          >
+            Sign in
+          </a>
+        </p>
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <div className="w-px h-8 bg-gradient-to-b from-transparent to-white/20 rounded-full" />
       </div>
     </section>
   );
@@ -531,77 +446,26 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section
-      id="how-it-works"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
-    >
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            How it works
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
-            Learning through discovery
-          </h2>
+    <section id="how-it-works" className="bg-white py-24 md:py-32 px-6 md:px-12 lg:px-24">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#A09C97] mb-4">How it works</p>
+          <h2 className="font-serif text-4xl md:text-5xl font-medium text-[#111110] leading-tight">Learning through discovery</h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-          {steps.map((step, index) => (
-            <div key={index} className="relative text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white border border-[#E7E5E4] mb-6">
-                <step.icon
-                  className="w-7 h-7 text-[#D97706]"
-                  strokeWidth={1.5}
-                />
-              </div>
-              <p className="text-xs font-medium tracking-wider uppercase text-[#57534E] mb-3">
-                Step {step.number}
-              </p>
-              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-4">
-                {step.title}
-              </h3>
-              <p className="text-[#57534E] leading-relaxed">{step.description}</p>
+        {steps.map((step, i) => (
+          <div key={i} className="flex gap-10 md:gap-16 py-12 border-t border-[#E4E2DE] last:border-b last:border-[#E4E2DE]">
+            {/* Large decorative number */}
+            <div className="shrink-0 w-14 md:w-20">
+              <span className="font-serif text-6xl md:text-8xl font-medium text-[#EDE9E2] leading-none select-none">{step.number}</span>
             </div>
-          ))}
-        </div>
-
-        {/* Chat preview - LC Biology */}
-        <div className="mt-20 max-w-2xl mx-auto overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
-          <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
-            <div className="h-2 w-2 rounded-full bg-[#D97706]" />
-            <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">LC Biology</span>
-            <p className="text-xs text-[#57534E]">
-              2023 LC Higher | Explain the process of meiosis and its significance in sexual reproduction
-            </p>
-          </div>
-          <div className="space-y-4 p-5 text-sm">
-            <div className="flex justify-start">
-              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Let&apos;s start with the basics. How many divisions happen in meiosis, and what type of cells does it produce?
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                Two divisions, and it produces 4 haploid cells?
-              </div>
-            </div>
-            <div className="flex justify-start">
-              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Good. Why is it essential that gametes are haploid? What would go wrong at fertilisation if they were diploid instead?
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
-                The chromosome number would double every generation… the zygote would be tetraploid?
-              </div>
-            </div>
-            <div className="flex justify-start">
-              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
-                Exactly. Now explain what happens in Prophase I that doesn&apos;t occur in mitosis, and why that&apos;s significant for genetic variation.
-              </div>
+            {/* Content */}
+            <div className="flex-1 pt-1 md:pt-3">
+              <h3 className="text-base font-semibold text-[#111110] mb-3">{step.title}</h3>
+              <p className="text-[#6B6760] leading-relaxed max-w-xl">{step.description}</p>
             </div>
           </div>
-        </div>
+        ))}
       </div>
     </section>
   );
@@ -684,21 +548,20 @@ const TryItDemo = () => {
   };
 
   return (
-    <section id="try-it" className="py-20 md:py-28 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
+    <section id="try-it" className="py-20 md:py-28 px-6 md:px-12 lg:px-24 bg-white">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-10">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">Try it free</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-[#1A1A1A] mb-3">
+        <div className="mb-10">
+          <h2 className="font-serif text-3xl md:text-4xl font-medium text-[#111110] mb-3">
             See the difference. No sign-up needed.
           </h2>
-          <p className="text-[#57534E]">Pick an LC topic below and see how Sage responds.</p>
+          <p className="text-[#6B6760]">Pick an LC topic below and see how Sage responds.</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-sm">
+        <div className="bg-[#F7F5F1] rounded-2xl border border-[#E4E2DE] overflow-hidden">
           {/* Topic picker */}
           {stage === "idle" && (
             <div className="p-6 space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E]">Choose a topic</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#A09C97]">Choose a topic</p>
               <div className="flex flex-wrap gap-2">
                 {DEMO_PROMPTS.map((p) => (
                   <button
@@ -706,8 +569,8 @@ const TryItDemo = () => {
                     onClick={() => setInput(p)}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-all ${
                       input === p
-                        ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
-                        : "border-[#E7E5E4] text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                        ? "bg-[#111110] text-white border-[#111110]"
+                        : "border-[#E4E2DE] text-[#6B6760] hover:border-[#111110] hover:text-[#111110]"
                     }`}
                   >
                     {p}
@@ -717,7 +580,7 @@ const TryItDemo = () => {
               <div className="pt-2">
                 <button
                   onClick={handleTry}
-                  className="w-full bg-[#1A1A1A] text-white rounded-xl py-3.5 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.01]"
+                  className="w-full bg-[#D97706] text-white rounded-xl py-3.5 text-sm font-medium hover:bg-[#C46A00] transition-all"
                 >
                   Ask Sage →
                 </button>
@@ -733,46 +596,46 @@ const TryItDemo = () => {
                   <div key={i} className="w-2 h-2 rounded-full bg-[#D97706] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
-              <p className="text-sm text-[#A8A29E]">Sage is thinking…</p>
+              <p className="text-sm text-[#A09C97]">Sage is thinking…</p>
             </div>
           )}
 
           {/* Conversation thread */}
           {(stage === "response1" || stage === "thinking2" || stage === "response2" || stage === "gated") && (
             <div className="flex flex-col">
-              <div className="px-5 py-3 bg-[#F5F4F0] border-b border-[#E7E5E4] flex items-center gap-2">
+              <div className="px-5 py-3 bg-[#EDE9E2] border-b border-[#E4E2DE] flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
-                <span className="text-xs text-[#57534E] font-medium truncate">{input}</span>
+                <span className="text-xs text-[#6B6760] font-medium truncate">{input}</span>
               </div>
 
-              <div className="space-y-3 p-5 text-sm">
+              <div className="space-y-3 p-5 text-sm bg-white">
                 {/* Sage turn 1 */}
                 <div className="flex justify-start">
-                  <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">{response1}</div>
+                  <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F7F5F1] px-4 py-3 leading-relaxed text-[#111110]">{response1}</div>
                 </div>
                 {/* Student turn 1 */}
                 {userReply1 && (
                   <div className="flex justify-end">
-                    <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white text-sm">{userReply1}</div>
+                    <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#111110] px-4 py-3 leading-relaxed text-white text-sm">{userReply1}</div>
                   </div>
                 )}
                 {/* Sage turn 2 */}
                 {response2 && (
                   <div className="flex justify-start">
-                    <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">{response2}</div>
+                    <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F7F5F1] px-4 py-3 leading-relaxed text-[#111110]">{response2}</div>
                   </div>
                 )}
                 {/* Student turn 2 */}
                 {userReply2 && stage === "gated" && (
                   <div className="flex justify-end">
-                    <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white text-sm">{userReply2}</div>
+                    <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#111110] px-4 py-3 leading-relaxed text-white text-sm">{userReply2}</div>
                   </div>
                 )}
               </div>
 
               {/* Input after turn 1 */}
               {stage === "response1" && (
-                <div className="border-t border-[#E7E5E4] px-5 py-4">
+                <div className="border-t border-[#E4E2DE] px-5 py-4 bg-white">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -781,9 +644,9 @@ const TryItDemo = () => {
                       onKeyDown={(e) => { if (e.key === "Enter") handleFirstReply(); }}
                       placeholder="Your answer…"
                       autoFocus
-                      className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-4 py-2.5 text-sm text-[#1A1A1A] placeholder:text-[#A8A29E] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+                      className="flex-1 rounded-xl border border-[#E4E2DE] bg-[#F7F5F1] px-4 py-2.5 text-sm text-[#111110] placeholder:text-[#A09C97] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
                     />
-                    <button onClick={handleFirstReply} disabled={!userReply1.trim()} className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#1A1A1A]/80">
+                    <button onClick={handleFirstReply} disabled={!userReply1.trim()} className="w-9 h-9 rounded-xl bg-[#D97706] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#C46A00]">
                       <Send className="w-4 h-4 text-white" strokeWidth={2} />
                     </button>
                   </div>
@@ -792,7 +655,7 @@ const TryItDemo = () => {
 
               {/* Input after turn 2 */}
               {stage === "response2" && (
-                <div className="border-t border-[#E7E5E4] px-5 py-4">
+                <div className="border-t border-[#E4E2DE] px-5 py-4 bg-white">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -801,9 +664,9 @@ const TryItDemo = () => {
                       onKeyDown={(e) => { if (e.key === "Enter") handleSecondReply(); }}
                       placeholder="Keep going…"
                       autoFocus
-                      className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-4 py-2.5 text-sm text-[#1A1A1A] placeholder:text-[#A8A29E] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
+                      className="flex-1 rounded-xl border border-[#E4E2DE] bg-[#F7F5F1] px-4 py-2.5 text-sm text-[#111110] placeholder:text-[#A09C97] outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/30 transition"
                     />
-                    <button onClick={handleSecondReply} disabled={!userReply2.trim()} className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#1A1A1A]/80">
+                    <button onClick={handleSecondReply} disabled={!userReply2.trim()} className="w-9 h-9 rounded-xl bg-[#D97706] flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-[#C46A00]">
                       <Send className="w-4 h-4 text-white" strokeWidth={2} />
                     </button>
                   </div>
@@ -812,18 +675,18 @@ const TryItDemo = () => {
 
               {/* Signup gate */}
               {stage === "gated" && (
-                <div className="border-t border-[#E7E5E4] p-5 bg-[#FDFAF5]">
+                <div className="border-t border-[#E4E2DE] p-5 bg-[#FBF7EE]">
                   <div className="text-center space-y-3">
-                    <p className="text-sm font-medium text-[#1A1A1A]">Ready to keep going?</p>
-                    <p className="text-xs text-[#57534E]">Sign up free to continue. Unlimited sessions for all LC subjects.</p>
+                    <p className="text-sm font-medium text-[#111110]">Ready to keep going?</p>
+                    <p className="text-xs text-[#6B6760]">Sign up free to continue. Unlimited sessions for all LC subjects.</p>
                     <a
                       href="/auth/signup"
                       onClick={() => posthog.capture('cta_clicked', { cta_location: 'try_it_gate' })}
-                      className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] w-full"
+                      className="inline-flex items-center justify-center gap-2 bg-[#D97706] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#C46A00] transition-all w-full"
                     >
                       Start free, no card required
                     </a>
-                    <button onClick={reset} className="text-xs text-[#A8A29E] hover:text-[#57534E] underline underline-offset-2">
+                    <button onClick={reset} className="text-xs text-[#A09C97] hover:text-[#6B6760] underline underline-offset-2">
                       Try a different topic
                     </button>
                   </div>
@@ -868,58 +731,39 @@ const Features = () => {
   ];
 
   return (
-    <section
-      id="features"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
-    >
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            Features
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] max-w-3xl mx-auto">
-            Everything you need to learn deeply
-          </h2>
+    <section id="features" className="py-24 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F7F5F1]">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-16">
+          <h2 className="font-serif text-4xl md:text-5xl font-medium text-[#111110] leading-tight">Everything you need to learn deeply</h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid md:grid-cols-2 border border-[#E4E2DE] bg-white">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group bg-white border border-[#E7E5E4] p-8 md:p-10 rounded-xl hover:shadow-lg transition-all duration-300"
+              className={`p-8 md:p-10 group transition-colors hover:bg-[#FDFCF8] ${
+                index % 2 === 0 ? "md:border-r border-[#E4E2DE]" : ""
+              } ${index < 2 ? "border-b border-[#E4E2DE]" : ""}`}
             >
-              <div className="flex items-start gap-5">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center group-hover:bg-[#D97706]/10 transition-colors">
-                  <feature.icon
-                    className="w-6 h-6 text-[#D97706]"
-                    strokeWidth={1.5}
-                  />
-                </div>
-                <div>
-                  <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-[#57534E] leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              </div>
+              <div className="border-t-2 border-[#E4E2DE] group-hover:border-[#D97706] transition-colors pt-6 mb-5" />
+              <h3 className="font-serif text-xl font-medium text-[#111110] mb-3">{feature.title}</h3>
+              <p className="text-[#6B6760] leading-relaxed text-sm">{feature.description}</p>
             </div>
           ))}
         </div>
 
         {/* Learning Receipt preview */}
-        <div className="mt-16 max-w-lg mx-auto bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-sm">
+        <div className="mt-16 max-w-lg mx-auto bg-white rounded-2xl border border-[#E4E2DE] overflow-hidden shadow-sm">
           {/* Receipt header */}
-          <div className="bg-[#F5F4F0] border-b border-[#E7E5E4] px-6 py-4 flex items-center justify-between">
+          <div className="bg-[#F7F5F1] border-b border-[#E4E2DE] px-6 py-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-0.5">Learning Receipt</p>
-              <p className="font-serif text-base font-medium text-[#1A1A1A]">LC Chemistry: Organic Chemistry</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A09C97] mb-0.5">Learning Receipt</p>
+              <p className="font-serif text-base font-medium text-[#111110]">LC Chemistry: Organic Chemistry</p>
             </div>
             <div className="text-right">
               <div className="flex items-baseline gap-0.5 justify-end">
                 <span className="font-serif text-3xl font-medium text-amber-600">84</span>
-                <span className="text-sm text-[#A8A29E]">/100</span>
+                <span className="text-sm text-[#A09C97]">/100</span>
               </div>
               <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-100 rounded-md px-2 py-0.5 mt-1 inline-block">H2 Level</span>
             </div>
@@ -928,12 +772,12 @@ const Features = () => {
           <div className="px-6 py-5 space-y-5">
             {/* Concepts covered */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">Concepts covered</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A09C97] mb-2">Concepts covered</p>
               <div className="space-y-1.5">
                 {["Functional groups of alcohols, esters & aldehydes", "Condensation reactions & esterification", "Naming organic compounds (IUPAC)"].map((c) => (
                   <div key={c} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={2.5} />
-                    <span className="text-sm text-[#1A1A1A]">{c}</span>
+                    <span className="text-sm text-[#111110]">{c}</span>
                   </div>
                 ))}
               </div>
@@ -949,8 +793,8 @@ const Features = () => {
                 ].map((g) => (
                   <div key={g} className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-2">
-                      <span className="text-[#A8A29E] mt-0.5 shrink-0 text-xs">→</span>
-                      <span className="text-sm text-[#57534E]">{g}</span>
+                      <span className="text-[#A09C97] mt-0.5 shrink-0 text-xs">→</span>
+                      <span className="text-sm text-[#6B6760]">{g}</span>
                     </div>
                     <span className="text-[11px] font-medium text-[#D97706] shrink-0 flex items-center gap-0.5 hover:underline cursor-pointer whitespace-nowrap">
                       Review this <ArrowRight className="w-3 h-3" />
@@ -960,7 +804,7 @@ const Features = () => {
               </div>
             </div>
 
-            <p className="text-xs text-[#A8A29E] italic">
+            <p className="text-xs text-[#A09C97] italic">
               Click &ldquo;Review this&rdquo; on any gap to start a new session focused on that topic.
             </p>
           </div>
@@ -969,8 +813,6 @@ const Features = () => {
     </section>
   );
 };
-
-
 
 // ─── Comparison ───────────────────────────────────────────────────────────────
 
@@ -986,65 +828,62 @@ const Comparison = () => {
 
   const Cell = ({ value, highlight }: { value: boolean; highlight?: boolean }) =>
     value ? (
-      <Check className={`w-5 h-5 mx-auto ${highlight ? "text-[#D97706]" : "text-[#57534E]"}`} strokeWidth={2.5} />
+      <Check className={`w-5 h-5 mx-auto ${highlight ? "text-[#D97706]" : "text-[#6B6760]"}`} strokeWidth={2.5} />
     ) : (
-      <XCircle className="w-5 h-5 mx-auto text-[#E7E5E4]" strokeWidth={2} />
+      <XCircle className="w-5 h-5 mx-auto text-[#E4E2DE]" strokeWidth={2} />
     );
 
   return (
-    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
+    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-white">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            Why StudyWith
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+        <div className="mb-16 md:mb-20">
+          <h2 className="font-serif text-3xl md:text-5xl font-medium text-[#111110] mb-4">
             Not all AI tutors are equal
           </h2>
-          <p className="text-lg text-[#57534E]">
+          <p className="text-lg text-[#6B6760]">
             ChatGPT writes your answers. Human grinds cost €40/hr. StudyWith makes you actually understand it.
           </p>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-[#E7E5E4]">
+        <div className="overflow-x-auto rounded-2xl border border-[#E4E2DE]">
           <div className="min-w-[480px] bg-white">
-          {/* Header */}
-          <div className="grid grid-cols-4 border-b border-[#E7E5E4]">
-            <div className="p-5 col-span-1" />
-            <div className="p-5 text-center border-l border-[#E7E5E4]">
-              <p className="text-sm font-medium text-[#57534E]">ChatGPT</p>
+            {/* Header */}
+            <div className="grid grid-cols-4 border-b border-[#E4E2DE]">
+              <div className="p-5 col-span-1" />
+              <div className="p-5 text-center border-l border-[#E4E2DE]">
+                <p className="text-sm font-medium text-[#6B6760]">ChatGPT</p>
+              </div>
+              <div className="p-5 text-center border-l border-[#E4E2DE]">
+                <p className="text-sm font-medium text-[#6B6760]">Human tutor</p>
+                <p className="text-xs text-[#A09C97]">~€40/hr</p>
+              </div>
+              <div className="p-5 text-center border-l border-[#E4E2DE] bg-[#FBF7EE]">
+                <p className="text-sm font-semibold text-[#D97706]">StudyWith</p>
+                <span className="inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5 mt-0.5">Free trial</span>
+              </div>
             </div>
-            <div className="p-5 text-center border-l border-[#E7E5E4]">
-              <p className="text-sm font-medium text-[#57534E]">Human tutor</p>
-              <p className="text-xs text-[#A8A29E]">~€40/hr</p>
-            </div>
-            <div className="p-5 text-center border-l border-[#E7E5E4] bg-[#FDFAF5]">
-              <p className="text-sm font-semibold text-[#D97706]">StudyWith</p>
-              <span className="inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5 mt-0.5">Free trial</span>
-            </div>
-          </div>
 
-          {rows.map((row, i) => (
-            <div
-              key={i}
-              className={`grid grid-cols-4 border-b border-[#E7E5E4] last:border-0 ${
-                i % 2 === 1 ? "bg-[#F5F4F0]/30" : ""
-              }`}
-            >
-              <div className="p-5 col-span-1">
-                <p className="text-sm text-[#1A1A1A]">{row.feature}</p>
+            {rows.map((row, i) => (
+              <div
+                key={i}
+                className={`grid grid-cols-4 border-b border-[#E4E2DE] last:border-0 ${
+                  i % 2 === 1 ? "bg-[#F7F5F1]/30" : ""
+                }`}
+              >
+                <div className="p-5 col-span-1">
+                  <p className="text-sm text-[#111110]">{row.feature}</p>
+                </div>
+                <div className="p-5 border-l border-[#E4E2DE] flex items-center justify-center">
+                  <Cell value={row.chatgpt} />
+                </div>
+                <div className="p-5 border-l border-[#E4E2DE] flex items-center justify-center">
+                  <Cell value={row.humanTutor} />
+                </div>
+                <div className="p-5 border-l border-[#E4E2DE] flex items-center justify-center bg-[#FBF7EE]">
+                  <Cell value={row.studywith} highlight />
+                </div>
               </div>
-              <div className="p-5 border-l border-[#E7E5E4] flex items-center justify-center">
-                <Cell value={row.chatgpt} />
-              </div>
-              <div className="p-5 border-l border-[#E7E5E4] flex items-center justify-center">
-                <Cell value={row.humanTutor} />
-              </div>
-              <div className="p-5 border-l border-[#E7E5E4] flex items-center justify-center bg-[#FDFAF5]">
-                <Cell value={row.studywith} highlight />
-              </div>
-            </div>
-          ))}
+            ))}
           </div>
         </div>
       </div>
@@ -1053,74 +892,9 @@ const Comparison = () => {
 };
 
 // ─── Use Cases ────────────────────────────────────────────────────────────────
+// (removed per design spec)
 
-const UseCases = () => {
-  const useCases = [
-    {
-      icon: FlaskConical,
-      title: "LC Science Subjects",
-      description:
-        "Work through Chemistry, Biology, and Physics past papers question by question. Sage guides you to the right reasoning, never just handing you the answer.",
-      example: "Chemistry, Biology, Physics, Agricultural Science",
-    },
-    {
-      icon: FunctionSquare,
-      title: "LC & JC Maths",
-      description:
-        "Step through Paper 1 and Paper 2 problems one line at a time. Build the method, not just the answer, because the LC marking scheme rewards method marks.",
-      example: "Higher & Ordinary Level · Paper 1 & Paper 2",
-    },
-    {
-      icon: Dna,
-      title: "Essay & Language Subjects",
-      description:
-        "Structure your LC English essay, develop a History argument, or practise Irish expression. Sage helps you find your own thesis, not write it for you.",
-      example: "English, Irish, History, Geography, Business, Economics",
-    },
-  ];
-
-  return (
-    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 md:mb-20">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            LC &amp; JC subjects
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
-            Every subject. Every paper.
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-          {useCases.map((useCase, index) => (
-            <div
-              key={index}
-              className="bg-white border border-[#E7E5E4] p-8 rounded-xl hover:-translate-y-1 transition-transform"
-            >
-              <div className="w-14 h-14 rounded-full bg-[#D97706]/10 flex items-center justify-center mb-6">
-                <useCase.icon
-                  className="w-7 h-7 text-[#D97706]"
-                  strokeWidth={1.5}
-                />
-              </div>
-              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-4">
-                {useCase.title}
-              </h3>
-              <p className="text-[#57534E] leading-relaxed mb-4">
-                {useCase.description}
-              </p>
-              <p className="text-sm text-[#D97706] font-medium">
-                {useCase.example}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Pricing (removed - free early access) ───────────────────────────────────
+// ─── Pricing ──────────────────────────────────────────────────────────────────
 
 const Pricing = () => {
   const features = [
@@ -1133,74 +907,68 @@ const Pricing = () => {
   ];
 
   return (
-    <section
-      id="pricing"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
-    >
+    <section id="pricing" className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F7F5F1]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            Pricing
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+        <div className="mb-12 md:mb-16">
+          <h2 className="font-serif text-3xl md:text-5xl font-medium text-[#111110] mb-4">
             Simple, transparent pricing
           </h2>
-          <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
+          <p className="text-lg text-[#6B6760] max-w-2xl">
             Pick the plan that suits you. Student pricing applied automatically at checkout.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
           {/* Free Trial */}
-          <div className="relative bg-white border border-[#E7E5E4] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
-            <h3 className="font-serif text-xl font-medium text-[#1A1A1A] mb-1">Free trial</h3>
+          <div className="relative bg-white border border-[#E4E2DE] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
+            <h3 className="font-serif text-xl font-medium text-[#111110] mb-1">Free trial</h3>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="font-serif text-4xl font-medium text-[#1A1A1A]">€0</span>
-              <span className="text-[#57534E] text-sm">today</span>
+              <span className="font-serif text-4xl font-medium text-[#111110]">€0</span>
+              <span className="text-[#6B6760] text-sm">today</span>
             </div>
-            <p className="text-xs text-[#A8A29E] mb-6">Then €12.99/mo. No card required to start.</p>
+            <p className="text-xs text-[#A09C97] mb-6">Then €12.99/mo. No card required to start.</p>
             <ul className="space-y-3 mb-8 flex-1">
               {features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <Check className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" strokeWidth={2} />
-                  <span className="text-sm text-[#1A1A1A]">{feature}</span>
+                  <span className="text-sm text-[#111110]">{feature}</span>
                 </li>
               ))}
             </ul>
             <CheckoutButton
               plan="trial"
               label="Start 7-day free trial"
-              className="w-full rounded-lg py-3 text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-[#111110] text-white hover:bg-[#111110]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
-            <p className="text-center text-xs text-[#A8A29E] mt-2">7 days free. Add a card to continue after the trial.</p>
+            <p className="text-center text-xs text-[#A09C97] mt-2">7 days free. Add a card to continue after the trial.</p>
           </div>
 
           {/* Monthly */}
-          <div className="relative bg-white border border-[#E7E5E4] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
-            <h3 className="font-serif text-xl font-medium text-[#1A1A1A] mb-1">Monthly</h3>
+          <div className="relative bg-white border border-[#E4E2DE] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
+            <h3 className="font-serif text-xl font-medium text-[#111110] mb-1">Monthly</h3>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="font-serif text-4xl font-medium text-[#1A1A1A]">€12.99</span>
-              <span className="text-[#57534E] text-sm">/ month</span>
+              <span className="font-serif text-4xl font-medium text-[#111110]">€12.99</span>
+              <span className="text-[#6B6760] text-sm">/ month</span>
             </div>
-            <p className="text-xs text-[#A8A29E] mb-6">Billed monthly. Cancel anytime.</p>
+            <p className="text-xs text-[#A09C97] mb-6">Billed monthly. Cancel anytime.</p>
             <ul className="space-y-3 mb-8 flex-1">
               {features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <Check className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" strokeWidth={2} />
-                  <span className="text-sm text-[#1A1A1A]">{feature}</span>
+                  <span className="text-sm text-[#111110]">{feature}</span>
                 </li>
               ))}
             </ul>
             <CheckoutButton
               plan="monthly"
               label="Get monthly"
-              className="w-full rounded-lg py-3 text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-[#111110] text-white hover:bg-[#111110]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
-            <p className="text-center text-xs text-[#A8A29E] mt-2">No trial. Access starts immediately.</p>
+            <p className="text-center text-xs text-[#A09C97] mt-2">No trial. Access starts immediately.</p>
           </div>
 
           {/* Annual - highlighted */}
-          <div className="relative bg-[#1A1A1A] border border-[#1A1A1A] p-8 rounded-2xl hover:shadow-xl transition-all duration-300 flex flex-col">
+          <div className="relative bg-[#111110] border border-[#111110] p-8 rounded-2xl hover:shadow-xl transition-all duration-300 flex flex-col">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#D97706] text-white text-xs font-medium px-4 py-1 rounded-full whitespace-nowrap">
               Best value, save 43%
             </span>
@@ -1221,13 +989,13 @@ const Pricing = () => {
             <CheckoutButton
               plan="annual"
               label="Get annual"
-              className="w-full rounded-lg py-3 text-sm font-medium bg-white text-[#1A1A1A] hover:bg-zinc-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-white text-[#111110] hover:bg-zinc-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <p className="text-center text-xs text-zinc-500 mt-2">No trial. Access starts immediately.</p>
           </div>
         </div>
 
-        <p className="text-center text-xs text-[#A8A29E] mt-8">
+        <p className="text-xs text-[#A09C97] mt-8">
           Have a .edu or academic email? Student pricing (€5.99/mo or €39/yr) is applied automatically.
         </p>
       </div>
@@ -1282,16 +1050,10 @@ const FAQ = () => {
   ];
 
   return (
-    <section
-      id="faq"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
-    >
+    <section id="faq" className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-white">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
-            FAQ
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+        <div className="mb-16">
+          <h2 className="font-serif text-3xl md:text-5xl font-medium text-[#111110]">
             Frequently asked questions
           </h2>
         </div>
@@ -1309,23 +1071,23 @@ const Footer = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <footer className="py-16 md:py-20 px-6 md:px-12 lg:px-24 border-t border-[#E7E5E4]">
+    <footer className="bg-[#111110] py-16 md:py-20 px-6 md:px-12 lg:px-24 border-t border-white/8">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-4 gap-12 md:gap-8 mb-12">
           <div className="md:col-span-1">
             <a
               href="/"
-              className="font-serif text-2xl font-semibold text-[#1A1A1A] hover:opacity-80 transition-opacity"
+              className="font-serif text-xl text-[#EDE9E2] hover:opacity-80 transition-opacity"
             >
               StudyWith
             </a>
-            <p className="text-[#57534E] mt-4 text-sm leading-relaxed">
+            <p className="text-[#6B6760] mt-4 text-sm leading-relaxed">
               The AI study companion built for Leaving Cert and Junior Cycle students. Upload your notes. Understand your material. Get the H1.
             </p>
           </div>
 
           <div>
-            <h4 className="font-medium text-[#1A1A1A] mb-4">Product</h4>
+            <h4 className="text-[#A09C97] text-xs font-semibold uppercase tracking-[0.08em] mb-4">Product</h4>
             <ul className="space-y-3">
               {[
                 { id: "how-it-works", label: "How it works" },
@@ -1335,7 +1097,7 @@ const Footer = () => {
                 <li key={id}>
                   <button
                     onClick={() => scrollToSection(id)}
-                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm"
+                    className="text-[#6B6760] hover:text-[#A09C97] text-sm transition"
                   >
                     {label}
                   </button>
@@ -1345,7 +1107,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-medium text-[#1A1A1A] mb-4">Account</h4>
+            <h4 className="text-[#A09C97] text-xs font-semibold uppercase tracking-[0.08em] mb-4">Account</h4>
             <ul className="space-y-3">
               {[
                 { label: "Sign in", href: "/auth/login" },
@@ -1355,7 +1117,7 @@ const Footer = () => {
                 <li key={item.label}>
                   <a
                     href={item.href}
-                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm"
+                    className="text-[#6B6760] hover:text-[#A09C97] text-sm transition"
                   >
                     {item.label}
                   </a>
@@ -1365,7 +1127,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-medium text-[#1A1A1A] mb-4">Legal</h4>
+            <h4 className="text-[#A09C97] text-xs font-semibold uppercase tracking-[0.08em] mb-4">Legal</h4>
             <ul className="space-y-3">
               {[
                 { label: "Privacy Policy", href: "/privacy" },
@@ -1374,7 +1136,7 @@ const Footer = () => {
                 <li key={item.label}>
                   <a
                     href={item.href}
-                    className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm"
+                    className="text-[#6B6760] hover:text-[#A09C97] text-sm transition"
                   >
                     {item.label}
                   </a>
@@ -1384,11 +1146,11 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-[#E7E5E4] flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-[#57534E]">
+        <div className="pt-8 border-t border-white/8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-[#4A4744] text-sm">
             &copy; {currentYear} StudyWith. All rights reserved.
           </p>
-          <p className="text-sm text-[#57534E]">
+          <p className="text-[#4A4744] text-sm">
             Made for LC &amp; JC students who want to actually understand it.
           </p>
         </div>
@@ -1435,26 +1197,21 @@ export default function StudyWithLanding() {
         <TryItDemo />
         <Features />
         <Comparison />
-        <UseCases />
         <Pricing />
         <FAQ />
         {/* Closing CTA */}
-        <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
-              Your mocks are closer than you think.
-            </h2>
-            <p className="text-lg text-[#57534E] mb-10">
-              Start studying smarter today. Upload your notes and let Sage guide you to the H1.
-            </p>
+        <section className="bg-[#111110] py-24 md:py-32 px-6 md:px-12 lg:px-24">
+          <div className="max-w-2xl">
+            <h2 className="font-serif text-4xl md:text-5xl font-medium text-[#EDE9E2] mb-6 leading-tight">Your mocks are closer than you think.</h2>
+            <p className="text-lg text-[#6B6760] mb-10">Start studying smarter today. Upload your notes and let Sage guide you to the H1.</p>
             <a
               href="/auth/signup"
               onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
-              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 bg-[#D97706] text-white hover:bg-[#C46A00] rounded-lg px-6 py-3 text-sm font-medium transition"
             >
               Start free, no card required
             </a>
-            <p className="text-sm text-[#A8A29E] mt-4">7-day free trial · Cancel anytime</p>
+            <p className="text-sm text-[#4A4744] mt-5">7-day free trial · Cancel anytime</p>
           </div>
         </section>
       </main>

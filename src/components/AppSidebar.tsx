@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus } from "lucide-react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus, FileText, Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
@@ -19,6 +19,132 @@ interface AppSidebarProps {
   sessions: Session[];
   userEmail: string;
   gritStreak?: number;
+}
+
+interface StudyMaterial {
+  id: string;
+  file_name: string;
+  topic: string | null;
+  created_at: string;
+}
+
+function MaterialsSidebar({ onNav }: { onNav?: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeMaterialId = searchParams?.get("id");
+  const [materials, setMaterials] = useState<StudyMaterial[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch("/api/study-materials")
+      .then((r) => r.json())
+      .then((d: { materials?: StudyMaterial[] }) => {
+        if (d.materials) setMaterials(d.materials);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const [, data] = (reader.result as string).split(",");
+          resolve(data);
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+      const extractRes = await fetch("/api/extract-assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: file.type || "application/pdf" }),
+      });
+      const extractData = (await extractRes.json()) as { text?: string; error?: string };
+      if (!extractData.text) throw new Error(extractData.error ?? "Could not extract text.");
+      const genRes = await fetch("/api/study-materials/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: extractData.text, fileName: file.name }),
+      });
+      const genData = (await genRes.json()) as { materialId?: string; error?: string };
+      if (!genData.materialId) throw new Error(genData.error ?? "Generation failed.");
+      const listRes = await fetch("/api/study-materials");
+      const listData = (await listRes.json()) as { materials?: StudyMaterial[] };
+      setMaterials(listData.materials ?? []);
+      router.push(`/app/study-materials?id=${genData.materialId}`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto px-3 pb-3">
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".pdf,image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+          e.target.value = "";
+        }}
+      />
+      <div className="pt-3 pb-1.5">
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-[#D6D3D1] text-xs font-medium text-[#57534E] hover:border-[#D97706]/50 hover:text-[#1A1A1A] transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {uploading ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
+          ) : (
+            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+          )}
+          {uploading ? "Generating…" : "Upload new"}
+        </button>
+      </div>
+      {materials.length === 0 ? (
+        <p className="text-[11px] text-[#A8A29E] px-2 py-3">No materials yet.</p>
+      ) : (
+        <div className="space-y-0.5 mt-1">
+          {materials.map((m) => {
+            const isActive = m.id === activeMaterialId;
+            return (
+              <button
+                key={m.id}
+                onClick={() => {
+                  router.push(`/app/study-materials?id=${m.id}`);
+                  onNav?.();
+                }}
+                className={`w-full text-left flex items-start gap-2 px-3 py-2 rounded-xl transition ${
+                  isActive
+                    ? "bg-[#E7E5E4] text-[#1A1A1A]"
+                    : "text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+                }`}
+              >
+                <FileText
+                  className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isActive ? "text-[#D97706]" : "text-[#A8A29E]"}`}
+                  strokeWidth={1.5}
+                />
+                <div className="min-w-0">
+                  <span className="text-sm leading-snug block truncate">{m.topic || m.file_name}</span>
+                  {m.topic && (
+                    <span className="text-[10px] text-[#A8A29E] truncate block">{m.file_name}</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function SidebarContent({
@@ -159,7 +285,12 @@ function SidebarContent({
         </a>
       </div>
 
-      {/* Recent Tutors list */}
+      {/* Conditional sidebar content */}
+      {pathname?.startsWith("/app/study-materials") ? (
+        <Suspense fallback={<div className="flex-1" />}>
+          <MaterialsSidebar onNav={onNav} />
+        </Suspense>
+      ) : (
       <div className="flex-1 overflow-y-auto px-3 pb-3">
         {(() => {
           const visible = sessions.filter((s) => !deletedIds.has(s.id));
@@ -295,6 +426,7 @@ function SidebarContent({
           );
         })()}
       </div>
+      )}
 
       {/* Footer: email + grit streak + nav + sign out */}
       <div className="px-3 py-4 border-t border-[#E7E5E4] space-y-1">
