@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Upload } from "lucide-react";
+import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
@@ -30,56 +30,18 @@ function SidebarContent({
 }: AppSidebarProps & { onNav?: () => void; onCollapse?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [learningMenuOpen, setLearningMenuOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [sidebarError, setSidebarError] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [localTitles, setLocalTitles] = useState<Record<string, string>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     posthog.reset();
     router.push("/");
-  };
-
-  const handleSidebarUpload = async (file: File) => {
-    setUploading(true);
-    setSidebarError(null);
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const data = (reader.result as string).split(",")[1] || "";
-          resolve(data);
-        };
-        reader.onerror = () => reject(new Error("Failed to read file"));
-        reader.readAsDataURL(file);
-      });
-
-      const response = await fetch("/api/study-materials/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, text: base64 }),
-      });
-      const data = await response.json();
-      if (!data.materialId) throw new Error(data.error || "Upload failed.");
-      router.push("/app/study-materials");
-    } catch (err) {
-      setSidebarError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSidebarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) void handleSidebarUpload(file);
   };
 
   const startRename = (session: Session, e: React.MouseEvent) => {
@@ -163,53 +125,8 @@ function SidebarContent({
       </div>
 
           {/* Start Learning button */}
-      <div className="px-3 pt-4 pb-2 relative">
-        <button
-          onClick={() => setLearningMenuOpen((prev) => !prev)}
-          className="flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 transition-all shadow-sm hover:shadow-md"
-        >
-          <Plus className="w-4 h-4 shrink-0" strokeWidth={2} />
-          Start Learning
-        </button>
-
-        {learningMenuOpen && (
-          <div className="absolute left-3 right-3 mt-2 rounded-xl border border-[#E7E5E4] bg-white p-2 shadow-lg z-20">
-            <button
-              onClick={() => {
-                setLearningMenuOpen(false);
-                router.push("/app/new");
-                onNav?.();
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F4] rounded-lg"
-            >
-              <MessageSquare className="w-4 h-4" />
-              New Chat
-            </button>
-            <button
-              onClick={() => {
-                setLearningMenuOpen(false);
-                fileInputRef.current?.click();
-              }}
-              className="mt-1 flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F4] rounded-lg"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Material
-            </button>
-            {uploading && <p className="text-xs text-[#6B7280] mt-2">Uploading...</p>}
-            {sidebarError && <p className="text-xs text-red-500 mt-2">{sidebarError}</p>}
-          </div>
-        )}
-        <input
-          type="file"
-          accept="application/pdf"
-          ref={fileInputRef}
-          className="hidden"
-          onChange={handleSidebarFileChange}
-        />
-      </div>
-
-      {/* Groups */}
-      <div className="px-3 pb-2">
+      {/* Main nav */}
+      <div className="px-3 pt-4 pb-2 space-y-1">
         <a
           href="/app"
           onClick={onNav}
@@ -221,14 +138,24 @@ function SidebarContent({
           Home
         </a>
         <a
+          href="/app/new"
+          onClick={onNav}
+          className={`flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/app/new" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          AI Tutor
+        </a>
+        <a
           href="/app/study-materials"
           onClick={onNav}
-          className={`mt-2 flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
             pathname === "/app/study-materials" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
           }`}
         >
           <Layers className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-          Library
+          Learning Materials
         </a>
       </div>
 
@@ -471,8 +398,8 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
           className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4]"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          {/* 5 zones: Home | Sessions | [spacer/+] | Stats | Settings */}
-          <div className="flex h-14 relative">
+          {/* 4 zones: Home | AI Tutor | Materials | Settings */}
+          <div className="flex h-14">
             <a
               href="/app"
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
@@ -483,27 +410,24 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
               Home
             </a>
 
-            <button
-              onClick={() => setMobileOpen(true)}
+            <a
+              href="/app/new"
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                mobileOpen ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+                pathname === "/app/new" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
               }`}
             >
-              <BookOpen className="w-5 h-5" strokeWidth={1.5} />
-              Sessions
-            </button>
-
-            {/* centre spacer - + button floats here */}
-            <div className="flex-1" />
+              <MessageSquare className="w-5 h-5" strokeWidth={pathname === "/app/new" ? 2 : 1.5} />
+              AI Tutor
+            </a>
 
             <a
-              href="/app/stats"
+              href="/app/study-materials"
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                pathname === "/app/stats" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+                pathname === "/app/study-materials" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
               }`}
             >
-              <BarChart2 className="w-5 h-5" strokeWidth={pathname === "/app/stats" ? 2 : 1.5} />
-              Stats
+              <Layers className="w-5 h-5" strokeWidth={pathname === "/app/study-materials" ? 2 : 1.5} />
+              Materials
             </a>
 
             <a
@@ -514,16 +438,6 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
             >
               <Settings className="w-5 h-5" strokeWidth={pathname === "/app/settings" ? 2 : 1.5} />
               Settings
-            </a>
-
-            {/* + button: absolutely centred */}
-            <a
-              href="/app/new"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-[#1A1A1A] flex items-center justify-center shadow-lg">
-                <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
             </a>
           </div>
         </nav>

@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, Upload, ChevronRight, Loader2, FileText } from "lucide-react";
+import { MessageSquare, Layers, ChevronRight, FileText } from "lucide-react";
 
 interface SessionRow {
   id: string;
@@ -44,11 +43,6 @@ export default function DashboardHome() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState("");
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -67,36 +61,6 @@ export default function DashboardHome() {
     void load();
   }, []);
 
-  const handleStart = () => {
-    const q = prompt.trim();
-    router.push(q ? `/app/new?topic=${encodeURIComponent(q)}` : "/app/new");
-  };
-
-  const handleUpload = async (file: File) => {
-    setUploading(true);
-    setUploadError(null);
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1] || "");
-        reader.onerror = () => reject(new Error("File read failed"));
-        reader.readAsDataURL(file);
-      });
-      const res = await fetch("/api/study-materials/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, text: base64 }),
-      });
-      const data = await res.json();
-      if (!data.materialId) throw new Error(data.error ?? "Upload failed");
-      router.push("/app/study-materials");
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const inProgress = sessions.filter((s) => s.receipt === null);
   const recent = sessions.slice(0, 6);
   const recentMaterials = materials.slice(0, 4);
@@ -110,56 +74,42 @@ export default function DashboardHome() {
           <h1 className="font-serif text-3xl md:text-4xl font-medium text-[#1A1A1A] mb-1">
             {getGreeting()}
           </h1>
-          <p className="text-[#57534E]">What would you like to study today?</p>
+          <p className="text-[#57534E]">What would you like to do today?</p>
         </div>
 
-        {/* Main input */}
-        <div className="space-y-3">
-          <div className="flex gap-2">
-            <input
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleStart()}
-              placeholder="Ask anything — biology, maths, history…"
-              className="flex-1 rounded-xl border border-[#E7E5E4] bg-white px-4 py-3 text-sm text-[#1A1A1A] placeholder:text-[#A8A29E] outline-none focus:border-[#D97706] focus:ring-2 focus:ring-[#D97706]/10 transition"
-            />
-            <button
-              onClick={handleStart}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#1A1A1A] px-5 py-3 text-sm font-medium text-white hover:bg-[#111111] transition shrink-0"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Start
-            </button>
-          </div>
+        {/* Feature cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link
+            href="/app/new"
+            className="group rounded-2xl border border-[#E7E5E4] bg-white p-6 hover:border-[#D97706]/50 hover:shadow-md transition"
+          >
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 mb-4">
+              <MessageSquare className="w-5 h-5 text-[#D97706]" strokeWidth={1.5} />
+            </div>
+            <h2 className="font-medium text-[#1A1A1A] mb-1">AI Tutor</h2>
+            <p className="text-sm text-[#57534E] leading-relaxed">
+              Ask a question, work through an assignment, or get help with anything you&apos;re studying.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[#D97706] group-hover:gap-2 transition-all">
+              Start session <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />
+            </span>
+          </Link>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#E7E5E4] bg-white px-4 py-2 text-xs font-medium text-[#57534E] hover:border-[#D97706]/40 hover:text-[#1A1A1A] transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {uploading ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating study set…</>
-              ) : (
-                <><Upload className="w-3.5 h-3.5" /> Upload PDF</>
-              )}
-            </button>
-            {uploadError && (
-              <p className="text-xs text-red-500">{uploadError}</p>
-            )}
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void handleUpload(f);
-              e.target.value = "";
-            }}
-          />
+          <Link
+            href="/app/study-materials"
+            className="group rounded-2xl border border-[#E7E5E4] bg-white p-6 hover:border-[#D97706]/50 hover:shadow-md transition"
+          >
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 mb-4">
+              <Layers className="w-5 h-5 text-[#D97706]" strokeWidth={1.5} />
+            </div>
+            <h2 className="font-medium text-[#1A1A1A] mb-1">Learning Materials</h2>
+            <p className="text-sm text-[#57534E] leading-relaxed">
+              Upload notes or PDFs and get AI-generated flashcards and practice quizzes.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[#D97706] group-hover:gap-2 transition-all">
+              View materials <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />
+            </span>
+          </Link>
         </div>
 
         {/* Continue learning */}
@@ -193,7 +143,7 @@ export default function DashboardHome() {
           </section>
         )}
 
-        {/* All recent sessions */}
+        {/* Recent sessions */}
         {!loading && recent.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -267,7 +217,7 @@ export default function DashboardHome() {
             </div>
             <h2 className="font-serif text-xl font-medium text-[#1A1A1A] mb-2">Ready when you are</h2>
             <p className="text-sm text-[#57534E] max-w-xs mx-auto leading-relaxed">
-              Type a question above to start a tutoring session, or upload a PDF to generate flashcards and quizzes.
+              Use the AI Tutor for a tutoring session, or upload notes in Learning Materials to get flashcards and quizzes.
             </p>
           </div>
         )}
