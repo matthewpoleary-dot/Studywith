@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import CheckoutButton from "@/components/CheckoutButton";
 
-// ─── Subscribe Banner ──────────────────────────────────────────────────────────
+// ─── Subscribe Banner (rendered inside the fixed nav) ─────────────────────────
 
 const SubscribeBannerBar = () => {
   const searchParams = useSearchParams();
@@ -108,7 +108,7 @@ const Navigation = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 80);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -122,6 +122,7 @@ const Navigation = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -150,10 +151,11 @@ const Navigation = () => {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[#FDFCF8]/95 backdrop-blur-md shadow-sm border-b border-[#E7E5E4]"
-          : "bg-[#0D0D0C] border-b border-[#1F1F1D]"
+          ? "bg-[#FDFCF8]/95 backdrop-blur-md shadow-sm border-b border-[#E7E5E4]/50"
+          : "bg-[#FDFCF8] border-b border-[#E7E5E4]/30"
       }`}
     >
+      {/* Subscribe banner lives inside the fixed nav so it never overlaps */}
       <Suspense fallback={null}>
         <SubscribeBannerBar />
       </Suspense>
@@ -162,34 +164,41 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-20">
           <a
             href="/"
-            className={`font-serif text-2xl font-semibold transition-opacity hover:opacity-80 ${
-              scrolled ? "text-[#1A1A1A]" : "text-[#F0EDE6]"
-            }`}
+            className="font-serif text-2xl font-semibold text-[#1A1A1A] hover:opacity-80 transition-opacity"
           >
             StudyWith
           </a>
+
+          <div className="hidden md:flex items-center gap-6">
+            {[
+              { id: "how-it-works", label: "How it works" },
+              { id: "features", label: "Features" },
+              { id: "pricing", label: "Pricing" },
+              { id: "faq", label: "FAQ" },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => scrollToSection(id)}
+                className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
                 <a
                   href="/app"
-                  className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition-all whitespace-nowrap ${
-                    scrolled
-                      ? "border-[#E7E5E4] text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                      : "border-white/15 text-zinc-300 hover:border-white/30 hover:text-white"
-                  }`}
+                  className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all whitespace-nowrap"
                 >
                   Dashboard
                 </a>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
-                      scrolled
-                        ? "bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90"
-                        : "bg-white/10 text-white hover:bg-white/15"
-                    }`}
+                    className="flex items-center gap-2 rounded-lg bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A]/90 transition-all"
                   >
                     <span className="max-w-[120px] truncate">{displayName}</span>
                     <ChevronDown className="w-4 h-4 flex-shrink-0" />
@@ -223,18 +232,14 @@ const Navigation = () => {
               <>
                 <a
                   href="/auth/login"
-                  className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition-all whitespace-nowrap ${
-                    scrolled
-                      ? "border-[#E7E5E4] text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                      : "border-white/15 text-zinc-300 hover:border-white/30 hover:text-white"
-                  }`}
+                  className="rounded-lg border border-[#E7E5E4] px-5 py-2.5 text-sm font-medium text-[#57534E] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all whitespace-nowrap"
                 >
                   Sign in
                 </a>
                 <CheckoutButton
                   plan="trial"
-                  label="Start free"
-                  className="bg-[#D97706] text-white hover:bg-[#B45309] rounded-lg px-5 py-2.5 text-sm font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                  label="Sign up"
+                  className="bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-lg px-5 py-2.5 text-sm font-medium transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 whitespace-nowrap"
                 />
               </>
             )}
@@ -245,31 +250,41 @@ const Navigation = () => {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
-              <X className={`w-6 h-6 ${scrolled ? "text-[#1A1A1A]" : "text-[#F0EDE6]"}`} />
+              <X className="w-6 h-6 text-[#1A1A1A]" />
             ) : (
-              <Menu className={`w-6 h-6 ${scrolled ? "text-[#1A1A1A]" : "text-[#F0EDE6]"}`} />
+              <Menu className="w-6 h-6 text-[#1A1A1A]" />
             )}
           </button>
         </div>
 
         {mobileMenuOpen && (
-          <div className={`md:hidden border-t py-4 ${scrolled ? "bg-[#FDFCF8] border-[#E7E5E4]" : "bg-[#0D0D0C] border-[#1F1F1D]"}`}>
-            <div className="flex flex-col gap-3">
+          <div className="md:hidden bg-[#FDFCF8] border-t border-[#E7E5E4] py-4">
+            <div className="flex flex-col gap-4">
+              {[
+                { id: "how-it-works", label: "How it works" },
+                { id: "features", label: "Features" },
+                { id: "pricing", label: "Pricing" },
+                { id: "faq", label: "FAQ" },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  className="text-[#57534E] hover:text-[#1A1A1A] transition-colors text-sm font-medium py-2"
+                >
+                  {label}
+                </button>
+              ))}
               {user ? (
                 <>
                   <a
                     href="/app"
-                    className={`rounded-lg border px-6 py-3 text-sm font-medium text-center ${
-                      scrolled ? "border-[#E7E5E4] text-[#57534E]" : "border-white/15 text-zinc-300"
-                    }`}
+                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
                   >
                     Dashboard
                   </a>
                   <a
                     href="/app/settings"
-                    className={`rounded-lg border px-6 py-3 text-sm font-medium text-center ${
-                      scrolled ? "border-[#E7E5E4] text-[#57534E]" : "border-white/15 text-zinc-300"
-                    }`}
+                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
                   >
                     Settings
                   </a>
@@ -284,16 +299,14 @@ const Navigation = () => {
                 <>
                   <a
                     href="/auth/login"
-                    className={`rounded-lg border px-6 py-3 text-sm font-medium text-center ${
-                      scrolled ? "border-[#E7E5E4] text-[#57534E]" : "border-white/15 text-zinc-300"
-                    }`}
+                    className="rounded-lg border border-[#E7E5E4] px-6 py-3 text-sm font-medium text-[#57534E] text-center"
                   >
                     Sign in
                   </a>
                   <CheckoutButton
                     plan="trial"
-                    label="Start free"
-                    className="bg-[#D97706] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed text-center"
+                    label="Sign up"
+                    className="bg-[#1A1A1A] text-white rounded-lg px-6 py-3 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </>
               )}
@@ -352,12 +365,14 @@ const Hero = () => {
   const scrollToSection = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
+  // Reveal messages one by one, then cycle to next subject
   useEffect(() => {
     setVisibleMsgs(0);
     const delays = [800, 2000, 3400];
     const timers = delays.map((delay, i) =>
       setTimeout(() => setVisibleMsgs(i + 1), delay)
     );
+    // After all messages shown, wait then cycle
     const cycleTimer = setTimeout(() => {
       setDemoIndex((idx) => (idx + 1) % HERO_DEMOS.length);
     }, 6500);
@@ -367,132 +382,119 @@ const Hero = () => {
   const demo = HERO_DEMOS[demoIndex];
 
   return (
-    <section className="relative bg-[#0D0D0C] min-h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 pt-20 pb-24 text-center overflow-hidden">
-      <div className="max-w-4xl mx-auto relative z-10">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400 mb-8">
-          Built for Leaving Cert &amp; Junior Cycle students
-        </span>
+    <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 md:px-12 lg:px-24 overflow-hidden">
+      {/* Warm radial glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_-5%_0%,rgba(217,119,6,0.07),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_40%_30%_at_100%_80%,rgba(217,119,6,0.04),transparent_70%)]" />
+      <div className="max-w-7xl mx-auto relative">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-16 lg:gap-24">
+          {/* Left: copy */}
+          <div className="flex-1 min-w-0">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-4xl xl:text-7xl font-medium tracking-tight leading-[1.1] text-[#1A1A1A] mb-6">
+              Get the <em className="italic text-[#D97706]">H1</em>. Actually understand it.
+            </h1>
 
-        <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl font-medium leading-[1.05] tracking-tight text-[#F0EDE6] mb-6">
-          Get the <em className="italic text-[#D97706]">H1</em>.<br />Actually understand it.
-        </h1>
+            <p className="text-lg md:text-xl leading-relaxed text-[#57534E] max-w-xl mb-10">
+              Paste any LC or JC question. Sage never gives you the answer. It asks you questions until you actually understand it. That's what builds the H1.
+            </p>
 
-        <p className="text-lg text-zinc-400 max-w-md mx-auto mt-6 leading-relaxed">
-          Paste any LC or JC question. Sage never gives the answer. It asks until you understand. That&apos;s what builds the H1.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
-          <CheckoutButton
-            plan="trial"
-            label="Start free, no card required"
-            className="inline-flex items-center justify-center gap-2 bg-[#D97706] text-white hover:bg-[#B45309] rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
-          />
-          <button
-            onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
-            className="inline-flex items-center gap-2 border border-white/15 text-zinc-300 hover:border-white/30 hover:text-white rounded-xl px-5 py-4 text-base font-medium transition-all whitespace-nowrap"
-          >
-            Try it without signing up
-            <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-          </button>
-        </div>
-
-        <p className="text-sm text-zinc-500 mt-6">
-          Already a member?{" "}
-          <a
-            href="/auth/login"
-            className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors"
-          >
-            Sign in
-          </a>
-        </p>
-      </div>
-    </section>
-  );
-};
-
-// ─── Demo Chat Section ─────────────────────────────────────────────────────────
-
-const DemoChat = () => {
-  const [demoIndex, setDemoIndex] = useState(0);
-  const [visibleMsgs, setVisibleMsgs] = useState(0);
-
-  useEffect(() => {
-    setVisibleMsgs(0);
-    const delays = [800, 2000, 3400];
-    const timers = delays.map((delay, i) =>
-      setTimeout(() => setVisibleMsgs(i + 1), delay)
-    );
-    const cycleTimer = setTimeout(() => {
-      setDemoIndex((idx) => (idx + 1) % HERO_DEMOS.length);
-    }, 6500);
-    return () => { timers.forEach(clearTimeout); clearTimeout(cycleTimer); };
-  }, [demoIndex]);
-
-  const demo = HERO_DEMOS[demoIndex];
-
-  return (
-    <section className="bg-[#0D0D0C] pb-28 px-6 md:px-12 lg:px-24">
-      <div className="max-w-lg mx-auto">
-        <div className="relative bg-[#111110] rounded-2xl border border-white/8 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.6)] overflow-hidden">
-          {/* Subject tab strip */}
-          <div className="flex border-b border-white/8 bg-[#0D0D0C]">
-            {HERO_DEMOS.map((d, i) => (
-              <button
-                key={i}
-                onClick={() => setDemoIndex(i)}
-                className={`flex-1 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
-                  i === demoIndex
-                    ? "border-b-2 border-[#D97706] text-[#D97706]"
-                    : "text-zinc-600 hover:text-zinc-400"
-                }`}
-              >
-                {d.subject}
-              </button>
-            ))}
-          </div>
-
-          {/* Question prompt */}
-          <div className="px-4 py-3 bg-[#0F0F0E] border-b border-white/8">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">{demo.tag}</span>
-            <p className="text-[12px] text-zinc-400 mt-0.5 leading-snug">{demo.question}</p>
-          </div>
-
-          {/* Messages */}
-          <div className="space-y-3 p-4 min-h-[220px]">
-            {demo.messages.slice(0, visibleMsgs).map((msg, i) => (
-              <div
-                key={`${demoIndex}-${i}`}
-                className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"} animate-fade-in`}
-              >
-                <div
-                  className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[13px] ${
-                    msg.role === "student"
-                      ? "rounded-tr-sm bg-[#D97706] text-white"
-                      : "rounded-tl-sm bg-[#1A1A18] border border-white/8 text-zinc-200"
-                  }`}
-                >
-                  {msg.text}
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
+              <div className="sm:flex-none sm:w-auto">
+                <CheckoutButton
+                  plan="trial"
+                  label="Start free, no card required"
+                  className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/85 rounded-xl px-8 py-4 text-base font-medium transition-all hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
+                />
               </div>
-            ))}
-            {visibleMsgs < demo.messages.length && visibleMsgs > 0 && (
-              <div className="flex justify-start">
-                <div className="bg-[#1A1A18] border border-white/8 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1">
-                  {[0,1,2].map((i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-zinc-600 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <button
+                onClick={() => { scrollToSection("try-it"); posthog.capture('see_how_it_works_clicked'); }}
+                className="inline-flex items-center gap-2 border border-[#D6D3D1] text-[#57534E] rounded-xl px-5 py-3 text-sm font-medium hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all duration-200 whitespace-nowrap"
+              >
+                Try it without signing up
+                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <p className="text-sm text-[#A8A29E]">
+              Already a member?{" "}
+              <a
+                href="/auth/login"
+                className="text-[#57534E] hover:text-[#1A1A1A] underline underline-offset-2 transition-colors"
+              >
+                Sign in
+              </a>
+            </p>
+          </div>
+
+          {/* Right: animated Socratic Q&A demo */}
+          <div className="hidden lg:block flex-shrink-0 w-[420px]">
+            <div className="relative">
+              <div className="absolute inset-0 scale-110 rounded-3xl bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(217,119,6,0.08),transparent)]" />
+              <div className="relative bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] overflow-hidden">
+
+                {/* Subject tab strip */}
+                <div className="flex border-b border-[#E7E5E4] bg-[#F5F4F0]">
+                  {HERO_DEMOS.map((d, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setDemoIndex(i)}
+                      className={`flex-1 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+                        i === demoIndex
+                          ? "bg-white border-b-2 border-[#D97706] text-[#D97706]"
+                          : "text-[#A8A29E] hover:text-[#57534E]"
+                      }`}
+                    >
+                      {d.subject}
+                    </button>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
 
-          {/* Input bar mock */}
-          <div className="border-t border-white/8 px-4 py-3 flex items-center gap-3">
-            <div className="flex-1 rounded-xl border border-white/8 bg-[#0D0D0C] px-3 py-2 text-xs text-zinc-600">
-              Write your response…
-            </div>
-            <div className="w-7 h-7 rounded-lg bg-[#D97706] flex items-center justify-center shrink-0">
-              <Send className="w-3 h-3 text-white" strokeWidth={2} />
+                {/* Question prompt */}
+                <div className="px-4 py-3 bg-[#FDFAF5] border-b border-[#E7E5E4]">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E]">{demo.tag}</span>
+                  <p className="text-[12px] text-[#57534E] mt-0.5 leading-snug">{demo.question}</p>
+                </div>
+
+                {/* Messages */}
+                <div className="space-y-3 p-4 min-h-[220px]">
+                  {demo.messages.slice(0, visibleMsgs).map((msg, i) => (
+                    <div
+                      key={`${demoIndex}-${i}`}
+                      className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"} animate-fade-in`}
+                    >
+                      <div
+                        className={`max-w-[88%] rounded-2xl px-4 py-3 leading-relaxed text-[13px] ${
+                          msg.role === "student"
+                            ? "rounded-tr-sm bg-[#1A1A1A] text-white"
+                            : "rounded-tl-sm bg-[#FAFAF8] border border-[#EDECEA] text-[#1A1A1A]"
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  {/* Typing indicator between messages */}
+                  {visibleMsgs < demo.messages.length && visibleMsgs > 0 && (
+                    <div className="flex justify-start">
+                      <div className="bg-[#FAFAF8] border border-[#EDECEA] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1">
+                        {[0,1,2].map((i) => (
+                          <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#A8A29E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input bar mock */}
+                <div className="border-t border-[#E7E5E4] px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 rounded-xl border border-[#E7E5E4] bg-[#FAFAF8] px-3 py-2 text-xs text-[#A8A29E]">
+                    Write your response…
+                  </div>
+                  <div className="w-7 h-7 rounded-lg bg-[#1A1A1A] flex items-center justify-center shrink-0">
+                    <Send className="w-3 h-3 text-white" strokeWidth={2} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -507,18 +509,21 @@ const HowItWorks = () => {
   const steps = [
     {
       number: "01",
+      icon: FileUp,
       title: "Upload your notes or paste a question",
       description:
         "Drop in your notes as a PDF, paste a LC exam question, or type any topic. The AI reads your material and builds your session from it.",
     },
     {
       number: "02",
+      icon: Lightbulb,
       title: "Get Socratic questions, not answers",
       description:
         "Your AI tutor asks you questions. It never gives the answer directly. You work through the material until you genuinely understand it.",
     },
     {
       number: "03",
+      icon: Target,
       title: "Get your Learning Receipt",
       description:
         "Every session ends with a scored breakdown: what you understood, what your gaps are, and an honest score out of 100. Share it or use it to plan your next session.",
@@ -528,27 +533,74 @@ const HowItWorks = () => {
   return (
     <section
       id="how-it-works"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-white"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
     >
-      <div className="max-w-3xl mx-auto">
-        <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-16 md:mb-20">
-          Learning through discovery
-        </h2>
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            How it works
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            Learning through discovery
+          </h2>
+        </div>
 
-        <div className="space-y-16 md:space-y-20">
+        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
           {steps.map((step, index) => (
-            <div key={index} className="flex gap-8 md:gap-12 items-start">
-              <span className="font-serif text-7xl md:text-8xl font-medium text-[#F0EDE6] leading-none select-none shrink-0 -mt-2">
-                {step.number}
-              </span>
-              <div className="border-l-2 border-[#E7E5E4] pl-6 md:pl-8 pt-1">
-                <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-[#57534E] leading-relaxed">{step.description}</p>
+            <div key={index} className="relative text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white border border-[#E7E5E4] mb-6">
+                <step.icon
+                  className="w-7 h-7 text-[#D97706]"
+                  strokeWidth={1.5}
+                />
               </div>
+              <p className="text-xs font-medium tracking-wider uppercase text-[#57534E] mb-3">
+                Step {step.number}
+              </p>
+              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-4">
+                {step.title}
+              </h3>
+              <p className="text-[#57534E] leading-relaxed">{step.description}</p>
             </div>
           ))}
+        </div>
+
+        {/* Chat preview - LC Biology */}
+        <div className="mt-20 max-w-2xl mx-auto overflow-hidden rounded-2xl border border-[#E7E5E4] bg-white">
+          <div className="flex items-center gap-2.5 border-b border-[#E7E5E4] bg-[#F5F4F0] px-5 py-3">
+            <div className="h-2 w-2 rounded-full bg-[#D97706]" />
+            <span className="rounded-md bg-[#D97706]/10 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] uppercase tracking-wide">LC Biology</span>
+            <p className="text-xs text-[#57534E]">
+              2023 LC Higher | Explain the process of meiosis and its significance in sexual reproduction
+            </p>
+          </div>
+          <div className="space-y-4 p-5 text-sm">
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                Let&apos;s start with the basics. How many divisions happen in meiosis, and what type of cells does it produce?
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
+                Two divisions, and it produces 4 haploid cells?
+              </div>
+            </div>
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                Good. Why is it essential that gametes are haploid? What would go wrong at fertilisation if they were diploid instead?
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white">
+                The chromosome number would double every generation… the zygote would be tetraploid?
+              </div>
+            </div>
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">
+                Exactly. Now explain what happens in Prophase I that doesn&apos;t occur in mitosis, and why that&apos;s significant for genetic variation.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -578,6 +630,7 @@ const DEMO_RESPONSES: Record<string, string> = {
     "Before we apply the limit definition. What does the derivative of a function actually represent geometrically? Describe it in your own words first.",
 };
 
+// Second Sage response - a natural follow-up regardless of what the user typed
 const DEMO_FOLLOWUPS: Record<string, string> = {
   "Explain the difference between mitosis and meiosis for LC Biology":
     "Good. Now push further: what happens during Prophase I that doesn't occur in mitosis at all? Think about the genetic implications. This is a classic LC question.",
@@ -631,9 +684,10 @@ const TryItDemo = () => {
   };
 
   return (
-    <section id="try-it" className="py-20 md:py-28 px-6 md:px-12 lg:px-24 bg-white">
+    <section id="try-it" className="py-20 md:py-28 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-10">
+        <div className="text-center mb-10">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">Try it free</p>
           <h2 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-[#1A1A1A] mb-3">
             See the difference. No sign-up needed.
           </h2>
@@ -641,6 +695,7 @@ const TryItDemo = () => {
         </div>
 
         <div className="bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-sm">
+          {/* Topic picker */}
           {stage === "idle" && (
             <div className="p-6 space-y-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#A8A29E]">Choose a topic</p>
@@ -662,7 +717,7 @@ const TryItDemo = () => {
               <div className="pt-2">
                 <button
                   onClick={handleTry}
-                  className="w-full bg-[#D97706] text-white rounded-xl py-3.5 text-sm font-medium hover:bg-[#B45309] transition-all hover:scale-[1.01]"
+                  className="w-full bg-[#1A1A1A] text-white rounded-xl py-3.5 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.01]"
                 >
                   Ask Sage →
                 </button>
@@ -670,6 +725,7 @@ const TryItDemo = () => {
             </div>
           )}
 
+          {/* Thinking indicators */}
           {(stage === "thinking1" || stage === "thinking2") && (
             <div className="p-8 flex flex-col items-center justify-center gap-3">
               <div className="flex gap-1.5">
@@ -681,6 +737,7 @@ const TryItDemo = () => {
             </div>
           )}
 
+          {/* Conversation thread */}
           {(stage === "response1" || stage === "thinking2" || stage === "response2" || stage === "gated") && (
             <div className="flex flex-col">
               <div className="px-5 py-3 bg-[#F5F4F0] border-b border-[#E7E5E4] flex items-center gap-2">
@@ -689,19 +746,23 @@ const TryItDemo = () => {
               </div>
 
               <div className="space-y-3 p-5 text-sm">
+                {/* Sage turn 1 */}
                 <div className="flex justify-start">
                   <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">{response1}</div>
                 </div>
+                {/* Student turn 1 */}
                 {userReply1 && (
                   <div className="flex justify-end">
                     <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white text-sm">{userReply1}</div>
                   </div>
                 )}
+                {/* Sage turn 2 */}
                 {response2 && (
                   <div className="flex justify-start">
                     <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-[#F5F4F0] px-4 py-3 leading-relaxed text-[#1A1A1A]">{response2}</div>
                   </div>
                 )}
+                {/* Student turn 2 */}
                 {userReply2 && stage === "gated" && (
                   <div className="flex justify-end">
                     <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-[#1A1A1A] px-4 py-3 leading-relaxed text-white text-sm">{userReply2}</div>
@@ -709,6 +770,7 @@ const TryItDemo = () => {
                 )}
               </div>
 
+              {/* Input after turn 1 */}
               {stage === "response1" && (
                 <div className="border-t border-[#E7E5E4] px-5 py-4">
                   <div className="flex items-center gap-2">
@@ -728,6 +790,7 @@ const TryItDemo = () => {
                 </div>
               )}
 
+              {/* Input after turn 2 */}
               {stage === "response2" && (
                 <div className="border-t border-[#E7E5E4] px-5 py-4">
                   <div className="flex items-center gap-2">
@@ -747,6 +810,7 @@ const TryItDemo = () => {
                 </div>
               )}
 
+              {/* Signup gate */}
               {stage === "gated" && (
                 <div className="border-t border-[#E7E5E4] p-5 bg-[#FDFAF5]">
                   <div className="text-center space-y-3">
@@ -755,7 +819,7 @@ const TryItDemo = () => {
                     <a
                       href="/auth/signup"
                       onClick={() => posthog.capture('cta_clicked', { cta_location: 'try_it_gate' })}
-                      className="inline-flex items-center justify-center gap-2 bg-[#D97706] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#B45309] transition-all hover:scale-[1.02] w-full"
+                      className="inline-flex items-center justify-center gap-2 bg-[#1A1A1A] text-white rounded-xl px-6 py-3 text-sm font-medium hover:bg-[#1A1A1A]/90 transition-all hover:scale-[1.02] w-full"
                     >
                       Start free, no card required
                     </a>
@@ -806,33 +870,47 @@ const Features = () => {
   return (
     <section
       id="features"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F9F7F4]"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
     >
       <div className="max-w-7xl mx-auto">
-        <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] max-w-2xl mb-16 md:mb-20">
-          Everything you need to learn deeply
-        </h2>
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Features
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] max-w-3xl mx-auto">
+            Everything you need to learn deeply
+          </h2>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-0 border border-[#E7E5E4] rounded-2xl overflow-hidden bg-white">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`p-8 md:p-10 border-l-2 border-[#D97706] ${
-                index % 2 === 0 ? "" : "md:border-l border-l-2 border-t md:border-t-0 md:border-l-[#E7E5E4] border-[#E7E5E4]"
-              } ${index >= 2 ? "border-t border-t-[#E7E5E4]" : ""}`}
+              className="group bg-white border border-[#E7E5E4] p-8 md:p-10 rounded-xl hover:shadow-lg transition-all duration-300"
             >
-              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-[#57534E] leading-relaxed">
-                {feature.description}
-              </p>
+              <div className="flex items-start gap-5">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#F5F4F0] flex items-center justify-center group-hover:bg-[#D97706]/10 transition-colors">
+                  <feature.icon
+                    className="w-6 h-6 text-[#D97706]"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-[#57534E] leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Learning Receipt preview */}
         <div className="mt-16 max-w-lg mx-auto bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-sm">
+          {/* Receipt header */}
           <div className="bg-[#F5F4F0] border-b border-[#E7E5E4] px-6 py-4 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-0.5">Learning Receipt</p>
@@ -848,6 +926,7 @@ const Features = () => {
           </div>
 
           <div className="px-6 py-5 space-y-5">
+            {/* Concepts covered */}
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#A8A29E] mb-2">Concepts covered</p>
               <div className="space-y-1.5">
@@ -860,6 +939,7 @@ const Features = () => {
               </div>
             </div>
 
+            {/* Gaps to review - highlighted as USP */}
             <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700 mb-2">Gaps to review before mocks</p>
               <div className="space-y-2.5">
@@ -890,6 +970,8 @@ const Features = () => {
   );
 };
 
+
+
 // ─── Comparison ───────────────────────────────────────────────────────────────
 
 const Comparison = () => {
@@ -910,9 +992,9 @@ const Comparison = () => {
     );
 
   return (
-    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-white">
+    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-16 md:mb-20">
+        <div className="text-center mb-16 md:mb-20">
           <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
             Why StudyWith
           </p>
@@ -926,6 +1008,7 @@ const Comparison = () => {
 
         <div className="overflow-x-auto rounded-2xl border border-[#E7E5E4]">
           <div className="min-w-[480px] bg-white">
+          {/* Header */}
           <div className="grid grid-cols-4 border-b border-[#E7E5E4]">
             <div className="p-5 col-span-1" />
             <div className="p-5 text-center border-l border-[#E7E5E4]">
@@ -969,7 +1052,75 @@ const Comparison = () => {
   );
 };
 
-// ─── Pricing ──────────────────────────────────────────────────────────────────
+// ─── Use Cases ────────────────────────────────────────────────────────────────
+
+const UseCases = () => {
+  const useCases = [
+    {
+      icon: FlaskConical,
+      title: "LC Science Subjects",
+      description:
+        "Work through Chemistry, Biology, and Physics past papers question by question. Sage guides you to the right reasoning, never just handing you the answer.",
+      example: "Chemistry, Biology, Physics, Agricultural Science",
+    },
+    {
+      icon: FunctionSquare,
+      title: "LC & JC Maths",
+      description:
+        "Step through Paper 1 and Paper 2 problems one line at a time. Build the method, not just the answer, because the LC marking scheme rewards method marks.",
+      example: "Higher & Ordinary Level · Paper 1 & Paper 2",
+    },
+    {
+      icon: Dna,
+      title: "Essay & Language Subjects",
+      description:
+        "Structure your LC English essay, develop a History argument, or practise Irish expression. Sage helps you find your own thesis, not write it for you.",
+      example: "English, Irish, History, Geography, Business, Economics",
+    },
+  ];
+
+  return (
+    <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            LC &amp; JC subjects
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            Every subject. Every paper.
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+          {useCases.map((useCase, index) => (
+            <div
+              key={index}
+              className="bg-white border border-[#E7E5E4] p-8 rounded-xl hover:-translate-y-1 transition-transform"
+            >
+              <div className="w-14 h-14 rounded-full bg-[#D97706]/10 flex items-center justify-center mb-6">
+                <useCase.icon
+                  className="w-7 h-7 text-[#D97706]"
+                  strokeWidth={1.5}
+                />
+              </div>
+              <h3 className="font-serif text-xl md:text-2xl font-medium text-[#1A1A1A] mb-4">
+                {useCase.title}
+              </h3>
+              <p className="text-[#57534E] leading-relaxed mb-4">
+                {useCase.description}
+              </p>
+              <p className="text-sm text-[#D97706] font-medium">
+                {useCase.example}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Pricing (removed - free early access) ───────────────────────────────────
 
 const Pricing = () => {
   const features = [
@@ -984,19 +1135,22 @@ const Pricing = () => {
   return (
     <section
       id="pricing"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F9F7F4]"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="mb-12 md:mb-16">
+        <div className="text-center mb-12 md:mb-16">
+          <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
+            Pricing
+          </p>
           <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
             Simple, transparent pricing
           </h2>
-          <p className="text-lg text-[#57534E] max-w-2xl">
+          <p className="text-lg text-[#57534E] max-w-2xl mx-auto">
             Pick the plan that suits you. Student pricing applied automatically at checkout.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {/* Free Trial */}
           <div className="relative bg-white border border-[#E7E5E4] p-8 rounded-2xl hover:shadow-lg transition-all duration-300 flex flex-col">
             <h3 className="font-serif text-xl font-medium text-[#1A1A1A] mb-1">Free trial</h3>
@@ -1016,7 +1170,7 @@ const Pricing = () => {
             <CheckoutButton
               plan="trial"
               label="Start 7-day free trial"
-              className="w-full rounded-lg py-3 text-sm font-medium bg-[#D97706] text-white hover:bg-[#B45309] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-lg py-3 text-sm font-medium bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <p className="text-center text-xs text-[#A8A29E] mt-2">7 days free. Add a card to continue after the trial.</p>
           </div>
@@ -1073,7 +1227,7 @@ const Pricing = () => {
           </div>
         </div>
 
-        <p className="text-xs text-[#A8A29E] mt-8">
+        <p className="text-center text-xs text-[#A8A29E] mt-8">
           Have a .edu or academic email? Student pricing (€5.99/mo or €39/yr) is applied automatically.
         </p>
       </div>
@@ -1130,10 +1284,10 @@ const FAQ = () => {
   return (
     <section
       id="faq"
-      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-white"
+      className="py-20 md:py-32 px-6 md:px-12 lg:px-24 bg-[#F5F4F0]"
     >
       <div className="max-w-3xl mx-auto">
-        <div className="mb-16">
+        <div className="text-center mb-16">
           <p className="text-sm font-medium tracking-wide uppercase text-[#D97706] mb-4">
             FAQ
           </p>
@@ -1155,7 +1309,7 @@ const Footer = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <footer className="py-16 md:py-20 px-6 md:px-12 lg:px-24 border-t border-[#E7E5E4] bg-white">
+    <footer className="py-16 md:py-20 px-6 md:px-12 lg:px-24 border-t border-[#E7E5E4]">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-4 gap-12 md:gap-8 mb-12">
           <div className="md:col-span-1">
@@ -1264,6 +1418,7 @@ export default function StudyWithLanding() {
     });
   }, [router]);
 
+  // Capture referral code from /?ref=... so CheckoutButton can send it
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get("ref");
     if (ref) {
@@ -1272,34 +1427,34 @@ export default function StudyWithLanding() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0D0D0C] overflow-x-hidden">
+    <div className="min-h-screen bg-[#FDFCF8] overflow-x-hidden">
       <Navigation />
       <main>
         <Hero />
-        <DemoChat />
         <HowItWorks />
         <TryItDemo />
         <Features />
         <Comparison />
+        <UseCases />
         <Pricing />
         <FAQ />
         {/* Closing CTA */}
-        <section className="py-24 md:py-36 px-6 md:px-12 lg:px-24 bg-[#0D0D0C]">
+        <section className="py-20 md:py-32 px-6 md:px-12 lg:px-24">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="font-serif text-4xl md:text-6xl font-medium tracking-tight text-[#F0EDE6] mb-6 leading-[1.05]">
+            <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-4">
               Your mocks are closer than you think.
             </h2>
-            <p className="text-lg text-zinc-400 mb-10 max-w-md mx-auto leading-relaxed">
+            <p className="text-lg text-[#57534E] mb-10">
               Start studying smarter today. Upload your notes and let Sage guide you to the H1.
             </p>
             <a
               href="/auth/signup"
               onClick={() => posthog.capture('cta_clicked', { cta_location: 'footer' })}
-              className="inline-flex items-center justify-center bg-[#D97706] text-white hover:bg-[#B45309] rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
+              className="inline-flex items-center justify-center bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90 rounded-xl px-10 py-4 text-base font-medium transition-all hover:scale-[1.02]"
             >
               Start free, no card required
             </a>
-            <p className="text-sm text-zinc-600 mt-4">7-day free trial · Cancel anytime</p>
+            <p className="text-sm text-[#A8A29E] mt-4">7-day free trial · Cancel anytime</p>
           </div>
         </section>
       </main>
