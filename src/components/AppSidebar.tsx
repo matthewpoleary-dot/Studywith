@@ -2,10 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus } from "lucide-react";
+import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus, Upload, FileText, Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
+
+interface StudyMaterial {
+  id: string;
+  file_name: string;
+  topic: string | null;
+  created_at: string;
+}
 
 interface Session {
   id: string;
@@ -36,6 +43,58 @@ function SidebarContent({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const materialsFileRef = useRef<HTMLInputElement>(null);
+
+  // Materials sidebar state
+  const [materials, setMaterials] = useState<StudyMaterial[]>([]);
+  const [activeMaterialId, setActiveMaterialId] = useState<string | null>(null);
+  const [uploadingMaterial, setUploadingMaterial] = useState(false);
+  const isMaterialsPage = pathname?.startsWith("/app/study-materials");
+
+  // Fetch materials when on materials page
+  useEffect(() => {
+    if (!isMaterialsPage) return;
+    const params = new URLSearchParams(window.location.search);
+    setActiveMaterialId(params.get("id"));
+    fetch("/api/study-materials")
+      .then((r) => r.json())
+      .then((d: { materials?: StudyMaterial[] }) => { if (d.materials) setMaterials(d.materials); })
+      .catch(() => {});
+  }, [isMaterialsPage, pathname]);
+
+  const handleMaterialUpload = async (file: File) => {
+    setUploadingMaterial(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(((reader.result as string).split(",")[1]) || "");
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+      const extractRes = await fetch("/api/extract-assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: file.type || "application/pdf" }),
+      });
+      const extractData = (await extractRes.json()) as { text?: string; error?: string };
+      if (!extractData.text) throw new Error(extractData.error ?? "Could not extract text.");
+      const genRes = await fetch("/api/study-materials/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: extractData.text, fileName: file.name }),
+      });
+      const genData = (await genRes.json()) as { materialId?: string; error?: string };
+      if (!genData.materialId) throw new Error(genData.error ?? "Generation failed.");
+      // Refresh materials list and navigate to the new one
+      const listRes = await fetch("/api/study-materials");
+      const listData = (await listRes.json()) as { materials?: StudyMaterial[] };
+      if (listData.materials) setMaterials(listData.materials);
+      router.push(`/app/study-materials?id=${genData.materialId}`);
+      setActiveMaterialId(genData.materialId);
+    } catch { /* silently fail */ } finally {
+      setUploadingMaterial(false);
+    }
+  };
 
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -159,9 +218,65 @@ function SidebarContent({
         </a>
       </div>
 
-      {/* Recent Tutors list */}
+      {/* Conditional: materials list or sessions list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {(() => {
+        {isMaterialsPage ? (
+          <>
+            <input
+              ref={materialsFileRef}
+              type="file"
+              accept=".pdf,image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleMaterialUpload(f);
+                e.target.value = "";
+              }}
+            />
+            <div className="pt-3 pb-2">
+              <button
+                onClick={() => materialsFileRef.current?.click()}
+                disabled={uploadingMaterial}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-[#D6D3D1] bg-white px-3 py-2 text-xs font-medium text-[#57534E] hover:border-[#D97706]/50 hover:text-[#1A1A1A] transition disabled:opacity-50"
+              >
+                {uploadingMaterial ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} /> Generating…</>
+                ) : (
+                  <><Upload className="w-3.5 h-3.5" strokeWidth={2} /> Upload new PDF</>
+                )}
+              </button>
+            </div>
+            {materials.length === 0 ? (
+              <p className="text-xs text-[#A8A29E] px-2 py-2">No materials yet.</p>
+            ) : (
+              <div className="space-y-0.5">
+                {materials.map((m) => {
+                  const isActive = m.id === activeMaterialId;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setActiveMaterialId(m.id);
+                        router.push(`/app/study-materials?id=${m.id}`);
+                        onNav?.();
+                      }}
+                      className={`w-full text-left flex items-start gap-2 px-3 py-2 rounded-lg transition border-l-2 ${
+                        isActive ? "border-[#D97706] bg-white text-[#1A1A1A]" : "border-transparent text-[#57534E] hover:bg-[#E7E5E4]/60 hover:text-[#1A1A1A]"
+                      }`}
+                    >
+                      <FileText className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isActive ? "text-[#D97706]" : "text-[#A8A29E]"}`} strokeWidth={1.5} />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium leading-snug truncate">{m.topic || m.file_name}</p>
+                        {m.topic && <p className="text-[10px] text-[#A8A29E] truncate">{m.file_name}</p>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : null}
+        {!isMaterialsPage && (() => {
           const visible = sessions.filter((s) => !deletedIds.has(s.id));
           const inProgress = visible.filter((s) => s.receipt === null);
           const completed = visible.filter((s) => s.receipt !== null);
