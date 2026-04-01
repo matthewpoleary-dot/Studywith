@@ -5,7 +5,7 @@ import { createServerClient } from "@supabase/ssr";
 import { getSupabaseAdmin } from "@/lib/supabase-service";
 import { redirect } from "next/navigation";
 import type { Database } from "@/lib/database.types";
-import StudyPlannerClient from "@/components/StudyPlannerClient";
+import StudyPlannerClient, { type StudyPlan } from "@/components/StudyPlannerClient";
 
 export default async function StudyPlannerPage() {
   const cookieStore = await cookies();
@@ -37,7 +37,7 @@ export default async function StudyPlannerPage() {
 
   return (
     <div className="w-full px-6 md:px-10 py-10 md:py-16 pb-24 md:pb-16">
-      <StudyPlannerClient initialPlan={plan ?? null} />
+      <StudyPlannerClient initialPlan={(plan as unknown as StudyPlan) ?? null} />
     </div>
   );
 }

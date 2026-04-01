@@ -16,7 +16,7 @@ interface StudyTopic {
   completed?: boolean;
 }
 
-interface StudyPlan {
+export interface StudyPlan {
   id: string;
   exam_type: string;
   exam_year: number;
