@@ -185,6 +185,38 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      study_plans: {
+        Row: {
+          id: string;
+          user_id: string;
+          exam_type: string;
+          exam_year: number;
+          subjects: Json;
+          start_date: string;
+          sessions_per_week: number;
+          session_duration_mins: number;
+          topics: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          exam_type: string;
+          exam_year: number;
+          subjects: Json;
+          start_date: string;
+          sessions_per_week: number;
+          session_duration_mins: number;
+          topics?: Json;
+          created_at?: string;
+        };
+        Update: {
+          topics?: Json;
+          sessions_per_week?: number;
+          session_duration_mins?: number;
+        };
+        Relationships: [];
+      };
       room_assignments: {
         Row: {
           id: string;

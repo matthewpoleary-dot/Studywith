@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus, FileText, Loader2 } from "lucide-react";
+import { X, BookOpen, LogOut, Pencil, Settings, PanelLeftClose, PanelLeftOpen, Home, Trash2, BarChart2, Layers, MessageSquare, Plus, FileText, Loader2, CalendarCheck } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { posthog } from "@/lib/posthog";
@@ -283,6 +283,16 @@ function SidebarContent({
           <Layers className="w-4 h-4 shrink-0" strokeWidth={1.5} />
           Learning Materials
         </a>
+        <a
+          href="/app/study-planner"
+          onClick={onNav}
+          className={`flex items-center gap-2.5 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/app/study-planner" ? "bg-[#D97706] text-white shadow-sm" : "text-[#57534E] hover:text-[#1A1A1A] hover:bg-[#E7E5E4]"
+          }`}
+        >
+          <CalendarCheck className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          Study Planner
+        </a>
       </div>
 
       {/* Conditional sidebar content */}
@@ -530,7 +540,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
           className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFCF8] border-t border-[#E7E5E4]"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          {/* 4 zones: Home | AI Tutor | Materials | Settings */}
+          {/* 5 zones: Home | AI Tutor | Materials | Planner | Settings */}
           <div className="flex h-14">
             <a
               href="/app"
@@ -549,7 +559,7 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
               }`}
             >
               <MessageSquare className="w-5 h-5" strokeWidth={pathname === "/app/new" ? 2 : 1.5} />
-              AI Tutor
+              Tutor
             </a>
 
             <a
@@ -560,6 +570,16 @@ export default function AppSidebar({ sessions: initialSessions, userEmail, gritS
             >
               <Layers className="w-5 h-5" strokeWidth={pathname === "/app/study-materials" ? 2 : 1.5} />
               Materials
+            </a>
+
+            <a
+              href="/app/study-planner"
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                pathname === "/app/study-planner" ? "text-[#1A1A1A]" : "text-[#A8A29E]"
+              }`}
+            >
+              <CalendarCheck className="w-5 h-5" strokeWidth={pathname === "/app/study-planner" ? 2 : 1.5} />
+              Planner
             </a>
 
             <a
