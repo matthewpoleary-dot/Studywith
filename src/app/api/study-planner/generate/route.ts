@@ -141,11 +141,11 @@ Return ONLY a valid JSON array with no markdown formatting, no explanation, no c
       user_id: user.id,
       exam_type,
       exam_year,
-      subjects: subjects,
+      subjects: subjects as unknown as import("@/lib/database.types").Json,
       start_date,
       sessions_per_week,
       session_duration_mins,
-      topics: topics,
+      topics: topics as unknown as import("@/lib/database.types").Json,
     })
     .select()
     .single();
