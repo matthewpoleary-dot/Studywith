@@ -105,7 +105,7 @@ body {
   font-family: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
-a { color: inherit; text-decoration: none; }
+a { text-decoration: none; }
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }

@@ -85,6 +85,7 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       consume_ai_action: { Args: { p_user_id: string; p_feature: string }; Returns: Json };
+      refund_ai_action: { Args: { p_user_id: string; p_usage_event_id: string }; Returns: boolean };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
