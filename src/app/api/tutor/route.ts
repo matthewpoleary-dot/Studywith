@@ -13,6 +13,7 @@ import {
   type PendingStudyUpload,
 } from "@/lib/study-files";
 import type { Json } from "@/lib/database.types";
+import { studySubject, studySubjects } from "@/lib/study-subjects";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -108,6 +109,28 @@ function line(value: unknown) {
   return `${JSON.stringify(value)}\n`;
 }
 
+async function detectStudySubject(groq: Groq, context: string) {
+  try {
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      temperature: 0,
+      max_completion_tokens: 40,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `Classify Irish secondary-school study material. Return only JSON in the form {"subject":"Biology"}. The subject must be exactly one of: ${studySubjects.join(", ")}. Use Other only when none fits.`,
+        },
+        { role: "user", content: context.slice(0, 14_000) },
+      ],
+    });
+    const result = JSON.parse(completion.choices[0]?.message?.content ?? "{}") as { subject?: unknown };
+    return studySubject(result.subject);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in to use the tutor." }, { status: 401 });
@@ -122,7 +145,7 @@ export async function POST(request: Request) {
   const uploads = parseUploads(body?.uploads);
   if (!body || uploads === null) return NextResponse.json({ error: "The message or file details were invalid." }, { status: 400 });
 
-  const subject = String(body.subject ?? "Auto-detect").trim().slice(0, 60) || "Auto-detect";
+  const requestedSubject = body.subject === "Auto-detect" ? "Auto-detect" : studySubject(body.subject) ?? "Auto-detect";
   const text = String(body.text ?? "").trim().slice(0, 5_000);
   const admin = createAdminSupabase();
 
@@ -162,6 +185,17 @@ export async function POST(request: Request) {
       : []),
   ];
   const studentText = text || (material ? `Help me study from ${material.title}.` : "Help me understand the attached work.");
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const detectionContext = [
+    studentText,
+    material ? `Saved notes titled ${material.title} with selected subject ${material.subject}:\n${material.extracted_text}` : "",
+    preparedFiles.length ? combineExtractedText(preparedFiles) : "",
+  ].filter(Boolean).join("\n\n");
+  const materialSubject = studySubject(material?.subject);
+  const detectedSubject = requestedSubject === "Auto-detect"
+    ? materialSubject ?? await detectStudySubject(groq, detectionContext)
+    : null;
+  const subject = detectedSubject ?? requestedSubject;
   const studentMessage: TutorMessage = { role: "student", content: studentText, ...(attachments.length ? { attachments } : {}) };
   const pendingMessages = [...previousMessages, studentMessage];
   const sessionId = existing?.id ?? crypto.randomUUID();
@@ -172,7 +206,7 @@ export async function POST(request: Request) {
     await removeStoredStudyFiles(preparedFiles.map((item) => item.storagePath)).catch(() => undefined);
     if (preparedFiles.length) await admin.from("study_attachments").delete().in("id", preparedFiles.map((item) => item.id));
     if (isNew) await admin.from("sessions").delete().eq("id", sessionId).eq("user_id", user.id);
-    else await admin.from("sessions").update({ messages: previousMessages as Json }).eq("id", sessionId).eq("user_id", user.id);
+    else await admin.from("sessions").update({ messages: previousMessages as Json, subject: existing?.subject ?? "Auto-detect" }).eq("id", sessionId).eq("user_id", user.id);
   };
 
   const sessionWrite = isNew
@@ -217,7 +251,7 @@ export async function POST(request: Request) {
 
   let groqStream;
   try {
-    groqStream = await new Groq({ apiKey: process.env.GROQ_API_KEY }).chat.completions.create({
+    groqStream = await groq.chat.completions.create({
       model: imageFiles.length ? "qwen/qwen3.6-27b" : "llama-3.3-70b-versatile",
       ...(imageFiles.length ? { reasoning_effort: "none" as const, reasoning_format: "hidden" as const } : {}),
       temperature: 0.42,
@@ -240,6 +274,7 @@ export async function POST(request: Request) {
     async start(controller) {
       let reply = "";
       try {
+        controller.enqueue(encoder.encode(line({ type: "subject", subject })));
         for await (const chunk of groqStream) {
           const delta = chunk.choices[0]?.delta?.content ?? "";
           if (!delta) continue;
