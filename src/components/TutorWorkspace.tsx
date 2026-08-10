@@ -59,6 +59,7 @@ import {
 import { uploadStudyFileParts, discardPendingUploads } from "@/lib/study-upload-browser";
 import type { PendingStudyUpload } from "@/lib/study-file-shared";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { explicitlyRecognisedSubject, subjectOptions } from "@/lib/study-subjects";
 
 type TutorAttachment = {
   id: string;
@@ -73,7 +74,6 @@ type TutorMessage = { role: "student" | "tutor"; content: string; attachments?: 
 type Session = { id: string; title: string; subject: string; messages: TutorMessage[] };
 type MaterialOption = { id: string; title: string; subject: string };
 
-const subjects = ["Auto-detect", "Maths", "English", "Irish", "Biology", "Chemistry", "Physics", "History", "Geography", "Business", "Economics", "Other"];
 const starters = [
   { icon: Camera, label: "Photograph a question", prompt: "Help me work through the question in this photo. Start by checking what I have tried." },
   { icon: Brain, label: "Explain a difficult idea", prompt: "Explain this concept clearly, then ask me one question to check I understand it:" },
@@ -92,9 +92,16 @@ export function TutorWorkspace(props: { initialSessions: Session[]; materials: M
 
 function TutorWorkspaceInner({ initialSessions, materials, userId, initialMaterialId }: { initialSessions: Session[]; materials: MaterialOption[]; userId: string; initialMaterialId?: string }) {
   const promptController = usePromptInputController();
-  const [sessions, setSessions] = useState(initialSessions);
+  const [sessions, setSessions] = useState(() =>
+    initialSessions.map((session) => ({
+      ...session,
+      subject: explicitlyRecognisedSubject(session.messages) ?? session.subject,
+    })),
+  );
   const [activeId, setActiveId] = useState(initialSessions[0]?.id ?? "");
-  const [subject, setSubject] = useState(initialSessions[0]?.subject ?? "Auto-detect");
+  const [subject, setSubject] = useState(() =>
+    initialSessions[0] ? explicitlyRecognisedSubject(initialSessions[0].messages) ?? initialSessions[0].subject : "Auto-detect",
+  );
   const [status, setStatus] = useState<ChatStatus>("ready");
   const [notice, setNotice] = useState("");
   const [uploadProgress, setUploadProgress] = useState("");
@@ -106,6 +113,7 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
   function newSession() {
     if (busy) return;
     setActiveId("");
+    setSubject("Auto-detect");
     setSelectedMaterial(null);
     setNotice("");
     promptController.textInput.clear();
@@ -202,8 +210,11 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
         buffer = lines.pop() ?? "";
         for (const raw of lines) {
           if (!raw.trim()) continue;
-          const event = JSON.parse(raw) as { type: "delta" | "done" | "error"; content?: string; session?: Session; remaining?: number | null; error?: string };
-          if (event.type === "delta" && event.content) {
+          const event = JSON.parse(raw) as { type: "subject" | "delta" | "done" | "error"; subject?: string; content?: string; session?: Session; remaining?: number | null; error?: string };
+          if (event.type === "subject" && event.subject) {
+            setSubject(event.subject);
+            setSessions((items) => items.map((item) => (item.id === draftId ? { ...item, subject: event.subject as string } : item)));
+          } else if (event.type === "delta" && event.content) {
             setSessions((items) =>
               items.map((item) =>
                 item.id === draftId
@@ -224,6 +235,7 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
       const saved = finalSession as Session;
       setSessions((items) => [saved, ...items.filter((item) => item.id !== draftId && item.id !== saved.id)]);
       setActiveId(saved.id);
+      setSubject(saved.subject);
       setSelectedMaterial(null);
       if (typeof remaining === "number") setNotice(`${remaining} included AI action${remaining === 1 ? "" : "s"} remaining.`);
       setStatus("ready");
@@ -296,7 +308,7 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
             <label className="flex items-center gap-2 text-xs font-bold text-muted">
               Subject
               <select value={subject} onChange={(event) => setSubject(event.target.value)} disabled={busy} className="focus-ring rounded-xl border border-line bg-white px-3 py-2 text-sm font-extrabold text-ink outline-none disabled:bg-[#edf0f1] disabled:text-[#8b9398]">
-                {subjects.map((item) => <option key={item}>{item}</option>)}
+                {subjectOptions.map((item) => <option key={item}>{item}</option>)}
               </select>
             </label>
           </header>
