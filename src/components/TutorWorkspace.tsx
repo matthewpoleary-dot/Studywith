@@ -73,7 +73,7 @@ type TutorMessage = { role: "student" | "tutor"; content: string; attachments?: 
 type Session = { id: string; title: string; subject: string; messages: TutorMessage[] };
 type MaterialOption = { id: string; title: string; subject: string };
 
-const subjects = ["Maths", "English", "Irish", "Biology", "Chemistry", "Physics", "History", "Geography", "Business", "Economics", "Other"];
+const subjects = ["Auto-detect", "Maths", "English", "Irish", "Biology", "Chemistry", "Physics", "History", "Geography", "Business", "Economics", "Other"];
 const starters = [
   { icon: Camera, label: "Photograph a question", prompt: "Help me work through the question in this photo. Start by checking what I have tried." },
   { icon: Brain, label: "Explain a difficult idea", prompt: "Explain this concept clearly, then ask me one question to check I understand it:" },
@@ -94,7 +94,7 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
   const promptController = usePromptInputController();
   const [sessions, setSessions] = useState(initialSessions);
   const [activeId, setActiveId] = useState(initialSessions[0]?.id ?? "");
-  const [subject, setSubject] = useState(initialSessions[0]?.subject ?? "Maths");
+  const [subject, setSubject] = useState(initialSessions[0]?.subject ?? "Auto-detect");
   const [status, setStatus] = useState<ChatStatus>("ready");
   const [notice, setNotice] = useState("");
   const [uploadProgress, setUploadProgress] = useState("");
@@ -123,7 +123,7 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
     setSessions(next);
     if (activeId === session.id) {
       setActiveId(next[0]?.id ?? "");
-      setSubject(next[0]?.subject ?? "Maths");
+      setSubject(next[0]?.subject ?? "Auto-detect");
     }
   }
 

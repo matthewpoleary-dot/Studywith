@@ -74,8 +74,10 @@ async function extractImageText(groq: Groq, name: string, mimeType: string, buff
   const dataUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
   const completion = await groq.chat.completions.create({
     model: "qwen/qwen3.6-27b",
+    reasoning_effort: "none",
+    reasoning_format: "hidden",
     temperature: 0.1,
-    max_completion_tokens: 1800,
+    max_completion_tokens: 1400,
     messages: [
       {
         role: "system",
@@ -101,7 +103,11 @@ async function extractImageText(groq: Groq, name: string, mimeType: string, buff
 
 export async function prepareStoredStudyFiles(userId: string, uploads: PendingStudyUpload[]) {
   validatePendingUploads(userId, uploads);
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+    maxRetries: 0,
+    timeout: 75_000,
+  });
   const admin = createAdminSupabase();
 
   return Promise.all(

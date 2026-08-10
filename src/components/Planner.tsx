@@ -7,14 +7,14 @@ type Subject = { name: string; confidence: number; priority: number };
 type Session = { day: string; subject: string; focus: string; minutes: number };
 
 const confidenceOptions = [
-  { value: 1, label: "Need to relearn", help: "I cannot explain this yet" },
-  { value: 3, label: "Getting there", help: "I understand some of it" },
-  { value: 5, label: "Confident", help: "I can answer questions on it" },
+  { value: 1, label: "Need to relearn", help: "You cannot explain it clearly yet, so it receives more rebuilding time." },
+  { value: 3, label: "Getting there", help: "You understand some of it but still need practice and correction." },
+  { value: 5, label: "Confident", help: "You can explain it and answer questions without much help." },
 ];
 const priorityOptions = [
-  { value: 1, label: "Normal", help: "No special deadline" },
-  { value: 2, label: "Important", help: "Needs attention soon" },
-  { value: 3, label: "Teacher priority", help: "My teacher told me to focus here" },
+  { value: 1, label: "Normal", help: "No test, deadline or teacher request makes it urgent this week." },
+  { value: 2, label: "Important", help: "It needs attention soon, so it receives extra weight." },
+  { value: 3, label: "Teacher focus", help: "A teacher, test or deadline makes this a main focus right now." },
 ];
 
 export function Planner({ initial }: { initial: { exam_year: number; sessions_per_week: number; session_duration_mins: number; subjects: Subject[]; schedule: Session[] } | null }) {
@@ -33,17 +33,21 @@ export function Planner({ initial }: { initial: { exam_year: number; sessions_pe
   async function build() {
     setSaving(true);
     setMessage("");
-    const response = await fetch("/api/planner", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ examYear, sessionsPerWeek: sessions, sessionMinutes: minutes, subjects }),
-    });
-    const body = (await response.json().catch(() => null)) as { schedule?: Session[]; error?: string } | null;
-    if (response.ok && body?.schedule) {
+    try {
+      const response = await fetch("/api/planner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examYear, sessionsPerWeek: sessions, sessionMinutes: minutes, subjects }),
+      });
+      const body = (await response.json().catch(() => null)) as { schedule?: Session[]; error?: string } | null;
+      if (!response.ok || !body?.schedule) throw new Error(body?.error ?? "The plan could not be saved. Please try again.");
       setSchedule(body.schedule);
       setMessage("Your week is built and saved.");
-    } else setMessage(body?.error ?? "The plan could not be saved. Check your subjects and try again.");
-    setSaving(false);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The plan could not be saved. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -84,9 +88,21 @@ export function Planner({ initial }: { initial: { exam_year: number; sessions_pe
                     <label className="min-w-0 flex-1"><span className="sr-only">Subject name</span><input value={subject.name} onChange={(event) => updateSubject(index, { name: event.target.value })} placeholder="Subject name" className="focus-ring w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-extrabold outline-none focus:border-brand" /></label>
                     <button type="button" aria-label={`Remove ${subject.name || "subject"}`} onClick={() => setSubjects((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-red-50 hover:text-red-700"><Trash2 size={15} /></button>
                   </div>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <label className="grid gap-1.5 text-[11px] font-extrabold text-[#4f5961]">How well do you know it?<select aria-label={`${subject.name || "Subject"} confidence`} value={normaliseConfidence(subject.confidence)} onChange={(event) => updateSubject(index, { confidence: Number(event.target.value) })} className="focus-ring rounded-xl border border-[#cfd7fd] bg-[#f7f8ff] px-3 py-2.5 text-xs font-bold text-ink outline-none focus:border-brand">{confidenceOptions.map((option) => <option key={option.value} value={option.value}>{option.label} — {option.help}</option>)}</select></label>
-                    <label className="grid gap-1.5 text-[11px] font-extrabold text-[#4f5961]">How important is it now?<select aria-label={`${subject.name || "Subject"} priority`} value={subject.priority} onChange={(event) => updateSubject(index, { priority: Number(event.target.value) })} className="focus-ring rounded-xl border border-[#cfe6dc] bg-[#f5fbf8] px-3 py-2.5 text-xs font-bold text-ink outline-none focus:border-[#55b892]">{priorityOptions.map((option) => <option key={option.value} value={option.value}>{option.label} — {option.help}</option>)}</select></label>
+                  <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+                    <label className="grid min-w-0 gap-1.5 text-[11px] font-extrabold text-[#4f5961]">
+                      How well do you know it?
+                      <select aria-label={`${subject.name || "Subject"} confidence`} value={normaliseConfidence(subject.confidence)} onChange={(event) => updateSubject(index, { confidence: Number(event.target.value) })} className="focus-ring min-w-0 w-full rounded-xl border border-[#cfd7fd] bg-[#f7f8ff] px-3 py-2.5 text-xs font-bold text-ink outline-none focus:border-brand">
+                        {confidenceOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                      </select>
+                      <span className="min-h-10 text-[10px] font-medium leading-4 text-muted">{confidenceOptions.find((option) => option.value === normaliseConfidence(subject.confidence))?.help}</span>
+                    </label>
+                    <label className="grid min-w-0 gap-1.5 text-[11px] font-extrabold text-[#4f5961]">
+                      How important is it now?
+                      <select aria-label={`${subject.name || "Subject"} priority`} value={subject.priority} onChange={(event) => updateSubject(index, { priority: Number(event.target.value) })} className="focus-ring min-w-0 w-full rounded-xl border border-[#cfe6dc] bg-[#f5fbf8] px-3 py-2.5 text-xs font-bold text-ink outline-none focus:border-[#55b892]">
+                        {priorityOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                      </select>
+                      <span className="min-h-10 text-[10px] font-medium leading-4 text-muted">{priorityOptions.find((option) => option.value === subject.priority)?.help}</span>
+                    </label>
                   </div>
                 </article>
               ))}

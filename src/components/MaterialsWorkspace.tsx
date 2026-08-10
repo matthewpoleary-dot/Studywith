@@ -127,6 +127,7 @@ export function MaterialsWorkspace({ initialMaterials, userId }: { initialMateri
       setTab("source");
       clearDraft();
     } catch (error) {
+      if (uploads.length) await discardPendingUploads(uploads).catch(() => undefined);
       setMessage(error instanceof Error ? error.message : "Could not save these notes.");
     } finally {
       setLoading("");

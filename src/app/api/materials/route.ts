@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { consumeAiAction } from "@/lib/access";
+import { consumeAiAction, refundAiAction } from "@/lib/access";
 import { createAdminSupabase } from "@/lib/supabase-server";
 import {
   claimStudyFiles,
@@ -11,7 +11,7 @@ import {
 } from "@/lib/study-files";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 function parseUploads(value: unknown): PendingStudyUpload[] | null {
   if (value === undefined) return [];
@@ -39,24 +39,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Add a title and either a file, photo or a few lines of notes." }, { status: 400 });
   }
 
+  let usageEventId: string | null = null;
   if (uploads.some((item) => item.mimeType.startsWith("image/"))) {
     const access = await consumeAiAction(user.id, "materials_import");
     if (!access.allowed) {
       return NextResponse.json({ error: "Your included AI actions are used. Upgrade to read more photos or screenshots." }, { status: 402 });
     }
+    usageEventId = access.usage_event_id ?? null;
   }
 
   let preparedFiles;
   try {
     preparedFiles = await prepareStoredStudyFiles(user.id, uploads);
   } catch (error) {
+    console.error("[materials] import failed", {
+      userId: user.id,
+      fileCount: uploads.length,
+      error: error instanceof Error ? error.message : "Unknown import error",
+    });
     await removeStoredStudyFiles(uploads.map((item) => item.storagePath)).catch(() => undefined);
+    await refundAiAction(user.id, usageEventId);
     return NextResponse.json({ error: error instanceof Error ? error.message : "StudyWith could not read those files." }, { status: 400 });
   }
 
   const extractedText = [notes, combineExtractedText(preparedFiles)].filter(Boolean).join("\n\n").slice(0, 60_000);
   if (extractedText.length < 20) {
     await removeStoredStudyFiles(preparedFiles.map((item) => item.storagePath)).catch(() => undefined);
+    await refundAiAction(user.id, usageEventId);
     return NextResponse.json({ error: "StudyWith could not find enough readable text in that material." }, { status: 400 });
   }
 
@@ -81,6 +90,7 @@ export async function POST(request: Request) {
     .single();
   if (error || !data) {
     await removeStoredStudyFiles(preparedFiles.map((item) => item.storagePath)).catch(() => undefined);
+    await refundAiAction(user.id, usageEventId);
     return NextResponse.json({ error: "The material could not be saved." }, { status: 500 });
   }
 
@@ -100,6 +110,7 @@ export async function POST(request: Request) {
   } catch {
     await admin.from("study_materials").delete().eq("id", materialId).eq("user_id", user.id);
     await removeStoredStudyFiles(preparedFiles.map((item) => item.storagePath)).catch(() => undefined);
+    await refundAiAction(user.id, usageEventId);
     return NextResponse.json({ error: "The notes were read but their files could not be secured. Add them again." }, { status: 500 });
   }
 }

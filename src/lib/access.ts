@@ -41,5 +41,14 @@ export async function consumeAiAction(userId: string, feature: string) {
     p_feature: feature,
   });
   if (error) throw error;
-  return data as { allowed: boolean; reason?: string; remaining?: number };
+  return data as { allowed: boolean; reason?: string; remaining?: number; usage_event_id?: string };
+}
+
+export async function refundAiAction(userId: string, usageEventId?: string | null) {
+  if (!usageEventId) return;
+  const { error } = await createAdminSupabase().rpc("refund_ai_action", {
+    p_user_id: userId,
+    p_usage_event_id: usageEventId,
+  });
+  if (error) console.error("[access] AI action refund failed", { userId, usageEventId, code: error.code });
 }
