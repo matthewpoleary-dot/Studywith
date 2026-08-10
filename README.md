@@ -1,22 +1,12 @@
-# StudyWith | Socratic AI Tutoring Engine
-**High-performance, low-latency educational orchestration for the Irish curriculum.**
+# StudyWith
 
-StudyWith is an AI-powered learning platform architected to solve the "passive learning" problem in EdTech. By utilizing a specialized Socratic prompting layer and Groq’s LPU inference engine, StudyWith provides a sub-second, interactive tutoring experience that guides students toward H1 solutions rather than simply providing answers.
+StudyWith is a focused AI study workspace for Irish Leaving Certificate students. It supports Socratic tutoring, note-based flashcards and quizzes, evidence-based revision planning, a one-time AI Study Toolkit, recurring Pro access, and future school cohorts.
 
-## 🛠 Strategic Tech Stack
-* **Inference:** Groq LPU (Sub-second latency for deep study flow).
-* **Framework:** Next.js 14 (App Router).
-* **Database & Auth:** Supabase (PostgreSQL) for secure, scalable user sessions.
-* **Payments:** Stripe-integrated (SaaS-ready).
-* **Analytics:** PostHog instrumented for student retention tracking.
+## Local setup
 
-## 🎓 Key Features
-* **Socratic Scaffolding:** Advanced system-prompting that prioritizes inquiry-based learning.
-* **Curriculum Optimization:** Tailored for Junior Cycle and Leaving Certificate marking schemes.
-* **Modular Architecture:** Fully decoupled frontend/backend for rapid integration into existing EdTech ecosystems.
+1. Copy `.env.example` to `.env.local` and configure Supabase, Groq and Stripe.
+2. Apply `supabase/migrations/20260810113000_rebuild_access_model.sql` to the linked StudyWith project.
+3. Run `npm install` and `npm run dev`.
+4. Configure the Stripe webhook endpoint as `/api/stripe/webhook` for checkout, subscription and invoice events.
 
-## 🚀 Development & Portability
-The project is built as a turnkey asset. All configuration is centralized in environment variables, allowing for a 5-minute handover/deployment process.
-
----
-© 2026 StudyWith. Built for the future of Irish Education.
+The legacy `users.subscribed` column remains only for safe rollback. All v2 authorization is derived from `entitlements`.

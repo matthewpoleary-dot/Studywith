@@ -1,107 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FDFCF8;
-  --foreground: #1A1A1A;
+  --ink: #101820;
+  --paper: #f5f2ea;
+  --paper-strong: #fffdf8;
+  --muted: #687177;
+  --line: #d9d8d1;
+  --blue: #2457ff;
+  --blue-dark: #173ecc;
+  --mint: #bff4df;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
-  --font-mono: monospace;
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-strong: var(--paper-strong);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--blue);
+  --font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
 }
 
-/* Remove tap highlight flash on all touchable elements */
-*,
-*::before,
-*::after {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #D6D3D1;
-  border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #A8A29E;
-}
-
-/* Text selection */
-::selection {
-  background-color: rgba(217, 119, 6, 0.15);
-  color: inherit;
-}
-
-html,
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
 body {
-  height: 100%;
-  overscroll-behavior: none;
-  overflow-x: hidden;
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; text-decoration: none; }
+button, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: #b9c8ff; }
+
+.display { font-family: Georgia, "Times New Roman", serif; }
+.shell { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
+.eyebrow { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.card { background: var(--paper-strong); border: 1px solid var(--line); border-radius: 24px; }
+.focus-ring:focus-visible { outline: 3px solid rgba(36, 87, 255, .35); outline-offset: 3px; }
+.soft-grid {
+  background-image: linear-gradient(rgba(16,24,32,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(16,24,32,.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.noise { position: relative; }
+.noise::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.animate-rise { animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 720px) {
+  .shell { width: min(100% - 28px, 1180px); }
+  input, textarea, select { font-size: 16px; }
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px) */
-@media screen and (max-width: 767px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
-  textarea,
-  select {
-    font-size: 16px !important;
-  }
-}
-
-/* App shell bottom padding - accounts for bottom nav + iPhone safe area */
-.app-main {
-  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
-}
-@media (min-width: 768px) {
-  .app-main {
-    padding-bottom: 0;
-  }
-}
-
-/* Session pages: no bottom nav shown, input bar handles its own safe area */
-.app-main-session {
-  padding-bottom: 0;
-}
-
-/* Bottom nav safe area - expands height to include iPhone home indicator zone */
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
-}
-
-/* Print styles — hide app chrome, show only quiz results */
-@media print {
-  .no-print { display: none !important; }
-  body::before { display: none; }
-}
-
-/* Hero message fade-in */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.35s ease-out both;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
