@@ -1,85 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type Props = {
-  label?: string;
-  className?: string;
-  plan?: "trial" | "monthly" | "annual";
-};
+type Product = "toolkit" | "pro_monthly" | "pro_annual";
 
-export default function CheckoutButton({
-  label = "Get started",
-  className,
-  plan = "monthly",
-}: Props) {
+export function CheckoutButton({ product, label, campaignCode, className = "" }: { product: Product; label: string; campaignCode?: string; className?: string }) {
   const [loading, setLoading] = useState(false);
-  const [trialUsed, setTrialUsed] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleClick = async () => {
-    setLoading(true);
-    setTrialUsed(false);
-
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("studywith_plan", plan);
-      }
-      window.location.href = "/auth/signup";
+  async function checkout() {
+    setLoading(true); setError("");
+    const response = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product, campaignCode }),
+    });
+    const body = await response.json() as { url?: string; error?: string };
+    if (response.status === 401) {
+      const query = new URLSearchParams({ product });
+      if (campaignCode) query.set("talk", campaignCode);
+      window.location.href = `/auth/signup?${query.toString()}`;
       return;
     }
+    if (body.url) { window.location.href = body.url; return; }
+    setError(body.error ?? "Checkout is unavailable. Please try again."); setLoading(false);
+  }
 
-    const referredBy =
-      typeof window !== "undefined"
-        ? (localStorage.getItem("studywith_referral") ?? undefined)
-        : undefined;
-
-    try {
-      const res = await fetch("/api/stripe/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, referred_by: referredBy }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      } else if (data.error === "trial_used") {
-        setTrialUsed(true);
-        setLoading(false);
-      } else {
-        setLoading(false);
-      }
-    } catch {
-      setLoading(false);
-    }
-  };
-
-  const defaultClass =
-    "inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60";
-
-  return (
-    <div className="w-full">
-      <button
-        onClick={() => void handleClick()}
-        disabled={loading}
-        className={
-          loading
-            ? `${className ?? defaultClass} opacity-60 cursor-not-allowed`
-            : (className ?? defaultClass)
-        }
-      >
-        {loading ? "Redirecting…" : label}
-      </button>
-      {trialUsed && (
-        <p className="text-xs text-red-500 mt-2 text-center">
-          You&apos;ve already used your free trial. Please choose a paid plan.
-        </p>
-      )}
-    </div>
-  );
+  return <div><button type="button" onClick={() => void checkout()} disabled={loading} className={`focus-ring disabled:cursor-wait disabled:opacity-60 ${className}`}>{loading ? "Opening checkout…" : label}</button>{error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}</div>;
 }

@@ -1,38 +1,14 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/lib/database.types";
+import { createServerSupabase } from "@/lib/supabase-server";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/app";
-
+  const code = request.nextUrl.searchParams.get("code");
+  const requested = request.nextUrl.searchParams.get("next") ?? "/app";
+  const next = requested.startsWith("/") && !requested.startsWith("//") ? requested : "/app";
   if (code) {
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: (cookiesToSet) => {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
-          },
-        },
-      },
-    );
-
+    const supabase = await createServerSupabase();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
-    }
+    if (!error) return NextResponse.redirect(new URL(next, request.url));
   }
-
-  return NextResponse.redirect(
-    new URL("/auth/login?error=auth_failed", request.url),
-  );
+  return NextResponse.redirect(new URL("/auth/login?error=confirmation", request.url));
 }

@@ -1,77 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 
-export const config = {
-  matcher: ["/app/:path*"],
-};
+export const config = { matcher: ["/app/:path*"] };
 
-export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
-
-  // Create a Supabase client using request cookies (Edge-compatible)
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
-        },
-      },
-    },
-  );
-
-  // Validate the session (getUser makes a network call to verify the JWT)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Auto-create the users row if the DB trigger never fired
-  const adminClient = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
-
-  const { data: userData } = await adminClient
-    .from("users")
-    .select("id, subscribed")
-    .eq("id", user.id)
-    .single();
-
-  if (!userData) {
-    await adminClient
-      .from("users")
-      .upsert(
-        { id: user.id, email: user.email ?? "", subscribed: false },
-        { onConflict: "id" },
-      );
-  }
-
-  // Subscription gate - unsubscribed users are sent to the pricing/checkout page.
-  // Allow /app/settings so they can still sign out or manage their account.
-  const subscribed = userData?.subscribed ?? false;
-  const pathname = request.nextUrl.pathname;
-  const isAllowedWithoutSub = pathname === "/app/settings";
-
-  if (!subscribed && !isAllowedWithoutSub) {
-    return NextResponse.redirect(new URL("/?checkout=required", request.url));
-  }
-
-  return response;
-}
+export async function proxy(request: NextRequest) { let response = NextResponse.next({ request }); const supabase = createServerClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { cookies: { getAll: () => request.cookies.getAll(), setAll: (values) => { values.forEach(({ name, value }) => request.cookies.set(name, value)); response = NextResponse.next({ request }); values.forEach(({ name, value, options }) => response.cookies.set(name, value, options)); } } }); const { data: { user } } = await supabase.auth.getUser(); if (!user) { const url = new URL("/auth/login", request.url); url.searchParams.set("redirectTo", `${request.nextUrl.pathname}${request.nextUrl.search}`); return NextResponse.redirect(url); } return response; }
