@@ -1,14 +1,129 @@
 "use client";
 
-import { CalendarDays, Check, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Check, Clock3, Info, Plus, Sparkles, Target, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 type Subject = { name: string; confidence: number; priority: number };
 type Session = { day: string; subject: string; focus: string; minutes: number };
 
+const confidenceOptions = [
+  { value: 1, label: "Need to relearn", help: "I cannot explain this yet" },
+  { value: 3, label: "Getting there", help: "I understand some of it" },
+  { value: 5, label: "Confident", help: "I can answer questions on it" },
+];
+const priorityOptions = [
+  { value: 1, label: "Normal", help: "No special deadline" },
+  { value: 2, label: "Important", help: "Needs attention soon" },
+  { value: 3, label: "Teacher priority", help: "My teacher told me to focus here" },
+];
+
 export function Planner({ initial }: { initial: { exam_year: number; sessions_per_week: number; session_duration_mins: number; subjects: Subject[]; schedule: Session[] } | null }) {
-  const [examYear, setExamYear] = useState(initial?.exam_year ?? 2027); const [sessions, setSessions] = useState(initial?.sessions_per_week ?? 5); const [minutes, setMinutes] = useState(initial?.session_duration_mins ?? 50); const [subjects, setSubjects] = useState<Subject[]>(initial?.subjects ?? [{ name: "Maths", confidence: 2, priority: 3 }, { name: "English", confidence: 3, priority: 2 }]); const [schedule, setSchedule] = useState(initial?.schedule ?? []); const [saving, setSaving] = useState(false); const [message, setMessage] = useState("");
-  function addSubject() { setSubjects((items) => [...items, { name: "", confidence: 2, priority: 2 }]); }
-  async function build() { setSaving(true); setMessage(""); const response = await fetch("/api/planner", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ examYear, sessionsPerWeek: sessions, sessionMinutes: minutes, subjects }) }); const body = await response.json() as { schedule?: Session[]; error?: string }; if (response.ok && body.schedule) { setSchedule(body.schedule); setMessage("Plan saved."); } else setMessage(body.error ?? "Could not save the plan."); setSaving(false); }
-  return <div><p className="eyebrow text-brand">Study planner</p><h1 className="display mt-3 text-5xl tracking-[-.04em]">Plan from evidence, not predictions.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">StudyWith prioritises official syllabus coverage, your confidence and available time. It does not guess what is “due” to appear on an exam.</p><div className="mt-8 grid gap-5 xl:grid-cols-[.85fr_1.15fr]"><section className="card p-6"><h2 className="text-lg font-extrabold">Your constraints</h2><div className="mt-5 grid gap-4 sm:grid-cols-3"><label className="grid gap-2 text-xs font-bold">Exam year<input type="number" min="2026" max="2035" value={examYear} onChange={(event) => setExamYear(Number(event.target.value))} className="rounded-xl border border-line px-3 py-3" /></label><label className="grid gap-2 text-xs font-bold">Sessions / week<input type="number" min="1" max="14" value={sessions} onChange={(event) => setSessions(Number(event.target.value))} className="rounded-xl border border-line px-3 py-3" /></label><label className="grid gap-2 text-xs font-bold">Minutes / session<select value={minutes} onChange={(event) => setMinutes(Number(event.target.value))} className="rounded-xl border border-line px-3 py-3">{[25,40,50,60,75,90].map(x => <option key={x}>{x}</option>)}</select></label></div><div className="mt-7 flex items-center justify-between"><h3 className="text-sm font-extrabold">Subjects</h3><button onClick={addSubject} className="flex items-center gap-1 text-xs font-extrabold text-brand"><Plus size={14} /> Add</button></div><div className="mt-3 grid gap-3">{subjects.map((subject, index) => <div key={index} className="grid grid-cols-[1fr_88px_88px_34px] gap-2"><input aria-label="Subject name" value={subject.name} onChange={(event) => setSubjects((items) => items.map((item, i) => i === index ? { ...item, name: event.target.value } : item))} placeholder="Subject" className="min-w-0 rounded-xl border border-line px-3 py-2 text-sm" /><select aria-label="Confidence" title="Confidence: 1 low, 5 high" value={subject.confidence} onChange={(event) => setSubjects((items) => items.map((item, i) => i === index ? { ...item, confidence: Number(event.target.value) } : item))} className="rounded-xl border border-line px-2 text-xs">{[1,2,3,4,5].map(x => <option key={x} value={x}>Conf. {x}</option>)}</select><select aria-label="Priority" title="Teacher priority: 1 low, 3 high" value={subject.priority} onChange={(event) => setSubjects((items) => items.map((item, i) => i === index ? { ...item, priority: Number(event.target.value) } : item))} className="rounded-xl border border-line px-2 text-xs">{[1,2,3].map(x => <option key={x} value={x}>Pri. {x}</option>)}</select><button aria-label="Remove subject" onClick={() => setSubjects((items) => items.filter((_, i) => i !== index))} className="text-muted hover:text-red-600"><Trash2 size={15} /></button></div>)}</div><button onClick={() => void build()} disabled={saving || !subjects.some((item) => item.name.trim())} className="focus-ring mt-6 flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-extrabold text-white disabled:opacity-40"><CalendarDays size={16} /> {saving ? "Building…" : "Build my week"}</button>{message ? <p className="mt-3 text-xs font-bold text-muted">{message}</p> : null}</section><section className="card p-6"><div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">This week</h2><span className="text-xs font-bold text-muted">{schedule.length} focused sessions</span></div>{schedule.length ? <ol className="mt-5 grid gap-3">{schedule.map((item, index) => <li key={`${item.day}-${index}`} className="flex items-center gap-4 rounded-2xl border border-line p-4"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#d8f7e9]"><Check size={17} /></span><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><strong className="truncate text-sm">{item.subject}</strong><span className="text-[10px] font-black uppercase tracking-wider text-muted">{item.day} · {item.minutes}m</span></div><p className="mt-1 text-xs text-muted">{item.focus}</p></div></li>)}</ol> : <div className="grid min-h-96 place-items-center text-center"><div><CalendarDays className="mx-auto text-muted" /><p className="mt-4 max-w-sm text-sm leading-6 text-muted">Add your subjects and constraints. The schedule will give more time to lower-confidence and teacher-priority areas without pretending to predict the paper.</p></div></div>}</section></div></div>;
+  const [examYear, setExamYear] = useState(initial?.exam_year ?? 2027);
+  const [sessions, setSessions] = useState(initial?.sessions_per_week ?? 5);
+  const [minutes, setMinutes] = useState(initial?.session_duration_mins ?? 50);
+  const [subjects, setSubjects] = useState<Subject[]>(initial?.subjects?.length ? initial.subjects : [{ name: "Maths", confidence: 1, priority: 3 }, { name: "English", confidence: 3, priority: 2 }]);
+  const [schedule, setSchedule] = useState(initial?.schedule ?? []);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  function updateSubject(index: number, patch: Partial<Subject>) {
+    setSubjects((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
+  }
+
+  async function build() {
+    setSaving(true);
+    setMessage("");
+    const response = await fetch("/api/planner", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ examYear, sessionsPerWeek: sessions, sessionMinutes: minutes, subjects }),
+    });
+    const body = (await response.json().catch(() => null)) as { schedule?: Session[]; error?: string } | null;
+    if (response.ok && body?.schedule) {
+      setSchedule(body.schedule);
+      setMessage("Your week is built and saved.");
+    } else setMessage(body?.error ?? "The plan could not be saved. Check your subjects and try again.");
+    setSaving(false);
+  }
+
+  return (
+    <div>
+      <p className="eyebrow text-brand">Weekly study plan</p>
+      <h1 className="display mt-3 max-w-4xl text-5xl tracking-[-.04em] md:text-6xl">A realistic week, weighted to what needs you most.</h1>
+      <p className="mt-4 max-w-3xl text-sm leading-6 text-muted">Tell StudyWith how well you know each subject and whether a teacher or deadline makes it important. It gives more sessions to weak, high-priority areas—without pretending to predict the exam paper.</p>
+
+      <div className="mt-7 grid gap-3 md:grid-cols-2">
+        <div className="flex gap-3 rounded-2xl border border-[#cfd7fd] bg-[#eef1ff] p-4">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-brand"><Target size={16} /></span>
+          <div><p className="text-xs font-black text-[#173ecc]">How well do you know this?</p><p className="mt-1 text-xs leading-5 text-[#4b5770]">Lower confidence means the planner gives the subject more rebuilding time.</p></div>
+        </div>
+        <div className="flex gap-3 rounded-2xl border border-[#cfe6dc] bg-[#edf9f4] p-4">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#087451]"><Info size={16} /></span>
+          <div><p className="text-xs font-black text-[#086348]">How important is it right now?</p><p className="mt-1 text-xs leading-5 text-[#4b6259]">Use Teacher priority only when a teacher, test or deadline makes it urgent.</p></div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-5 2xl:grid-cols-[minmax(0,.95fr)_minmax(0,1.05fr)]">
+        <section className="card overflow-hidden shadow-[0_18px_48px_rgba(16,24,32,.05)]">
+          <header className="border-b border-line bg-[#fffdf9] p-6">
+            <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-white"><Clock3 size={18} /></span><div><h2 className="text-lg font-black">Your available time</h2><p className="mt-0.5 text-xs text-muted">Set a week you can actually complete.</p></div></div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              <label className="grid gap-2 text-xs font-extrabold">Exam year<input type="number" min="2026" max="2035" value={examYear} onChange={(event) => setExamYear(Number(event.target.value))} className="focus-ring rounded-xl border border-line bg-white px-3 py-3 text-sm font-bold outline-none focus:border-brand" /></label>
+              <label className="grid gap-2 text-xs font-extrabold">Sessions per week<input type="number" min="1" max="14" value={sessions} onChange={(event) => setSessions(Number(event.target.value))} className="focus-ring rounded-xl border border-line bg-white px-3 py-3 text-sm font-bold outline-none focus:border-brand" /></label>
+              <label className="grid gap-2 text-xs font-extrabold">Minutes per session<select value={minutes} onChange={(event) => setMinutes(Number(event.target.value))} className="focus-ring rounded-xl border border-line bg-white px-3 py-3 text-sm font-bold outline-none focus:border-brand">{[25, 40, 50, 60, 75, 90].map((value) => <option key={value} value={value}>{value} minutes</option>)}</select></label>
+            </div>
+          </header>
+
+          <div className="p-5 md:p-6">
+            <div className="flex items-center justify-between"><div><h3 className="text-sm font-black">Subjects</h3><p className="mt-1 text-xs text-muted">Add up to 12. You can change this any week.</p></div><button type="button" disabled={subjects.length >= 12} onClick={() => setSubjects((items) => [...items, { name: "", confidence: 3, priority: 1 }])} className="focus-ring flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-2 text-xs font-extrabold text-brand shadow-sm hover:border-brand disabled:bg-[#edf0f1] disabled:text-[#8b9398]"><Plus size={14} /> Add subject</button></div>
+
+            <div className="mt-4 grid gap-3">
+              {subjects.map((subject, index) => (
+                <article key={index} className="rounded-2xl border border-line bg-[#fffdf9] p-4">
+                  <div className="flex items-center gap-3">
+                    <label className="min-w-0 flex-1"><span className="sr-only">Subject name</span><input value={subject.name} onChange={(event) => updateSubject(index, { name: event.target.value })} placeholder="Subject name" className="focus-ring w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-extrabold outline-none focus:border-brand" /></label>
+                    <button type="button" aria-label={`Remove ${subject.name || "subject"}`} onClick={() => setSubjects((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-red-50 hover:text-red-700"><Trash2 size={15} /></button>
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label className="grid gap-1.5 text-[11px] font-extrabold text-[#4f5961]">How well do you know it?<select aria-label={`${subject.name || "Subject"} confidence`} value={normaliseConfidence(subject.confidence)} onChange={(event) => updateSubject(index, { confidence: Number(event.target.value) })} className="focus-ring rounded-xl border border-[#cfd7fd] bg-[#f7f8ff] px-3 py-2.5 text-xs font-bold text-ink outline-none focus:border-brand">{confidenceOptions.map((option) => <option key={option.value} value={option.value}>{option.label} — {option.help}</option>)}</select></label>
+                    <label className="grid gap-1.5 text-[11px] font-extrabold text-[#4f5961]">How important is it now?<select aria-label={`${subject.name || "Subject"} priority`} value={subject.priority} onChange={(event) => updateSubject(index, { priority: Number(event.target.value) })} className="focus-ring rounded-xl border border-[#cfe6dc] bg-[#f5fbf8] px-3 py-2.5 text-xs font-bold text-ink outline-none focus:border-[#55b892]">{priorityOptions.map((option) => <option key={option.value} value={option.value}>{option.label} — {option.help}</option>)}</select></label>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button type="button" onClick={() => void build()} disabled={saving || !subjects.some((item) => item.name.trim())} className="focus-ring flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-sm font-extrabold text-white shadow-sm hover:bg-[#173ecc] disabled:bg-[#cbd0d3] disabled:text-[#687177] disabled:shadow-none"><CalendarDays size={16} />{saving ? "Building your week…" : schedule.length ? "Rebuild my week" : "Build my week"}</button>
+              {message ? <p role="status" className="text-xs font-bold text-[#5d6670]">{message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="card min-h-[680px] overflow-hidden shadow-[0_18px_48px_rgba(16,24,32,.05)]">
+          <header className="flex items-center justify-between border-b border-line bg-[#fffdf9] p-6"><div><p className="eyebrow text-brand">This week</p><h2 className="mt-2 text-xl font-black">Your focused sessions</h2></div><span className="rounded-full bg-[#edf0f1] px-3 py-1.5 text-xs font-black text-[#5d6670]">{schedule.length} session{schedule.length === 1 ? "" : "s"}</span></header>
+          {schedule.length ? (
+            <ol className="grid gap-3 p-5 md:p-6">
+              {schedule.map((item, index) => (
+                <li key={`${item.day}-${item.subject}-${index}`} className="group flex items-start gap-4 rounded-2xl border border-line bg-white p-4 transition hover:border-brand hover:shadow-sm">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#dff6ec] text-[#087451]"><Check size={18} /></span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm font-black">{item.subject}</strong><span className="rounded-full bg-[#f2f3f3] px-2.5 py-1 text-[10px] font-black uppercase tracking-[.1em] text-[#5d6670]">{item.day} · {item.minutes} min</span></div>
+                    <p className="mt-2 text-sm leading-6 text-muted">{item.focus}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="grid min-h-[560px] place-items-center p-8 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#e5e9ff] text-brand"><Sparkles size={21} /></span><h3 className="mt-5 text-lg font-black">Your week will appear here</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">Add your subjects, choose honest confidence levels and tell us what is important right now. Then build a plan in one click.</p></div></div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function normaliseConfidence(value: number) {
+  if (value <= 2) return 1;
+  if (value >= 4) return 5;
+  return 3;
 }

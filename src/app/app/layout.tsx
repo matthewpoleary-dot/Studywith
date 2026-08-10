@@ -12,5 +12,5 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const admin = createAdminSupabase();
   await admin.from("users").upsert({ id: user.id, email: user.email ?? "" }, { onConflict: "id" });
   const access = await getAccessSummary(user.id);
-  return <AppShell email={user.email ?? ""} planLabel={access.planLabel}>{children}</AppShell>;
+  return <AppShell email={user.email ?? ""} planLabel={access.planLabel} hasToolkit={access.hasToolkit}>{children}</AppShell>;
 }

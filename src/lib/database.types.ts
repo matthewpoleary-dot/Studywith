@@ -39,6 +39,12 @@ export type Database = {
         Update: { title?: string; subject?: string; file_name?: string; topic?: string | null; extracted_text?: string; updated_at?: string };
         Relationships: [];
       };
+      study_attachments: {
+        Row: { id: string; user_id: string; session_id: string | null; material_id: string | null; storage_path: string; file_name: string; mime_type: string; size_bytes: number; extracted_text: string; created_at: string };
+        Insert: { id?: string; user_id: string; session_id?: string | null; material_id?: string | null; storage_path: string; file_name: string; mime_type: string; size_bytes: number; extracted_text?: string };
+        Update: never;
+        Relationships: [];
+      };
       flashcards: {
         Row: { id: string; material_id: string; user_id: string; question: string; answer: string; topic: string; confidence: number; created_at: string };
         Insert: { id?: string; material_id: string; user_id: string; question: string; answer: string; topic?: string; confidence?: number };
