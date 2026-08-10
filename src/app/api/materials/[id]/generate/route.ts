@@ -1,6 +1,6 @@
 import Groq from "groq-sdk";
 import { NextResponse, type NextRequest } from "next/server";
-import { consumeAiAction } from "@/lib/access";
+import { consumeAiAction, refundAiAction } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import type { Json } from "@/lib/database.types";
 import { createAdminSupabase } from "@/lib/supabase-server";
@@ -119,10 +119,74 @@ export async function POST(
   try {
     const completion = await new Groq({ apiKey: process.env.GROQ_API_KEY })
       .chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-20b",
         temperature: 0.25,
         max_completion_tokens: 1800,
-        response_format: { type: "json_object" },
+        response_format: makingCards
+          ? {
+              type: "json_schema",
+              json_schema: {
+                name: "study_flashcards",
+                strict: true,
+                schema: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    flashcards: {
+                      type: "array",
+                      minItems: 10,
+                      maxItems: 10,
+                      items: {
+                        type: "object",
+                        additionalProperties: false,
+                        properties: {
+                          question: { type: "string" },
+                          answer: { type: "string" },
+                          topic: { type: "string" },
+                        },
+                        required: ["question", "answer", "topic"],
+                      },
+                    },
+                  },
+                  required: ["flashcards"],
+                },
+              },
+            }
+          : {
+              type: "json_schema",
+              json_schema: {
+                name: "study_quiz",
+                strict: true,
+                schema: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    questions: {
+                      type: "array",
+                      minItems: 6,
+                      maxItems: 6,
+                      items: {
+                        type: "object",
+                        additionalProperties: false,
+                        properties: {
+                          question: { type: "string" },
+                          options: {
+                            type: "array",
+                            minItems: 4,
+                            maxItems: 4,
+                            items: { type: "string" },
+                          },
+                          correctIndex: { type: "integer", minimum: 0, maximum: 3 },
+                          explanation: { type: "string" },
+                        },
+                        required: ["question", "options", "correctIndex", "explanation"],
+                      },
+                    },
+                  },
+                  required: ["questions"],
+                },
+              },
+            },
         messages: [
           {
             role: "system",
@@ -137,6 +201,7 @@ export async function POST(
     parsed = parseJson(completion.choices[0]?.message?.content ?? "{}");
   } catch (error) {
     console.error("Practice generation failed", error);
+    await refundAiAction(user.id, access.usage_event_id);
     return NextResponse.json(
       { error: "Practice could not be generated. Your saved notes are unchanged." },
       { status: 502 },
@@ -149,19 +214,21 @@ export async function POST(
       material_id: id,
       user_id: user.id,
     }));
-    if (!rows.length) {
+    if (rows.length !== 10) {
+      await refundAiAction(user.id, access.usage_event_id);
       return NextResponse.json(
         { error: "No usable flashcards were generated. Your existing deck was kept." },
         { status: 502 },
       );
     }
 
-    const { error: deleteError } = await admin
+    const { data: existingRows, error: readError } = await admin
       .from("flashcards")
-      .delete()
+      .select("id")
       .eq("material_id", id)
       .eq("user_id", user.id);
-    if (deleteError) {
+    if (readError) {
+      await refundAiAction(user.id, access.usage_event_id);
       return NextResponse.json({ error: "Flashcards could not be refreshed." }, { status: 500 });
     }
 
@@ -170,7 +237,17 @@ export async function POST(
       .insert(rows)
       .select("id, question, answer, topic, confidence");
     if (error) {
+      await refundAiAction(user.id, access.usage_event_id);
       return NextResponse.json({ error: "Flashcards could not be saved." }, { status: 500 });
+    }
+    const oldIds = (existingRows ?? []).map((item) => item.id);
+    if (oldIds.length) {
+      const { error: deleteError } = await admin.from("flashcards").delete().in("id", oldIds).eq("user_id", user.id);
+      if (deleteError) {
+        await admin.from("flashcards").delete().in("id", data.map((item) => item.id)).eq("user_id", user.id);
+        await refundAiAction(user.id, access.usage_event_id);
+        return NextResponse.json({ error: "Flashcards could not be refreshed." }, { status: 500 });
+      }
     }
     return NextResponse.json({ flashcards: data, remaining: access.remaining ?? null });
   }
@@ -181,19 +258,21 @@ export async function POST(
     material_id: id,
     user_id: user.id,
   }));
-  if (!rows.length) {
+  if (rows.length !== 6) {
+    await refundAiAction(user.id, access.usage_event_id);
     return NextResponse.json(
       { error: "No usable quiz was generated. Your existing quiz was kept." },
       { status: 502 },
     );
   }
 
-  const { error: deleteError } = await admin
+  const { data: existingRows, error: readError } = await admin
     .from("quiz_questions")
-    .delete()
+    .select("id")
     .eq("material_id", id)
     .eq("user_id", user.id);
-  if (deleteError) {
+  if (readError) {
+    await refundAiAction(user.id, access.usage_event_id);
     return NextResponse.json({ error: "Quiz could not be refreshed." }, { status: 500 });
   }
 
@@ -202,7 +281,17 @@ export async function POST(
     .insert(rows)
     .select("id, question, options, correct_index, explanation");
   if (error) {
+    await refundAiAction(user.id, access.usage_event_id);
     return NextResponse.json({ error: "Quiz could not be saved." }, { status: 500 });
+  }
+  const oldIds = (existingRows ?? []).map((item) => item.id);
+  if (oldIds.length) {
+    const { error: deleteError } = await admin.from("quiz_questions").delete().in("id", oldIds).eq("user_id", user.id);
+    if (deleteError) {
+      await admin.from("quiz_questions").delete().in("id", data.map((item) => item.id)).eq("user_id", user.id);
+      await refundAiAction(user.id, access.usage_event_id);
+      return NextResponse.json({ error: "Quiz could not be refreshed." }, { status: 500 });
+    }
   }
   return NextResponse.json({ quiz: data, remaining: access.remaining ?? null });
 }
