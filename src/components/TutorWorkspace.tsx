@@ -388,7 +388,7 @@ function TutorWorkspaceInner({ initialSessions, materials, userId, initialMateri
                   ) : null}
                 </PromptInputHeader>
                 <PromptInputBody>
-                  <PromptInputTextarea disabled={busy} placeholder="Ask about a topic, or add a photo of the work you want help with…" className="min-h-20 px-4 py-3 text-[15px] leading-6" />
+                  <PromptInputTextarea disabled={busy} placeholder={messageCount ? "Reply here…" : "Ask about a topic, or add a photo of the work you want help with…"} className="min-h-20 px-4 py-3 text-[15px] leading-6" />
                 </PromptInputBody>
                 <PromptInputFooter className="px-2.5 pb-2.5">
                   <PromptInputTools>
