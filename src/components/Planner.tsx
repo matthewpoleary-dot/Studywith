@@ -1,10 +1,18 @@
 "use client";
 
-import { CalendarDays, Check, Clock3, Info, Plus, Sparkles, Target, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarDays, Clock3, Info, MessageCircleMore, Plus, Sparkles, Target, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 type Subject = { name: string; confidence: number; priority: number };
-type Session = { day: string; subject: string; focus: string; minutes: number };
+type Session = { day: string; time?: string; subject: string; focus: string; minutes: number; status?: "planned" | "completed" };
+type InitialPlan = {
+  exam_year: number;
+  sessions_per_week: number;
+  session_duration_mins: number;
+  subjects: Subject[];
+  schedule: Session[];
+  weekly_context: string;
+};
 
 const confidenceOptions = [
   { value: 1, label: "Need to relearn", help: "You cannot explain it clearly yet, so it receives more rebuilding time." },
@@ -17,14 +25,16 @@ const priorityOptions = [
   { value: 3, label: "Teacher focus", help: "A teacher, test or deadline makes this a main focus right now." },
 ];
 
-export function Planner({ initial }: { initial: { exam_year: number; sessions_per_week: number; session_duration_mins: number; subjects: Subject[]; schedule: Session[] } | null }) {
+export function Planner({ initial }: { initial: InitialPlan | null }) {
   const [examYear, setExamYear] = useState(initial?.exam_year ?? 2027);
   const [sessions, setSessions] = useState(initial?.sessions_per_week ?? 5);
   const [minutes, setMinutes] = useState(initial?.session_duration_mins ?? 50);
+  const [weeklyContext, setWeeklyContext] = useState(initial?.weekly_context ?? "");
   const [subjects, setSubjects] = useState<Subject[]>(initial?.subjects?.length ? initial.subjects : [{ name: "Maths", confidence: 1, priority: 3 }, { name: "English", confidence: 3, priority: 2 }]);
   const [schedule, setSchedule] = useState(initial?.schedule ?? []);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [contextSummary, setContextSummary] = useState("");
 
   function updateSubject(index: number, patch: Partial<Subject>) {
     setSubjects((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
@@ -33,16 +43,18 @@ export function Planner({ initial }: { initial: { exam_year: number; sessions_pe
   async function build() {
     setSaving(true);
     setMessage("");
+    setContextSummary("");
     try {
       const response = await fetch("/api/planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ examYear, sessionsPerWeek: sessions, sessionMinutes: minutes, subjects }),
+        body: JSON.stringify({ examYear, sessionsPerWeek: sessions, sessionMinutes: minutes, subjects, weeklyContext }),
       });
-      const body = (await response.json().catch(() => null)) as { schedule?: Session[]; error?: string } | null;
+      const body = (await response.json().catch(() => null)) as { schedule?: Session[]; contextSummary?: string; error?: string } | null;
       if (!response.ok || !body?.schedule) throw new Error(body?.error ?? "The plan could not be saved. Please try again.");
       setSchedule(body.schedule);
-      setMessage("Your week is built and saved.");
+      setContextSummary(body.contextSummary ?? "");
+      setMessage("Your planned week is built and saved.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The plan could not be saved. Please try again.");
     } finally {
@@ -54,7 +66,7 @@ export function Planner({ initial }: { initial: { exam_year: number; sessions_pe
     <div>
       <p className="eyebrow text-brand">Weekly study plan</p>
       <h1 className="display mt-3 max-w-4xl text-5xl tracking-[-.04em] md:text-6xl">A realistic week, weighted to what needs you most.</h1>
-      <p className="mt-4 max-w-3xl text-sm leading-6 text-muted">Tell StudyWith how well you know each subject and whether a teacher or deadline makes it important. It gives more sessions to weak, high-priority areas—without pretending to predict the exam paper.</p>
+      <p className="mt-4 max-w-3xl text-sm leading-6 text-muted">Tell StudyWith what you need to cover and what is already in your calendar. It will spread planned sessions around your real week without pretending to predict the exam paper.</p>
 
       <div className="mt-7 grid gap-3 md:grid-cols-2">
         <div className="flex gap-3 rounded-2xl border border-[#cfd7fd] bg-[#eef1ff] p-4">
@@ -79,7 +91,20 @@ export function Planner({ initial }: { initial: { exam_year: number; sessions_pe
           </header>
 
           <div className="p-5 md:p-6">
-            <div className="flex items-center justify-between"><div><h3 className="text-sm font-black">Subjects</h3><p className="mt-1 text-xs text-muted">Add up to 12. You can change this any week.</p></div><button type="button" disabled={subjects.length >= 12} onClick={() => setSubjects((items) => [...items, { name: "", confidence: 3, priority: 1 }])} className="focus-ring flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-2 text-xs font-extrabold text-brand shadow-sm hover:border-brand disabled:bg-[#edf0f1] disabled:text-[#8b9398]"><Plus size={14} /> Add subject</button></div>
+            <label className="block rounded-[22px] border border-[#cfd7fd] bg-[#f3f5ff] p-4">
+              <span className="flex items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-brand shadow-sm"><MessageCircleMore size={18} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-black">What else is in your week?</span>
+                  <span className="mt-1 block text-xs leading-5 text-muted">Write naturally. StudyWith will plan around training, work, grinds and days you cannot study.</span>
+                </span>
+                <span className="rounded-full bg-brand px-2.5 py-1 text-[9px] font-black uppercase tracking-[.12em] text-white">Smart planner</span>
+              </span>
+              <textarea value={weeklyContext} onChange={(event) => setWeeklyContext(event.target.value)} maxLength={2_000} rows={3} placeholder="e.g. I have rugby every Monday and Wednesday from 5–7pm, and I can’t study on Friday." className="focus-ring mt-4 w-full resize-y rounded-2xl border border-[#cfd7fd] bg-white px-4 py-3 text-sm font-medium leading-6 outline-none placeholder:text-[#8b9398] focus:border-brand" />
+              <span className="mt-2 block text-[10px] font-medium text-muted">Kept private in your StudyWith plan; not sent to an external AI service.</span>
+            </label>
+
+            <div className="mt-6 flex items-center justify-between"><div><h3 className="text-sm font-black">Subjects</h3><p className="mt-1 text-xs text-muted">Every subject gets a session when your weekly total allows it.</p></div><button type="button" disabled={subjects.length >= 12} onClick={() => setSubjects((items) => [...items, { name: "", confidence: 3, priority: 1 }])} className="focus-ring flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-2 text-xs font-extrabold text-brand shadow-sm hover:border-brand disabled:bg-[#edf0f1] disabled:text-[#8b9398]"><Plus size={14} /> Add subject</button></div>
 
             <div className="mt-4 grid gap-3">
               {subjects.map((subject, index) => (
@@ -116,21 +141,24 @@ export function Planner({ initial }: { initial: { exam_year: number; sessions_pe
         </section>
 
         <section className="card min-h-[680px] overflow-hidden shadow-[0_18px_48px_rgba(16,24,32,.05)]">
-          <header className="flex items-center justify-between border-b border-line bg-[#fffdf9] p-6"><div><p className="eyebrow text-brand">This week</p><h2 className="mt-2 text-xl font-black">Your focused sessions</h2></div><span className="rounded-full bg-[#edf0f1] px-3 py-1.5 text-xs font-black text-[#5d6670]">{schedule.length} session{schedule.length === 1 ? "" : "s"}</span></header>
+          <header className="flex items-center justify-between border-b border-line bg-[#fffdf9] p-6"><div><p className="eyebrow text-brand">This week</p><h2 className="mt-2 text-xl font-black">Your planned sessions</h2></div><span className="rounded-full bg-[#edf0f1] px-3 py-1.5 text-xs font-black text-[#5d6670]">{schedule.length} planned</span></header>
           {schedule.length ? (
-            <ol className="grid gap-3 p-5 md:p-6">
-              {schedule.map((item, index) => (
-                <li key={`${item.day}-${item.subject}-${index}`} className="group flex items-start gap-4 rounded-2xl border border-line bg-white p-4 transition hover:border-brand hover:shadow-sm">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#dff6ec] text-[#087451]"><Check size={18} /></span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm font-black">{item.subject}</strong><span className="rounded-full bg-[#f2f3f3] px-2.5 py-1 text-[10px] font-black uppercase tracking-[.1em] text-[#5d6670]">{item.day} · {item.minutes} min</span></div>
-                    <p className="mt-2 text-sm leading-6 text-muted">{item.focus}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <div>
+              {contextSummary ? <p className="mx-5 mt-5 rounded-xl border border-[#cfe6dc] bg-[#edf9f4] px-4 py-3 text-xs font-bold leading-5 text-[#086348] md:mx-6">{contextSummary}</p> : null}
+              <ol className="grid gap-3 p-5 md:p-6">
+                {schedule.map((item, index) => (
+                  <li key={`${item.day}-${item.time ?? "time"}-${item.subject}-${index}`} className="group flex items-start gap-4 rounded-2xl border border-line bg-white p-4 transition hover:border-brand hover:shadow-sm">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#e5e9ff] text-brand"><CalendarClock size={18} /></span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm font-black">{item.subject}</strong><div className="flex items-center gap-2"><span className="rounded-full bg-[#edf9f4] px-2.5 py-1 text-[9px] font-black uppercase tracking-[.1em] text-[#087451]">Planned</span><span className="rounded-full bg-[#f2f3f3] px-2.5 py-1 text-[10px] font-black uppercase tracking-[.1em] text-[#5d6670]">{item.day}{item.time ? ` · ${item.time}` : ""} · {item.minutes} min</span></div></div>
+                      <p className="mt-2 text-sm leading-6 text-muted">{item.focus}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
           ) : (
-            <div className="grid min-h-[560px] place-items-center p-8 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#e5e9ff] text-brand"><Sparkles size={21} /></span><h3 className="mt-5 text-lg font-black">Your week will appear here</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">Add your subjects, choose honest confidence levels and tell us what is important right now. Then build a plan in one click.</p></div></div>
+            <div className="grid min-h-[560px] place-items-center p-8 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#e5e9ff] text-brand"><Sparkles size={21} /></span><h3 className="mt-5 text-lg font-black">Your week will appear here</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">Add your subjects, describe any commitments and choose honest confidence levels. StudyWith will turn that into a planned calendar.</p></div></div>
           )}
         </section>
       </div>
