@@ -11,6 +11,7 @@ import {
   Brain,
   Camera,
   CheckCircle2,
+  ChevronDown,
   FileImage,
   FileText,
   Images,
@@ -300,10 +301,13 @@ function LocalFile({ file, onRemove }: { file: FileUIPart & { id: string }; onRe
 
 function SourceView({ material }: { material: Material }) {
   return (
-    <div className="grid gap-7 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <aside>
-        <p className="text-xs font-black">Original files</p>
-        <div className="mt-3 grid gap-2">
+    <div className="mx-auto grid max-w-5xl gap-4">
+      <section className="rounded-2xl border border-line bg-[#fffdf9] p-5">
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#edf0f1] text-brand"><FileText size={17} /></span>
+          <div><h3 className="text-sm font-black">Original material</h3><p className="mt-1 text-xs leading-5 text-muted">Open the source pages whenever you want to compare them with the generated practice.</p></div>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {material.attachments.length ? material.attachments.map((file) => (
             <a key={file.id} href={`/api/attachments/${encodeURIComponent(file.id)}`} target="_blank" rel="noreferrer" className="group flex items-center gap-3 rounded-xl border border-line bg-white p-3 hover:border-brand">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#edf0f1] text-brand">{file.mimeType.startsWith("image/") ? <FileImage size={16} /> : <FileText size={16} />}</span>
@@ -311,11 +315,20 @@ function SourceView({ material }: { material: Material }) {
             </a>
           )) : <p className="rounded-xl border border-dashed border-line p-3 text-xs leading-5 text-muted">This material was pasted as text.</p>}
         </div>
-      </aside>
-      <article className="min-w-0 rounded-2xl border border-line bg-[#fffdf9] p-5 md:p-7">
-        <div className="mb-5 flex items-center gap-3 border-b border-line pb-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#e5e9ff] text-brand"><Sparkles size={16} /></span><div><h3 className="text-sm font-black">What StudyWith read</h3><p className="mt-0.5 text-[11px] text-muted">Check this before generating practice, especially if the source was handwritten.</p></div></div>
-        <MessageResponse className="text-sm leading-7 text-[#3f4a52]">{material.extracted_text}</MessageResponse>
-      </article>
+      </section>
+
+      <details className="group overflow-hidden rounded-2xl border border-[#cfd7fd] bg-[#f7f8ff]">
+        <summary className="focus-ring flex cursor-pointer list-none items-center gap-3 px-5 py-4 marker:hidden">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-brand shadow-sm"><Sparkles size={17} /></span>
+          <span className="min-w-0 flex-1"><span className="block text-sm font-black">Review what StudyWith read</span><span className="mt-1 block text-xs leading-5 text-muted">Optional: check the extracted text before making flashcards or a quiz.</span></span>
+          <ChevronDown size={18} className="shrink-0 text-brand transition group-open:rotate-180" />
+        </summary>
+        <div className="border-t border-[#cfd7fd] bg-white p-5 md:p-7">
+          <div className="max-h-[520px] overflow-y-auto pr-2">
+            <MessageResponse className="text-sm leading-7 text-[#3f4a52]">{material.extracted_text}</MessageResponse>
+          </div>
+        </div>
+      </details>
     </div>
   );
 }

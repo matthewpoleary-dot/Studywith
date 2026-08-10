@@ -42,7 +42,7 @@ export default async function DashboardPage() {
           <div className="grid min-w-64 grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/[.06] p-2 backdrop-blur">
             <Stat value={sessions ?? 0} label="Chats" />
             <Stat value={materials ?? 0} label="Materials" />
-            <Stat value={planSessions} label="Sessions" />
+            <Stat value={planSessions} label="Planned" />
           </div>
         </div>
       </section>
