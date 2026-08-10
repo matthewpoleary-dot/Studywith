@@ -140,6 +140,12 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert or update of email on auth.users
   for each row execute function private.handle_new_user();
 
+-- Retire the legacy exposed trigger function after repointing the trigger.
+-- Keeping it for rollback is harmless once its search path is fixed and all
+-- client execution privileges are removed.
+alter function public.handle_new_user() set search_path = '';
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 drop trigger if exists users_updated_at on public.users;
 create trigger users_updated_at before update on public.users for each row execute function private.set_updated_at();
 drop trigger if exists entitlements_updated_at on public.entitlements;
@@ -245,6 +251,14 @@ grant select on public.entitlements, public.purchases, public.usage_events, publ
 grant select, insert, update, delete on public.sessions, public.study_materials, public.flashcards, public.quiz_questions, public.study_plans to authenticated;
 grant all on all tables in schema public to service_role;
 revoke all on public.lc_documents, public.rooms, public.room_members, public.room_assignments from anon, authenticated;
+
+-- Legacy curriculum RPCs and classroom storage are not part of v2. Preserve
+-- them for rollback, but remove public/client access and pin function paths.
+alter function public.match_lc_documents(vector, integer, double precision) set search_path = pg_catalog, public;
+alter function public.search_lc_documents(text, integer) set search_path = pg_catalog, public;
+revoke execute on function public.match_lc_documents(vector, integer, double precision) from public, anon, authenticated;
+revoke execute on function public.search_lc_documents(text, integer) from public, anon, authenticated;
+update storage.buckets set public = false where id = 'room-files';
 
 revoke execute on function public.consume_ai_action(uuid, text) from public, anon, authenticated;
 grant execute on function public.consume_ai_action(uuid, text) to service_role;
