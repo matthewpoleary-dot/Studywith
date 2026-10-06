@@ -22,8 +22,8 @@ function fallbackSlots(count: number): CalendarSlot[] {
     occurrences.set(day, occurrence + 1);
     const weekend = day === "Sat" || day === "Sun";
     const time = weekend
-      ? ["11:00", "14:00", "16:30"][occurrence] ?? "18:30"
-      : ["18:30", "20:00"][occurrence] ?? "16:30";
+      ? (["11:00", "14:00", "16:30"][occurrence] ?? "18:30")
+      : (["18:30", "20:00"][occurrence] ?? "16:30");
     return { day, time };
   });
 }
@@ -63,7 +63,9 @@ function parseWeeklyCommitments(value: string) {
       continue;
     }
 
-    const range = sentence.match(/(?:from\s*)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    const range = sentence.match(
+      /(?:from\s*)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i,
+    );
     const single = sentence.match(/\b(?:at|from)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
     let start: number | null = null;
     let end: number | null = null;
@@ -173,17 +175,28 @@ export async function POST(request: Request) {
   const examYear = Number(body?.examYear);
   const count = Number(body?.sessionsPerWeek);
   const minutes = Number(body?.sessionMinutes);
-  const weeklyContext = String(body?.weeklyContext ?? "").trim().slice(0, 2_000);
+  const weeklyContext = String(body?.weeklyContext ?? "")
+    .trim()
+    .slice(0, 2_000);
   const subjects = (Array.isArray(body?.subjects) ? body.subjects : [])
     .map((item) => ({
-      name: String(item.name ?? "").trim().slice(0, 60),
+      name: String(item.name ?? "")
+        .trim()
+        .slice(0, 60),
       confidence: Math.max(1, Math.min(5, Number(item.confidence) || 3)),
       priority: Math.max(1, Math.min(3, Number(item.priority) || 2)),
     }))
     .filter((item) => item.name)
     .slice(0, 12);
 
-  if (examYear < 2026 || examYear > 2035 || count < 1 || count > 14 || !allowedMinutes.has(minutes) || !subjects.length) {
+  if (
+    examYear < 2026 ||
+    examYear > 2035 ||
+    count < 1 ||
+    count > 14 ||
+    !allowedMinutes.has(minutes) ||
+    !subjects.length
+  ) {
     return NextResponse.json({ error: "Check the year, available time and subject names." }, { status: 400 });
   }
 
@@ -191,11 +204,12 @@ export async function POST(request: Request) {
   const calendar = planCalendarSlots(weeklyContext, count, minutes);
   const schedule = assignments.map((subject, index) => {
     const slot = calendar.slots[index];
-    const focus = subject.confidence <= 2
-      ? "Rebuild one weak syllabus area, then answer two practice questions"
-      : subject.priority === 3
-        ? "Review the teacher-priority area and complete timed practice"
-        : "Use active recall, then correct one gap from memory";
+    const focus =
+      subject.confidence <= 2
+        ? "Rebuild one weak syllabus area, then answer two practice questions"
+        : subject.priority === 3
+          ? "Review the teacher-priority area and complete timed practice"
+          : "Use active recall, then correct one gap from memory";
     return { ...slot, subject: subject.name, focus, minutes, status: "planned" as const };
   });
 
@@ -215,7 +229,10 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("[planner] save failed", { userId: user.id, code: error.code, message: error.message });
-    return NextResponse.json({ error: "Your plan was built but could not be saved. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Your plan was built but could not be saved. Please try again." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ schedule, contextSummary: calendar.summary });

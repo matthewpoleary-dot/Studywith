@@ -23,7 +23,10 @@ type GeneratedQuestion = {
 
 function parseJson(text: string) {
   return JSON.parse(
-    text.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim(),
+    text
+      .replace(/^```(?:json)?/i, "")
+      .replace(/```$/i, "")
+      .trim(),
   ) as Record<string, unknown>;
 }
 
@@ -35,9 +38,15 @@ function parseCards(value: unknown, fallbackTopic: string): GeneratedCard[] {
     .map((entry) => {
       const item = entry as Record<string, unknown>;
       return {
-        question: String(item.question ?? "").trim().slice(0, 500),
-        answer: String(item.answer ?? "").trim().slice(0, 1000),
-        topic: String(item.topic ?? fallbackTopic).trim().slice(0, 80),
+        question: String(item.question ?? "")
+          .trim()
+          .slice(0, 500),
+        answer: String(item.answer ?? "")
+          .trim()
+          .slice(0, 1000),
+        topic: String(item.topic ?? fallbackTopic)
+          .trim()
+          .slice(0, 80),
       };
     })
     .filter((item) => item.question && item.answer);
@@ -55,26 +64,20 @@ function parseQuestions(value: unknown): GeneratedQuestion[] {
         : [];
       const requestedIndex = Number(item.correctIndex ?? 0);
       return {
-        question: String(item.question ?? "").trim().slice(0, 700),
+        question: String(item.question ?? "")
+          .trim()
+          .slice(0, 700),
         options,
-        correct_index: Number.isInteger(requestedIndex)
-          ? Math.max(0, Math.min(3, requestedIndex))
-          : 0,
-        explanation: String(item.explanation ?? "").trim().slice(0, 1000),
+        correct_index: Number.isInteger(requestedIndex) ? Math.max(0, Math.min(3, requestedIndex)) : 0,
+        explanation: String(item.explanation ?? "")
+          .trim()
+          .slice(0, 1000),
       };
     })
-    .filter(
-      (item) =>
-        Boolean(item.question) &&
-        item.options.length === 4 &&
-        item.options.every(Boolean),
-    );
+    .filter((item) => Boolean(item.question) && item.options.length === 4 && item.options.every(Boolean));
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Sign in first." }, { status: 401 });
@@ -85,10 +88,7 @@ export async function POST(
     kind?: "cards" | "quiz";
   } | null;
   if (body?.kind !== "cards" && body?.kind !== "quiz") {
-    return NextResponse.json(
-      { error: "Choose flashcards or quiz." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Choose flashcards or quiz." }, { status: 400 });
   }
 
   const admin = createAdminSupabase();
@@ -117,23 +117,22 @@ export async function POST(
 
   let parsed: Record<string, unknown>;
   try {
-    const completion = await new Groq({ apiKey: process.env.GROQ_API_KEY })
-      .chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.25,
-        max_completion_tokens: 1800,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `You create Leaving Cert study practice from the student's notes only. Do not invent claims not supported by the notes. ${instruction}`,
-          },
-          {
-            role: "user",
-            content: `Subject: ${material.subject}\n\nNOTES:\n${material.extracted_text.slice(0, 16000)}`,
-          },
-        ],
-      });
+    const completion = await new Groq({ apiKey: process.env.GROQ_API_KEY }).chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.25,
+      max_completion_tokens: 1800,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `You create Leaving Cert study practice from the student's notes only. Do not invent claims not supported by the notes. ${instruction}`,
+        },
+        {
+          role: "user",
+          content: `Subject: ${material.subject}\n\nNOTES:\n${material.extracted_text.slice(0, 16000)}`,
+        },
+      ],
+    });
     parsed = parseJson(completion.choices[0]?.message?.content ?? "{}");
   } catch (error) {
     console.error("Practice generation failed", error);
@@ -156,11 +155,7 @@ export async function POST(
       );
     }
 
-    const { error: deleteError } = await admin
-      .from("flashcards")
-      .delete()
-      .eq("material_id", id)
-      .eq("user_id", user.id);
+    const { error: deleteError } = await admin.from("flashcards").delete().eq("material_id", id).eq("user_id", user.id);
     if (deleteError) {
       return NextResponse.json({ error: "Flashcards could not be refreshed." }, { status: 500 });
     }
@@ -182,10 +177,7 @@ export async function POST(
     user_id: user.id,
   }));
   if (!rows.length) {
-    return NextResponse.json(
-      { error: "No usable quiz was generated. Your existing quiz was kept." },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "No usable quiz was generated. Your existing quiz was kept." }, { status: 502 });
   }
 
   const { error: deleteError } = await admin

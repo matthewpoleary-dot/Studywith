@@ -76,10 +76,26 @@ function parseMessages(value: Json | null | undefined): TutorMessage[] {
       for (const attachment of item.attachments) {
         if (!attachment || typeof attachment !== "object" || Array.isArray(attachment)) continue;
         if (typeof attachment.id !== "string" || typeof attachment.name !== "string") continue;
-        if (attachment.kind === "file" && typeof attachment.mimeType === "string" && typeof attachment.size === "number") {
-          attachments.push({ id: attachment.id, kind: "file", name: attachment.name, mimeType: attachment.mimeType, size: attachment.size });
+        if (
+          attachment.kind === "file" &&
+          typeof attachment.mimeType === "string" &&
+          typeof attachment.size === "number"
+        ) {
+          attachments.push({
+            id: attachment.id,
+            kind: "file",
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            size: attachment.size,
+          });
         } else if (attachment.kind === "material") {
-          attachments.push({ id: attachment.id, kind: "material", name: attachment.name, mimeType: "application/x-studywith-material", size: Number(attachment.size) || 0 });
+          attachments.push({
+            id: attachment.id,
+            kind: "material",
+            name: attachment.name,
+            mimeType: "application/x-studywith-material",
+            size: Number(attachment.size) || 0,
+          });
         }
       }
     }
@@ -95,8 +111,20 @@ function parseUploads(value: unknown): PendingStudyUpload[] | null {
   const uploads = value.flatMap((item) => {
     if (!item || typeof item !== "object") return [];
     const upload = item as Record<string, unknown>;
-    if ([upload.id, upload.name, upload.mimeType, upload.storagePath].some((field) => typeof field !== "string") || typeof upload.size !== "number") return [];
-    return [{ id: upload.id as string, name: upload.name as string, mimeType: upload.mimeType as string, size: upload.size, storagePath: upload.storagePath as string }];
+    if (
+      [upload.id, upload.name, upload.mimeType, upload.storagePath].some((field) => typeof field !== "string") ||
+      typeof upload.size !== "number"
+    )
+      return [];
+    return [
+      {
+        id: upload.id as string,
+        name: upload.name as string,
+        mimeType: upload.mimeType as string,
+        size: upload.size,
+        storagePath: upload.storagePath as string,
+      },
+    ];
   });
   return uploads.length === value.length ? uploads : null;
 }
@@ -143,27 +171,49 @@ export async function POST(request: Request) {
     uploads?: unknown;
   } | null;
   const uploads = parseUploads(body?.uploads);
-  if (!body || uploads === null) return NextResponse.json({ error: "The message or file details were invalid." }, { status: 400 });
+  if (!body || uploads === null)
+    return NextResponse.json({ error: "The message or file details were invalid." }, { status: 400 });
 
-  const requestedSubject = body.subject === "Auto-detect" ? "Auto-detect" : studySubject(body.subject) ?? "Auto-detect";
-  const text = String(body.text ?? "").trim().slice(0, 5_000);
+  const requestedSubject =
+    body.subject === "Auto-detect" ? "Auto-detect" : (studySubject(body.subject) ?? "Auto-detect");
+  const text = String(body.text ?? "")
+    .trim()
+    .slice(0, 5_000);
   const admin = createAdminSupabase();
 
   const { data: existing } = body.sessionId
-    ? await admin.from("sessions").select("id, title, subject, messages").eq("id", body.sessionId).eq("user_id", user.id).maybeSingle()
+    ? await admin
+        .from("sessions")
+        .select("id, title, subject, messages")
+        .eq("id", body.sessionId)
+        .eq("user_id", user.id)
+        .maybeSingle()
     : { data: null };
-  if (body.sessionId && !existing) return NextResponse.json({ error: "That tutor session was not found." }, { status: 404 });
+  if (body.sessionId && !existing)
+    return NextResponse.json({ error: "That tutor session was not found." }, { status: 404 });
 
   const { data: material } = body.materialId
-    ? await admin.from("study_materials").select("id, title, subject, extracted_text").eq("id", body.materialId).eq("user_id", user.id).maybeSingle()
+    ? await admin
+        .from("study_materials")
+        .select("id, title, subject, extracted_text")
+        .eq("id", body.materialId)
+        .eq("user_id", user.id)
+        .maybeSingle()
     : { data: null };
-  if (body.materialId && !material) return NextResponse.json({ error: "Those saved notes were not found." }, { status: 404 });
-  if (!text && !uploads.length && !material) return NextResponse.json({ error: "Add a question, photo, file or saved note first." }, { status: 400 });
+  if (body.materialId && !material)
+    return NextResponse.json({ error: "Those saved notes were not found." }, { status: 404 });
+  if (!text && !uploads.length && !material)
+    return NextResponse.json({ error: "Add a question, photo, file or saved note first." }, { status: 400 });
 
   const access = await consumeAiAction(user.id, "tutor");
   if (!access.allowed) {
     return NextResponse.json(
-      { error: access.reason === "fair_use_limit" ? "The daily fair-use safeguard has been reached. Try again tomorrow." : "Your included AI actions are used. The toolkit or Pro will unlock more." },
+      {
+        error:
+          access.reason === "fair_use_limit"
+            ? "The daily fair-use safeguard has been reached. Try again tomorrow."
+            : "Your included AI actions are used. The toolkit or Pro will unlock more.",
+      },
       { status: 402 },
     );
   }
@@ -181,37 +231,84 @@ export async function POST(request: Request) {
   const attachments: TutorMessage["attachments"] = [
     ...preparedFiles.map(savedAttachment),
     ...(material
-      ? [{ id: material.id, kind: "material" as const, name: material.title, mimeType: "application/x-studywith-material" as const, size: material.extracted_text.length }]
+      ? [
+          {
+            id: material.id,
+            kind: "material" as const,
+            name: material.title,
+            mimeType: "application/x-studywith-material" as const,
+            size: material.extracted_text.length,
+          },
+        ]
       : []),
   ];
-  const studentText = text || (material ? `Help me study from ${material.title}.` : "Help me understand the attached work.");
+  const studentText =
+    text || (material ? `Help me study from ${material.title}.` : "Help me understand the attached work.");
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const detectionContext = [
     studentText,
-    material ? `Saved notes titled ${material.title} with selected subject ${material.subject}:\n${material.extracted_text}` : "",
+    material
+      ? `Saved notes titled ${material.title} with selected subject ${material.subject}:\n${material.extracted_text}`
+      : "",
     preparedFiles.length ? combineExtractedText(preparedFiles) : "",
-  ].filter(Boolean).join("\n\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const materialSubject = studySubject(material?.subject);
-  const detectedSubject = requestedSubject === "Auto-detect"
-    ? materialSubject ?? await detectStudySubject(groq, detectionContext)
-    : null;
+  const detectedSubject =
+    requestedSubject === "Auto-detect" ? (materialSubject ?? (await detectStudySubject(groq, detectionContext))) : null;
   const subject = detectedSubject ?? requestedSubject;
-  const studentMessage: TutorMessage = { role: "student", content: studentText, ...(attachments.length ? { attachments } : {}) };
+  const studentMessage: TutorMessage = {
+    role: "student",
+    content: studentText,
+    ...(attachments.length ? { attachments } : {}),
+  };
   const pendingMessages = [...previousMessages, studentMessage];
   const sessionId = existing?.id ?? crypto.randomUUID();
-  const title = existing?.title ?? (text || material?.title || preparedFiles[0]?.name || "Study session").replace(/\s+/g, " ").slice(0, 64);
+  const title =
+    existing?.title ??
+    (text || material?.title || preparedFiles[0]?.name || "Study session").replace(/\s+/g, " ").slice(0, 64);
   const isNew = !existing;
 
   const rollback = async () => {
     await removeStoredStudyFiles(preparedFiles.map((item) => item.storagePath)).catch(() => undefined);
-    if (preparedFiles.length) await admin.from("study_attachments").delete().in("id", preparedFiles.map((item) => item.id));
+    if (preparedFiles.length)
+      await admin
+        .from("study_attachments")
+        .delete()
+        .in(
+          "id",
+          preparedFiles.map((item) => item.id),
+        );
     if (isNew) await admin.from("sessions").delete().eq("id", sessionId).eq("user_id", user.id);
-    else await admin.from("sessions").update({ messages: previousMessages as Json, subject: existing?.subject ?? "Auto-detect" }).eq("id", sessionId).eq("user_id", user.id);
+    else
+      await admin
+        .from("sessions")
+        .update({ messages: previousMessages as Json, subject: existing?.subject ?? "Auto-detect" })
+        .eq("id", sessionId)
+        .eq("user_id", user.id);
   };
 
   const sessionWrite = isNew
-    ? await admin.from("sessions").insert({ id: sessionId, user_id: user.id, subject, title, assignment_text: studentText, messages: pendingMessages as Json }).select("id").single()
-    : await admin.from("sessions").update({ subject, messages: pendingMessages as Json }).eq("id", sessionId).eq("user_id", user.id).select("id").single();
+    ? await admin
+        .from("sessions")
+        .insert({
+          id: sessionId,
+          user_id: user.id,
+          subject,
+          title,
+          assignment_text: studentText,
+          messages: pendingMessages as Json,
+        })
+        .select("id")
+        .single()
+    : await admin
+        .from("sessions")
+        .update({ subject, messages: pendingMessages as Json })
+        .eq("id", sessionId)
+        .eq("user_id", user.id)
+        .select("id")
+        .single();
   if (sessionWrite.error) {
     await removeStoredStudyFiles(preparedFiles.map((item) => item.storagePath)).catch(() => undefined);
     await refundAiAction(user.id, access.usage_event_id);
@@ -223,29 +320,52 @@ export async function POST(request: Request) {
   } catch {
     await rollback();
     await refundAiAction(user.id, access.usage_event_id);
-    return NextResponse.json({ error: "The attached files could not be secured. Please add them again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "The attached files could not be secured. Please add them again." },
+      { status: 500 },
+    );
   }
 
-  const previousFileIds = previousMessages.flatMap((message) => message.attachments?.filter((item) => item.kind === "file").map((item) => item.id) ?? []);
+  const previousFileIds = previousMessages.flatMap(
+    (message) => message.attachments?.filter((item) => item.kind === "file").map((item) => item.id) ?? [],
+  );
   const { data: previousFileRows } = previousFileIds.length
-    ? await admin.from("study_attachments").select("id, file_name, extracted_text").in("id", previousFileIds).eq("user_id", user.id)
+    ? await admin
+        .from("study_attachments")
+        .select("id, file_name, extracted_text")
+        .in("id", previousFileIds)
+        .eq("user_id", user.id)
     : { data: [] };
-  const extractedById = new Map((previousFileRows ?? []).map((item) => [item.id, `--- ${item.file_name} ---\n${item.extracted_text}`]));
+  const extractedById = new Map(
+    (previousFileRows ?? []).map((item) => [item.id, `--- ${item.file_name} ---\n${item.extracted_text}`]),
+  );
   const priorModelMessages: ChatCompletionMessageParam[] = previousMessages.slice(-16).map((message) => {
-    const attachmentContext = message.attachments?.flatMap((item) => (item.kind === "file" ? [extractedById.get(item.id) ?? ""] : [])).filter(Boolean).join("\n\n");
-    const content = attachmentContext ? `${message.content}\n\nATTACHED STUDY MATERIAL:\n${attachmentContext}` : message.content;
+    const attachmentContext = message.attachments
+      ?.flatMap((item) => (item.kind === "file" ? [extractedById.get(item.id) ?? ""] : []))
+      .filter(Boolean)
+      .join("\n\n");
+    const content = attachmentContext
+      ? `${message.content}\n\nATTACHED STUDY MATERIAL:\n${attachmentContext}`
+      : message.content;
     return { role: message.role === "student" ? "user" : "assistant", content };
   });
   const currentContext = [
-    material ? `SAVED NOTES — ${material.title} (${material.subject}):\n${material.extracted_text.slice(0, 18_000)}` : "",
+    material
+      ? `SAVED NOTES — ${material.title} (${material.subject}):\n${material.extracted_text.slice(0, 18_000)}`
+      : "",
     preparedFiles.length ? `ATTACHED FILE TRANSCRIPTION:\n${combineExtractedText(preparedFiles).slice(0, 18_000)}` : "",
-  ].filter(Boolean).join("\n\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const currentText = `${studentText}${currentContext ? `\n\n${currentContext}` : ""}`;
   const imageFiles = preparedFiles.filter((file) => file.mimeType.startsWith("image/"));
   const currentContent: string | ChatCompletionContentPart[] = imageFiles.length
     ? [
         { type: "text", text: currentText },
-        ...imageFiles.map((file) => ({ type: "image_url" as const, image_url: { url: `data:${file.mimeType};base64,${file.buffer.toString("base64")}` } })),
+        ...imageFiles.map((file) => ({
+          type: "image_url" as const,
+          image_url: { url: `data:${file.mimeType};base64,${file.buffer.toString("base64")}` },
+        })),
       ]
     : currentText;
 
@@ -258,7 +378,10 @@ export async function POST(request: Request) {
       max_completion_tokens: 700,
       stream: true,
       messages: [
-        { role: "system", content: `${systemPrompt}\nCurrent subject: ${subject}.${subject === "Auto-detect" ? " Infer the subject from the student's question or attachments without announcing that inference." : ""}` },
+        {
+          role: "system",
+          content: `${systemPrompt}\nCurrent subject: ${subject}.${subject === "Auto-detect" ? " Infer the subject from the student's question or attachments without announcing that inference." : ""}`,
+        },
         ...priorModelMessages,
         { role: "user", content: currentContent },
       ],
@@ -284,7 +407,11 @@ export async function POST(request: Request) {
         reply = studentFacingReply(reply);
         if (!reply) throw new Error("The tutor did not return a response. Try again.");
         const savedMessages: TutorMessage[] = [...pendingMessages, { role: "tutor", content: reply }];
-        const { error } = await admin.from("sessions").update({ messages: savedMessages as Json, subject }).eq("id", sessionId).eq("user_id", user.id);
+        const { error } = await admin
+          .from("sessions")
+          .update({ messages: savedMessages as Json, subject })
+          .eq("id", sessionId)
+          .eq("user_id", user.id);
         if (error) throw new Error("The reply was generated but could not be saved.");
         controller.enqueue(
           encoder.encode(

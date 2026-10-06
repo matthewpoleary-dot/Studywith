@@ -3,7 +3,9 @@ import { createServerSupabase } from "./supabase-server";
 
 export const getCurrentUser = cache(async () => {
   const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return user;
 });
 

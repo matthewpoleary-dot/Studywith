@@ -4,4 +4,43 @@ import Link from "next/link";
 import { useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase-browser";
 
-export default function ForgotPasswordPage() { const [email, setEmail] = useState(""); const [message, setMessage] = useState(""); const [loading, setLoading] = useState(false); async function submit(event: React.FormEvent) { event.preventDefault(); setLoading(true); const { error } = await createBrowserSupabase().auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password` }); setMessage(error ? error.message : "If that account exists, a secure reset link is on its way."); setLoading(false); } return <div className="card w-full max-w-md justify-self-end p-8"><p className="eyebrow text-brand">Password reset</p><h1 className="display mt-4 text-4xl">Get a secure link.</h1><p className="mt-3 text-sm leading-6 text-muted">Enter the email attached to your StudyWith account.</p><form onSubmit={(event) => void submit(event)} className="mt-7 grid gap-4"><label className="grid gap-2 text-sm font-bold">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="rounded-2xl border border-line px-4 py-3 outline-none focus:border-brand" /></label><button disabled={loading} className="rounded-full bg-brand px-5 py-3 text-sm font-extrabold text-white">{loading ? "Sending…" : "Send reset link"}</button></form>{message ? <p className="mt-4 text-sm font-bold text-muted">{message}</p> : null}<Link href="/auth/login" className="mt-6 block text-xs font-bold text-brand">Back to sign in</Link></div>; }
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    const { error } = await createBrowserSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+    });
+    setMessage(error ? error.message : "If that account exists, a secure reset link is on its way.");
+    setLoading(false);
+  }
+  return (
+    <div className="card w-full max-w-md justify-self-end p-8">
+      <p className="eyebrow text-brand">Password reset</p>
+      <h1 className="display mt-4 text-4xl">Get a secure link.</h1>
+      <p className="mt-3 text-sm leading-6 text-muted">Enter the email attached to your StudyWith account.</p>
+      <form onSubmit={(event) => void submit(event)} className="mt-7 grid gap-4">
+        <label className="grid gap-2 text-sm font-bold">
+          Email
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="rounded-2xl border border-line px-4 py-3 outline-none focus:border-brand"
+          />
+        </label>
+        <button disabled={loading} className="rounded-full bg-brand px-5 py-3 text-sm font-extrabold text-white">
+          {loading ? "Sending…" : "Send reset link"}
+        </button>
+      </form>
+      {message ? <p className="mt-4 text-sm font-bold text-muted">{message}</p> : null}
+      <Link href="/auth/login" className="mt-6 block text-xs font-bold text-brand">
+        Back to sign in
+      </Link>
+    </div>
+  );
+}

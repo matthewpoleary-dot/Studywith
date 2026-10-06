@@ -21,10 +21,7 @@ export async function getAccessSummary(userId: string): Promise<AccessSummary> {
   const hasPro = active.some((row) => row.kind === "pro" || row.kind === "trial");
   const hasSchoolAccess = active.some((row) => row.kind === "school");
   const hasToolkit = active.some((row) => row.kind === "toolkit") || hasPro || hasSchoolAccess;
-  const creditsRemaining = active.reduce(
-    (sum, row) => sum + Math.max(0, row.ai_credits - row.ai_credits_used),
-    0,
-  );
+  const creditsRemaining = active.reduce((sum, row) => sum + Math.max(0, row.ai_credits - row.ai_credits_used), 0);
 
   return {
     hasToolkit,

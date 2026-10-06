@@ -10,7 +10,11 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   const admin = createAdminSupabase();
   const { data: session } = await admin.from("sessions").select("id").eq("id", id).eq("user_id", user.id).maybeSingle();
   if (!session) return NextResponse.json({ error: "Session not found." }, { status: 404 });
-  const { data: attachments } = await admin.from("study_attachments").select("storage_path").eq("session_id", id).eq("user_id", user.id);
+  const { data: attachments } = await admin
+    .from("study_attachments")
+    .select("storage_path")
+    .eq("session_id", id)
+    .eq("user_id", user.id);
   try {
     await removeStoredStudyFiles((attachments ?? []).map((item) => item.storage_path));
   } catch {

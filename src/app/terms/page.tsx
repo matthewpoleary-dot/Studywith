@@ -5,5 +5,68 @@ import { Footer } from "@/components/Footer";
 export const metadata: Metadata = { title: "Terms" };
 
 export default function TermsPage() {
-  return <><PublicNav /><main className="py-20"><article className="shell max-w-3xl"><p className="eyebrow text-brand">Last updated 10 August 2026</p><h1 className="display mt-5 text-6xl tracking-[-.04em]">Terms of use.</h1><div className="mt-10 grid gap-9 leading-7 text-muted"><section><h2 className="mb-3 text-xl font-extrabold text-ink">The service</h2><p>StudyWith provides AI-assisted explanation, practice, active recall and revision planning for education. It is a study aid, not a teacher, examiner or guarantee of any grade.</p></section><section><h2 className="mb-3 text-xl font-extrabold text-ink">Academic integrity</h2><p>You must not use StudyWith to produce coursework, projects, CBAs, exam submissions or other assessed work presented as your own. Follow your school, teacher and examination-body rules. Access may be restricted where the service is deliberately misused.</p></section><section><h2 className="mb-3 text-xl font-extrabold text-ink">Plans and payments</h2><p>The AI Study Toolkit is a one-time purchase for permanent access to its workflow library plus the fixed AI-credit quantity shown at checkout. StudyWith Pro is recurring and continues until cancelled. Subscription management is available from Settings. Statutory consumer rights are not limited by these terms.</p></section><section><h2 className="mb-3 text-xl font-extrabold text-ink">AI limitations</h2><p>AI responses can be incomplete or wrong. Check important facts against class materials, official curriculum sources and your teacher&apos;s instructions. Do not rely on StudyWith for medical, legal, safety-critical or emergency advice.</p></section><section><h2 className="mb-3 text-xl font-extrabold text-ink">Fair use</h2><p>Pro access is intended for ordinary individual study. Automated extraction, account sharing, attacks, bulk generation or use that materially disrupts the service is prohibited. A generous daily safeguard may temporarily pause unusually high automated use.</p></section><section><h2 className="mb-3 text-xl font-extrabold text-ink">Contact</h2><p>StudyWith is operated by Matthew O&apos;Leary as an independent freelancer in Ireland. Contact <a className="font-bold text-brand" href="mailto:hello@studywith.live">hello@studywith.live</a>.</p></section></div></article></main><Footer /></>;
+  return (
+    <>
+      <PublicNav />
+      <main className="py-20">
+        <article className="shell max-w-3xl">
+          <p className="eyebrow text-brand">Last updated 10 August 2026</p>
+          <h1 className="display mt-5 text-6xl tracking-[-.04em]">Terms of use.</h1>
+          <div className="mt-10 grid gap-9 leading-7 text-muted">
+            <section>
+              <h2 className="mb-3 text-xl font-extrabold text-ink">The service</h2>
+              <p>
+                StudyWith provides AI-assisted explanation, practice, active recall and revision planning for education.
+                It is a study aid, not a teacher, examiner or guarantee of any grade.
+              </p>
+            </section>
+            <section>
+              <h2 className="mb-3 text-xl font-extrabold text-ink">Academic integrity</h2>
+              <p>
+                You must not use StudyWith to produce coursework, projects, CBAs, exam submissions or other assessed
+                work presented as your own. Follow your school, teacher and examination-body rules. Access may be
+                restricted where the service is deliberately misused.
+              </p>
+            </section>
+            <section>
+              <h2 className="mb-3 text-xl font-extrabold text-ink">Plans and payments</h2>
+              <p>
+                The AI Study Toolkit is a one-time purchase for permanent access to its workflow library plus the fixed
+                AI-credit quantity shown at checkout. StudyWith Pro is recurring and continues until cancelled.
+                Subscription management is available from Settings. Statutory consumer rights are not limited by these
+                terms.
+              </p>
+            </section>
+            <section>
+              <h2 className="mb-3 text-xl font-extrabold text-ink">AI limitations</h2>
+              <p>
+                AI responses can be incomplete or wrong. Check important facts against class materials, official
+                curriculum sources and your teacher&apos;s instructions. Do not rely on StudyWith for medical, legal,
+                safety-critical or emergency advice.
+              </p>
+            </section>
+            <section>
+              <h2 className="mb-3 text-xl font-extrabold text-ink">Fair use</h2>
+              <p>
+                Pro access is intended for ordinary individual study. Automated extraction, account sharing, attacks,
+                bulk generation or use that materially disrupts the service is prohibited. A generous daily safeguard
+                may temporarily pause unusually high automated use.
+              </p>
+            </section>
+            <section>
+              <h2 className="mb-3 text-xl font-extrabold text-ink">Contact</h2>
+              <p>
+                StudyWith is operated by Matthew O&apos;Leary as an independent freelancer in Ireland. Contact{" "}
+                <a className="font-bold text-brand" href="mailto:hello@studywith.live">
+                  hello@studywith.live
+                </a>
+                .
+              </p>
+            </section>
+          </div>
+        </article>
+      </main>
+      <Footer />
+    </>
+  );
 }
