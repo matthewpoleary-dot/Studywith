@@ -7,34 +7,50 @@ export function SettingsClient({
   planLabel,
   creditsRemaining,
   hasPro,
+  paymentSucceeded = false,
 }: {
   planLabel: string;
   creditsRemaining: number;
   hasPro: boolean;
+  paymentSucceeded?: boolean;
 }) {
   const [message, setMessage] = useState("");
   const [deleting, setDeleting] = useState(false);
   async function portal() {
     setMessage("");
-    const response = await fetch("/api/stripe/portal", { method: "POST" });
-    const body = (await response.json()) as { url?: string; error?: string };
-    if (body.url) window.location.href = body.url;
-    else setMessage(body.error ?? "Billing management is unavailable.");
+    try {
+      const response = await fetch("/api/stripe/portal", { method: "POST" });
+      const body = (await response.json()) as { url?: string; error?: string };
+      if (body.url) window.location.href = body.url;
+      else setMessage(body.error ?? "Billing management is unavailable.");
+    } catch {
+      setMessage("Billing management is unavailable. Please try again.");
+    }
   }
   async function removeAccount() {
     if (!confirm("Permanently delete your account, study sessions and materials? This cannot be undone.")) return;
     setDeleting(true);
-    const response = await fetch("/api/account", { method: "DELETE" });
-    if (response.ok) window.location.href = "/";
-    else {
-      const body = (await response.json()) as { error?: string };
-      setMessage(body.error ?? "Account deletion failed.");
-      setDeleting(false);
+    try {
+      const response = await fetch("/api/account", { method: "DELETE" });
+      if (response.ok) {
+        window.location.href = "/";
+        return;
+      }
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setMessage(body?.error ?? "Account deletion failed.");
+    } catch {
+      setMessage("Account deletion failed. Check your connection and try again.");
     }
+    setDeleting(false);
   }
   return (
     <div className="mt-8 grid gap-5 lg:grid-cols-2">
       <section className="card p-7">
+        {paymentSucceeded ? (
+          <p role="status" className="mb-5 rounded-xl bg-[#dcfce7] px-4 py-3 text-sm font-bold text-[#166534]">
+            Payment received. Your access can take a few seconds to update; refresh if it has not changed yet.
+          </p>
+        ) : null}
         <p className="eyebrow text-brand">Current access</p>
         <h2 className="display mt-4 text-4xl">{planLabel}</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
@@ -59,11 +75,13 @@ export function SettingsClient({
               className="rounded-full bg-brand px-5 py-3 text-sm font-extrabold text-white"
             />
           )}
-          <CheckoutButton
-            product="pro_annual"
-            label="Choose annual (€59)"
-            className="rounded-full border border-line px-5 py-3 text-sm font-extrabold"
-          />
+          {hasPro ? null : (
+            <CheckoutButton
+              product="pro_annual"
+              label="Choose annual (€59)"
+              className="rounded-full border border-line px-5 py-3 text-sm font-extrabold"
+            />
+          )}
         </div>
       </section>
       <section className="card p-7">

@@ -21,23 +21,27 @@ export function CheckoutButton({
   async function checkout() {
     setLoading(true);
     setError("");
-    const response = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ product, campaignCode }),
-    });
-    const body = (await response.json()) as { url?: string; error?: string };
-    if (response.status === 401) {
-      const query = new URLSearchParams({ product });
-      if (campaignCode) query.set("talk", campaignCode);
-      window.location.href = `/auth/signup?${query.toString()}`;
-      return;
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product, campaignCode }),
+      });
+      if (response.status === 401) {
+        const query = new URLSearchParams({ product });
+        if (campaignCode) query.set("talk", campaignCode);
+        window.location.href = `/auth/signup?${query.toString()}`;
+        return;
+      }
+      const body = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (body?.url) {
+        window.location.href = body.url;
+        return;
+      }
+      setError(body?.error ?? "Checkout is unavailable. Please try again.");
+    } catch {
+      setError("Checkout is unavailable. Please try again.");
     }
-    if (body.url) {
-      window.location.href = body.url;
-      return;
-    }
-    setError(body.error ?? "Checkout is unavailable. Please try again.");
     setLoading(false);
   }
 

@@ -12,10 +12,10 @@ import {
   FileText,
   ImagePlus,
   LoaderCircle,
-  MoreHorizontal,
   Plus,
   Sparkles,
   Trash2,
+  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -97,6 +97,7 @@ export function TutorWorkspace(props: {
   materials: MaterialOption[];
   userId: string;
   initialMaterialId?: string;
+  initialSessionId?: string;
 }) {
   return (
     <TooltipProvider>
@@ -112,11 +113,13 @@ function TutorWorkspaceInner({
   materials,
   userId,
   initialMaterialId,
+  initialSessionId,
 }: {
   initialSessions: Session[];
   materials: MaterialOption[];
   userId: string;
   initialMaterialId?: string;
+  initialSessionId?: string;
 }) {
   const promptController = usePromptInputController();
   const [sessions, setSessions] = useState(() =>
@@ -125,11 +128,10 @@ function TutorWorkspaceInner({
       subject: explicitlyRecognisedSubject(session.messages) ?? session.subject,
     })),
   );
-  const [activeId, setActiveId] = useState(initialSessions[0]?.id ?? "");
+  const initialSession = initialSessions.find((session) => session.id === initialSessionId) ?? initialSessions[0];
+  const [activeId, setActiveId] = useState(initialSession?.id ?? "");
   const [subject, setSubject] = useState(() =>
-    initialSessions[0]
-      ? (explicitlyRecognisedSubject(initialSessions[0].messages) ?? initialSessions[0].subject)
-      : "Auto-detect",
+    initialSession ? (explicitlyRecognisedSubject(initialSession.messages) ?? initialSession.subject) : "Auto-detect",
   );
   const [status, setStatus] = useState<ChatStatus>("ready");
   const [notice, setNotice] = useState("");
@@ -490,8 +492,13 @@ function TutorWorkspaceInner({
                       <p className="text-xs font-black">Use saved notes</p>
                       <p className="mt-0.5 text-[10px] text-muted">Adds the extracted notes as tutor context</p>
                     </div>
-                    <button type="button" onClick={() => setShowMaterials(false)} className="rounded-lg p-1 text-muted">
-                      <MoreHorizontal size={17} />
+                    <button
+                      type="button"
+                      onClick={() => setShowMaterials(false)}
+                      aria-label="Close saved notes"
+                      className="rounded-lg p-1 text-muted hover:bg-[#f2f3f3]"
+                    >
+                      <X size={17} />
                     </button>
                   </div>
                   <div className="max-h-64 overflow-y-auto p-2">

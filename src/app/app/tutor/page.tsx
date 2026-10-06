@@ -3,10 +3,14 @@ import { createAdminSupabase } from "@/lib/supabase-server";
 import { TutorWorkspace } from "@/components/TutorWorkspace";
 import type { Json } from "@/lib/database.types";
 
-export default async function TutorPage({ searchParams }: { searchParams: Promise<{ material?: string }> }) {
+export default async function TutorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ material?: string; session?: string }>;
+}) {
   const user = await getCurrentUser();
   if (!user) return null;
-  const { material } = await searchParams;
+  const { material, session } = await searchParams;
   const admin = createAdminSupabase();
   const [{ data }, { data: materials }] = await Promise.all([
     admin
@@ -34,6 +38,7 @@ export default async function TutorPage({ searchParams }: { searchParams: Promis
       materials={materials ?? []}
       userId={user.id}
       initialMaterialId={material}
+      initialSessionId={session}
     />
   );
 }

@@ -27,6 +27,7 @@ import { useMemo, useRef, useState } from "react";
 import { MessageResponse } from "@/components/ai-elements/message";
 import { discardPendingUploads, uploadStudyFileParts } from "@/lib/study-upload-browser";
 import type { PendingStudyUpload } from "@/lib/study-file-shared";
+import { studySubjects } from "@/lib/study-subjects";
 
 type Card = { id: string; question: string; answer: string; topic: string; confidence: number };
 type Question = { id: string; question: string; options: string[]; correct_index: number; explanation: string };
@@ -43,26 +44,12 @@ type Material = {
   quiz: Question[];
 };
 
-const subjects = [
-  "Maths",
-  "English",
-  "Irish",
-  "Biology",
-  "Chemistry",
-  "Physics",
-  "History",
-  "Geography",
-  "Business",
-  "Economics",
-  "Other",
-];
-
 export function MaterialsWorkspace({ initialMaterials, userId }: { initialMaterials: Material[]; userId: string }) {
   const [materials, setMaterials] = useState(initialMaterials);
   const [activeId, setActiveId] = useState(initialMaterials[0]?.id ?? "");
   const [adding, setAdding] = useState(initialMaterials.length === 0);
   const [title, setTitle] = useState("");
-  const [subject, setSubject] = useState("Biology");
+  const [subject, setSubject] = useState<string>("Biology");
   const [notes, setNotes] = useState("");
   const [files, setFiles] = useState<Array<FileUIPart & { id: string }>>([]);
   const [loading, setLoading] = useState("");
@@ -159,11 +146,18 @@ export function MaterialsWorkspace({ initialMaterials, userId }: { initialMateri
     if (!active) return;
     setLoading(kind);
     setMessage("");
-    const response = await fetch(`/api/materials/${active.id}/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`/api/materials/${active.id}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind }),
+      });
+    } catch {
+      setMessage("Practice generation failed. Check your connection and try again.");
+      setLoading("");
+      return;
+    }
     const body = (await response.json().catch(() => null)) as {
       flashcards?: Card[];
       quiz?: Question[];
@@ -208,6 +202,8 @@ export function MaterialsWorkspace({ initialMaterials, userId }: { initialMateri
     const next = materials.filter((item) => item.id !== active.id);
     setMaterials(next);
     setActiveId(next[0]?.id ?? "");
+    setCardIndex(0);
+    setRevealed(false);
     setAdding(next.length === 0);
     setLoading("");
   }
@@ -260,6 +256,8 @@ export function MaterialsWorkspace({ initialMaterials, userId }: { initialMateri
                 type="button"
                 onClick={() => {
                   setActiveId(item.id);
+                  setCardIndex(0);
+                  setRevealed(false);
                   setAdding(false);
                   setTab("source");
                   setMessage("");
@@ -329,7 +327,7 @@ export function MaterialsWorkspace({ initialMaterials, userId }: { initialMateri
                     onChange={(event) => setSubject(event.target.value)}
                     className="focus-ring rounded-2xl border border-line bg-white px-4 py-3.5 font-medium outline-none focus:border-brand"
                   >
-                    {subjects.map((item) => (
+                    {studySubjects.map((item) => (
                       <option key={item}>{item}</option>
                     ))}
                   </select>

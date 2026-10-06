@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               {(recentSessions ?? []).map((session) => (
                 <RecentRow
                   key={`session-${session.id}`}
-                  href={`/app/tutor`}
+                  href={`/app/tutor?session=${session.id}`}
                   icon={Brain}
                   title={session.title}
                   meta={`${session.subject} · Tutor conversation`}
