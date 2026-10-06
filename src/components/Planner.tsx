@@ -148,7 +148,7 @@ export function Planner({ initial }: { initial: InitialPlan | null }) {
                 Exam year
                 <input
                   type="number"
-                  min="2026"
+                  min={new Date().getFullYear()}
                   max="2035"
                   value={examYear}
                   onChange={(event) => setExamYear(Number(event.target.value))}

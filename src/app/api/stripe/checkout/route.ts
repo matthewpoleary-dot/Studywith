@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Sign in before checkout." }, { status: 401 });
   const body = (await request.json().catch(() => null)) as { product?: Product; campaignCode?: string | null } | null;
   const productKey = body?.product;
-  if (!productKey || !(productKey in products))
+  if (!productKey || !Object.hasOwn(products, productKey))
     return NextResponse.json({ error: "Unknown product." }, { status: 400 });
   const admin = createAdminSupabase();
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);

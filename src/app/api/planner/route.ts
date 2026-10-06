@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     .slice(0, 12);
 
   if (
-    examYear < 2026 ||
+    examYear < new Date().getFullYear() ||
     examYear > 2035 ||
     count < 1 ||
     count > 14 ||

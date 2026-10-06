@@ -389,7 +389,8 @@ export async function POST(request: Request) {
   } catch (error) {
     await rollback();
     await refundAiAction(user.id, access.usage_event_id);
-    return NextResponse.json({ error: errorMessage(error) }, { status: 502 });
+    console.error("[tutor] model request failed", error);
+    return NextResponse.json({ error: "The tutor is unavailable right now. Please try again." }, { status: 502 });
   }
 
   const encoder = new TextEncoder();

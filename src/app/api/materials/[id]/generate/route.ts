@@ -1,6 +1,6 @@
 import Groq from "groq-sdk";
 import { NextResponse, type NextRequest } from "next/server";
-import { consumeAiAction } from "@/lib/access";
+import { consumeAiAction, refundAiAction } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import type { Json } from "@/lib/database.types";
 import { createAdminSupabase } from "@/lib/supabase-server";
@@ -110,7 +110,35 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     );
   }
 
-  const makingCards = body.kind === "cards";
+  const response = await generatePractice({
+    admin,
+    userId: user.id,
+    id,
+    material,
+    kind: body.kind,
+    remaining: access.remaining,
+  });
+  // Failed generations should not cost the student an AI action.
+  if (!response.ok) await refundAiAction(user.id, access.usage_event_id);
+  return response;
+}
+
+async function generatePractice({
+  admin,
+  userId,
+  id,
+  material,
+  kind,
+  remaining,
+}: {
+  admin: ReturnType<typeof createAdminSupabase>;
+  userId: string;
+  id: string;
+  material: { subject: string; extracted_text: string };
+  kind: "cards" | "quiz";
+  remaining?: number;
+}) {
+  const makingCards = kind === "cards";
   const instruction = makingCards
     ? 'Return strict JSON: {"flashcards":[{"question":"","answer":"","topic":""}]}. Create exactly 10 concise active-recall cards.'
     : 'Return strict JSON: {"questions":[{"question":"","options":["","","",""],"correctIndex":0,"explanation":""}]}. Create exactly 6 questions with one unambiguous correct answer.';
@@ -146,7 +174,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const rows = parseCards(parsed.flashcards, material.subject).map((card) => ({
       ...card,
       material_id: id,
-      user_id: user.id,
+      user_id: userId,
     }));
     if (!rows.length) {
       return NextResponse.json(
@@ -155,7 +183,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       );
     }
 
-    const { error: deleteError } = await admin.from("flashcards").delete().eq("material_id", id).eq("user_id", user.id);
+    const { error: deleteError } = await admin.from("flashcards").delete().eq("material_id", id).eq("user_id", userId);
     if (deleteError) {
       return NextResponse.json({ error: "Flashcards could not be refreshed." }, { status: 500 });
     }
@@ -167,14 +195,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (error) {
       return NextResponse.json({ error: "Flashcards could not be saved." }, { status: 500 });
     }
-    return NextResponse.json({ flashcards: data, remaining: access.remaining ?? null });
+    return NextResponse.json({ flashcards: data, remaining: remaining ?? null });
   }
 
   const rows = parseQuestions(parsed.questions).map((question) => ({
     ...question,
     options: question.options as Json,
     material_id: id,
-    user_id: user.id,
+    user_id: userId,
   }));
   if (!rows.length) {
     return NextResponse.json({ error: "No usable quiz was generated. Your existing quiz was kept." }, { status: 502 });
@@ -184,7 +212,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .from("quiz_questions")
     .delete()
     .eq("material_id", id)
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
   if (deleteError) {
     return NextResponse.json({ error: "Quiz could not be refreshed." }, { status: 500 });
   }
@@ -196,5 +224,5 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   if (error) {
     return NextResponse.json({ error: "Quiz could not be saved." }, { status: 500 });
   }
-  return NextResponse.json({ quiz: data, remaining: access.remaining ?? null });
+  return NextResponse.json({ quiz: data, remaining: remaining ?? null });
 }
