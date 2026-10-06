@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase-browser";
+import { safeRedirectPath } from "@/lib/redirects";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const params = useSearchParams();
   const verified = mode === "login" && params.get("verified") === "1";
+  const linkFailed = mode === "login" && params.get("error") === "confirmation";
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,14 +22,22 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     event.preventDefault();
     setLoading(true);
     setError("");
+    try {
+      await authenticate();
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+      setLoading(false);
+    }
+  }
+
+  async function authenticate() {
     const supabase = createBrowserSupabase();
     const product = params.get("product");
     const talk = params.get("talk");
     const fallback = product
       ? `/welcome?product=${encodeURIComponent(product)}${talk ? `&talk=${encodeURIComponent(talk)}` : ""}`
       : "/app";
-    const redirectTo = params.get("redirectTo");
-    const next = redirectTo?.startsWith("/") ? redirectTo : fallback;
+    const next = safeRedirectPath(params.get("redirectTo"), fallback);
 
     if (mode === "signup") {
       const callback = new URL("/auth/callback", window.location.origin);
@@ -70,7 +80,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           way. Open it to finish creating your account.
         </p>
         <p className="mt-4 text-sm leading-6 text-muted">
-          Already registered? Supabase will not send another signup email.{" "}
+          Already have an account? No new email will be sent.{" "}
           <Link className="font-bold text-brand" href="/auth/login">
             Sign in
           </Link>{" "}
@@ -91,12 +101,17 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       </h2>
       <p className="mt-3 text-sm leading-6 text-muted">
         {mode === "signup"
-          ? "No card required. Your first three AI study actions are included."
+          ? "No card required. Three AI study actions are included free every month."
           : "Sign in to your tutor, notes and revision plan."}
       </p>
       {verified ? (
         <p role="status" className="mt-5 rounded-xl bg-[#dcfce7] px-4 py-3 text-sm font-bold text-[#166534]">
           Account verified. Sign in to continue.
+        </p>
+      ) : null}
+      {linkFailed ? (
+        <p role="alert" className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          That confirmation link is invalid or has expired. Sign in, or create your account again to get a new link.
         </p>
       ) : null}
       <form onSubmit={(event) => void submit(event)} className="mt-7 grid gap-4">
