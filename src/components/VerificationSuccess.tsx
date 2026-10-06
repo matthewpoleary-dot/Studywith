@@ -22,17 +22,27 @@ export function VerificationSuccess({ loginHref }: { loginHref: string }) {
   }, [loginHref, router]);
 
   return (
-    <section className="card w-full max-w-md justify-self-end p-7 text-center md:p-9" aria-labelledby="verification-title">
+    <section
+      className="card w-full max-w-md justify-self-end p-7 text-center md:p-9"
+      aria-labelledby="verification-title"
+    >
       <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#dcfce7] text-[#15803d]">
         <CheckCircle2 aria-hidden="true" size={32} strokeWidth={2.25} />
       </span>
       <p className="eyebrow mt-6 text-brand">Email confirmed</p>
-      <h1 id="verification-title" className="display mt-4 text-4xl tracking-[-.04em]">Your account is verified.</h1>
+      <h1 id="verification-title" className="display mt-4 text-4xl tracking-[-.04em]">
+        Your account is verified.
+      </h1>
       <p className="mt-4 text-sm leading-6 text-muted">You can now sign in with the email and password you chose.</p>
-      <Link href={loginHref} className="focus-ring mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 text-sm font-extrabold text-white hover:bg-[var(--blue-dark)]">
+      <Link
+        href={loginHref}
+        className="focus-ring mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 text-sm font-extrabold text-white hover:bg-[var(--blue-dark)]"
+      >
         Continue to sign in <ArrowRight aria-hidden="true" size={17} />
       </Link>
-      <p className="mt-4 text-xs text-muted" aria-live="polite">Returning to sign in in {seconds} second{seconds === 1 ? "" : "s"}…</p>
+      <p className="mt-4 text-xs text-muted" aria-live="polite">
+        Returning to sign in in {seconds} second{seconds === 1 ? "" : "s"}…
+      </p>
     </section>
   );
 }

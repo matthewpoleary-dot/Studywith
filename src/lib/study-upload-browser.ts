@@ -62,5 +62,7 @@ export async function uploadStudyFileParts(
 
 export async function discardPendingUploads(uploads: PendingStudyUpload[]) {
   if (!uploads.length) return;
-  await createBrowserSupabase().storage.from(STUDY_FILES_BUCKET).remove(uploads.map((item) => item.storagePath));
+  await createBrowserSupabase()
+    .storage.from(STUDY_FILES_BUCKET)
+    .remove(uploads.map((item) => item.storagePath));
 }

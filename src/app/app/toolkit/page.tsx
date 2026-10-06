@@ -4,12 +4,109 @@ import { getAccessSummary } from "@/lib/access";
 import { ToolkitLibrary, type Workflow } from "@/components/ToolkitLibrary";
 
 const workflows: Workflow[] = [
-  { title: "Explain without answering", use: "For a concept that has stopped making sense in class notes or a textbook.", prompt: "Act as a Socratic Leaving Cert tutor. Help me understand [concept] without giving me a final answer to copy. First ask what I already understand, then give one small explanation or analogy at a time. End every reply with one question that checks my thinking.", steps: ["Name the exact concept, not the whole chapter.", "Answer the tutor before asking for another hint.", "Finish by explaining the concept back in your own words."] },
-  { title: "Diagnose the real gap", use: "When you keep getting a question wrong but cannot tell why.", prompt: "Diagnose my knowledge gap in [topic]. Ask me five short questions, one at a time, moving from basic recall to application. Do not reveal later answers early. After question five, identify the first point where my understanding broke down and give me one targeted practice task.", steps: ["Use a narrow topic.", "Do not look up answers mid-diagnosis.", "Practise the earliest weak step first."] },
-  { title: "Active recall from my notes", use: "To turn notes you have already learned into a focused recall session.", prompt: "Use only the notes I paste below. Quiz me through active recall, one question at a time. Mix definitions, processes, comparisons and application. Do not show an answer until I attempt it. Track weak areas and retest them at the end. NOTES: [paste notes]", steps: ["Remove names or personal details before pasting.", "Attempt every question from memory.", "Add missed ideas back into your next session."] },
-  { title: "Mark a practice answer", use: "For feedback on work completed for practice, not coursework for submission.", prompt: "Give formative feedback on this practice answer for [subject/topic]. Do not rewrite it for me. Separate feedback into: what is accurate, what is missing, what is unclear, and the single highest-impact improvement. Then ask me to revise one section myself. QUESTION: [question] ANSWER: [your answer]", steps: ["Use work written for practice.", "Check the feedback against your teacher's rubric.", "Rewrite only after you understand the gap."] },
-  { title: "Build an exam-style practice set", use: "To practise transferring knowledge instead of rereading it.", prompt: "Create a short Leaving Cert practice set on [topic] at [Higher/Ordinary] level: two recall questions, two application questions and one synthesis question. Do not include solutions initially. Ask me to submit all five, then give concise feedback and solutions after I attempt them.", steps: ["Set a timer before starting.", "Show working where the subject requires it.", "Turn each mistake into one flashcard."] },
-  { title: "Plan from time and confidence", use: "To allocate study time without guessing what will appear on the paper.", prompt: "Help me build a one-week Leaving Cert study plan. Use only my available time, official syllabus areas, teacher priorities and confidence ratings. Do not predict exam topics. Ask for my subjects, confidence from 1-5, teacher priorities, days available and session length. Then produce a realistic schedule with a clear goal for each session.", steps: ["Use honest confidence ratings.", "Keep one buffer session.", "Review the plan after a week and adjust."] },
+  {
+    title: "Explain without answering",
+    use: "For a concept that has stopped making sense in class notes or a textbook.",
+    prompt:
+      "Act as a Socratic Leaving Cert tutor. Help me understand [concept] without giving me a final answer to copy. First ask what I already understand, then give one small explanation or analogy at a time. End every reply with one question that checks my thinking.",
+    steps: [
+      "Name the exact concept, not the whole chapter.",
+      "Answer the tutor before asking for another hint.",
+      "Finish by explaining the concept back in your own words.",
+    ],
+  },
+  {
+    title: "Diagnose the real gap",
+    use: "When you keep getting a question wrong but cannot tell why.",
+    prompt:
+      "Diagnose my knowledge gap in [topic]. Ask me five short questions, one at a time, moving from basic recall to application. Do not reveal later answers early. After question five, identify the first point where my understanding broke down and give me one targeted practice task.",
+    steps: ["Use a narrow topic.", "Do not look up answers mid-diagnosis.", "Practise the earliest weak step first."],
+  },
+  {
+    title: "Active recall from my notes",
+    use: "To turn notes you have already learned into a focused recall session.",
+    prompt:
+      "Use only the notes I paste below. Quiz me through active recall, one question at a time. Mix definitions, processes, comparisons and application. Do not show an answer until I attempt it. Track weak areas and retest them at the end. NOTES: [paste notes]",
+    steps: [
+      "Remove names or personal details before pasting.",
+      "Attempt every question from memory.",
+      "Add missed ideas back into your next session.",
+    ],
+  },
+  {
+    title: "Mark a practice answer",
+    use: "For feedback on work completed for practice, not coursework for submission.",
+    prompt:
+      "Give formative feedback on this practice answer for [subject/topic]. Do not rewrite it for me. Separate feedback into: what is accurate, what is missing, what is unclear, and the single highest-impact improvement. Then ask me to revise one section myself. QUESTION: [question] ANSWER: [your answer]",
+    steps: [
+      "Use work written for practice.",
+      "Check the feedback against your teacher's rubric.",
+      "Rewrite only after you understand the gap.",
+    ],
+  },
+  {
+    title: "Build an exam-style practice set",
+    use: "To practise transferring knowledge instead of rereading it.",
+    prompt:
+      "Create a short Leaving Cert practice set on [topic] at [Higher/Ordinary] level: two recall questions, two application questions and one synthesis question. Do not include solutions initially. Ask me to submit all five, then give concise feedback and solutions after I attempt them.",
+    steps: [
+      "Set a timer before starting.",
+      "Show working where the subject requires it.",
+      "Turn each mistake into one flashcard.",
+    ],
+  },
+  {
+    title: "Plan from time and confidence",
+    use: "To allocate study time without guessing what will appear on the paper.",
+    prompt:
+      "Help me build a one-week Leaving Cert study plan. Use only my available time, official syllabus areas, teacher priorities and confidence ratings. Do not predict exam topics. Ask for my subjects, confidence from 1-5, teacher priorities, days available and session length. Then produce a realistic schedule with a clear goal for each session.",
+    steps: ["Use honest confidence ratings.", "Keep one buffer session.", "Review the plan after a week and adjust."],
+  },
 ];
 
-export default async function ToolkitPage() { const user = await getCurrentUser(); if (!user) return null; const access = await getAccessSummary(user.id); return <div><p className="eyebrow text-brand">AI Study Toolkit</p><div className="mt-3 flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><h1 className="display text-5xl tracking-[-.04em]">Six workflows worth reusing.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">These prompts are built around learning behaviours, not magic wording. Replace the brackets, follow the steps and keep yourself responsible for the thinking.</p></div><span className="rounded-full bg-[#d8f7e9] px-4 py-2 text-xs font-black">{access.hasToolkit ? "FULL TOOLKIT UNLOCKED" : "PREVIEW"}</span></div>{access.hasToolkit ? <div className="mt-8"><ToolkitLibrary workflows={workflows} /></div> : <div className="mt-8"><ToolkitLibrary workflows={workflows.slice(0, 2)} /><section className="mt-6 rounded-[28px] bg-ink p-8 text-white md:flex md:items-center md:justify-between"><div><p className="eyebrow text-[#9fb2ff]">Unlock the complete library</p><h2 className="display mt-3 text-4xl">One payment. Permanent access.</h2><p className="mt-3 text-sm text-white/60">Get all six workflows plus 25 included AI study actions for €19.</p></div><Link href="/pricing" className="focus-ring mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-extrabold text-ink md:mt-0">See toolkit pricing</Link></section></div>}</div>; }
+export default async function ToolkitPage() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const access = await getAccessSummary(user.id);
+  return (
+    <div>
+      <p className="eyebrow text-brand">AI Study Toolkit</p>
+      <div className="mt-3 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div>
+          <h1 className="display text-5xl tracking-[-.04em]">Six workflows worth reusing.</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
+            These prompts are built around learning behaviours, not magic wording. Replace the brackets, follow the
+            steps and keep yourself responsible for the thinking.
+          </p>
+        </div>
+        <span className="rounded-full bg-[#d8f7e9] px-4 py-2 text-xs font-black">
+          {access.hasToolkit ? "FULL TOOLKIT UNLOCKED" : "PREVIEW"}
+        </span>
+      </div>
+      {access.hasToolkit ? (
+        <div className="mt-8">
+          <ToolkitLibrary workflows={workflows} />
+        </div>
+      ) : (
+        <div className="mt-8">
+          <ToolkitLibrary workflows={workflows.slice(0, 2)} />
+          <section className="mt-6 rounded-[28px] bg-ink p-8 text-white md:flex md:items-center md:justify-between">
+            <div>
+              <p className="eyebrow text-[#9fb2ff]">Unlock the complete library</p>
+              <h2 className="display mt-3 text-4xl">One payment. Permanent access.</h2>
+              <p className="mt-3 text-sm text-white/60">
+                Get all six workflows plus 25 included AI study actions for €19.
+              </p>
+            </div>
+            <Link
+              href="/pricing"
+              className="focus-ring mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-extrabold text-ink md:mt-0"
+            >
+              See toolkit pricing
+            </Link>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}

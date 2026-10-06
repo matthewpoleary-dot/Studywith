@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@streamdown/cjk": "1.0.3",
@@ -42,6 +45,7 @@
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.3",
     "eslint-config-next": "16.1.6",
+    "prettier": "3.9.9",
     "tailwindcss": "4.1.18",
     "typescript": "5.9.3"
   }

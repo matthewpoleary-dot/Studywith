@@ -15,13 +15,7 @@ import {
 export { STUDY_FILES_BUCKET, studyStoragePath } from "./study-file-shared";
 export type { PendingStudyUpload } from "./study-file-shared";
 
-const allowedMimeTypes = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/pdf",
-  "text/plain",
-]);
+const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain"]);
 
 export type PreparedStudyFile = {
   id: string;
@@ -190,7 +184,10 @@ export async function claimStudyFiles({
     size_bytes: file.size,
     extracted_text: file.extractedText,
   }));
-  const { data, error } = await admin.from("study_attachments").insert(rows).select("id, file_name, mime_type, size_bytes");
+  const { data, error } = await admin
+    .from("study_attachments")
+    .insert(rows)
+    .select("id, file_name, mime_type, size_bytes");
   if (error) throw error;
   return data ?? [];
 }
